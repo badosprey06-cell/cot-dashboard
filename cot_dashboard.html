@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COT Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightweight-charts/4.1.3/lightweight-charts.standalone.production.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;800&display=swap');
+
+:root {
+  --bg:       #0b0d12;
+  --bg2:      #10131a;
+  --bg3:      #161b25;
+  --border:   #1e2535;
+  --text:     #cbd5e1;
+  --muted:    #475569;
+  --accent:   #38bdf8;
+  --blue:     #38bdf8;
+  --red:      #f43f5e;
+  --blue-dim: rgba(56,189,248,0.12);
+  --red-dim:  rgba(244,63,94,0.12);
+  --dealer:   #3b82f6;
+  --assetmgr: #22c55e;
+  --levfunds: #a855f7;
+  --other:    #f97316;
+  --nonrept:  #94a3b8;
+  --oi-color: #fbbf24;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:var(--bg); color:var(--text);
+  font-family:'JetBrains Mono',monospace; font-size:12px;
+  height:100vh; overflow:hidden; display:flex; flex-direction:column;
+}
+
+/* HEADER */
+header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 20px; border-bottom:1px solid var(--border);
+  background:var(--bg2); flex-shrink:0;
+}
+.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:16px; letter-spacing:-0.5px; }
+.logo span { color:var(--accent); }
+.status { font-size:10px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.dot { width:5px; height:5px; border-radius:50%; background:#22c55e; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+/* TABS */
+.tabs {
+  display:flex; padding:0 20px;
+  border-bottom:1px solid var(--border); background:var(--bg2); flex-shrink:0;
+}
+.tab {
+  padding:8px 18px; cursor:pointer; color:var(--muted);
+  font-family:'Syne',sans-serif; font-size:11px; font-weight:600;
+  letter-spacing:0.8px; text-transform:uppercase;
+  border-bottom:2px solid transparent; transition:all 0.15s;
+}
+.tab:hover { color:var(--text); }
+.tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+/* CONTENT */
+.content { display:none; flex:1; overflow:hidden; }
+.content.active { display:flex; flex-direction:column; }
+
+/* CHART LAYOUT */
+.chart-layout { display:flex; flex:1; overflow:hidden; }
+
+/* SIDEBAR */
+.sidebar {
+  width:196px; flex-shrink:0;
+  background:var(--bg2); border-right:1px solid var(--border);
+  padding:14px 12px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:16px;
+}
+.s-section { display:flex; flex-direction:column; gap:6px; }
+.s-label {
+  font-family:'Syne',sans-serif; font-size:9px; font-weight:700;
+  letter-spacing:1.5px; text-transform:uppercase; color:var(--muted);
+  padding-bottom:5px; border-bottom:1px solid var(--border);
+}
+.ctrl-select {
+  background:var(--bg3); border:1px solid var(--border);
+  color:var(--text); font-family:'JetBrains Mono',monospace; font-size:10px;
+  padding:5px 8px; border-radius:3px; width:100%; cursor:pointer; outline:none;
+}
+.ctrl-select:focus { border-color:var(--accent); }
+
+.tog-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:5px 0; cursor:pointer; user-select:none;
+}
+.tog-label { display:flex; align-items:center; gap:7px; font-size:10px; color:var(--muted); transition:color 0.15s; }
+.tog-label.on { color:var(--text); }
+.cdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.tog-sw {
+  width:28px; height:14px; background:var(--border);
+  border-radius:7px; position:relative; transition:background 0.2s; flex-shrink:0;
+}
+.tog-sw::after {
+  content:''; position:absolute; left:2px; top:2px;
+  width:10px; height:10px; border-radius:50%;
+  background:var(--muted); transition:all 0.2s;
+}
+.tog-sw.on { background:rgba(56,189,248,0.25); }
+.tog-sw.on::after { left:16px; background:var(--accent); }
+
+/* PANELS AREA */
+.panels-area { flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative; }
+
+.panel { position:relative; flex-shrink:0; overflow:hidden; }
+.panel-label {
+  position:absolute; top:7px; left:10px; z-index:5;
+  font-family:'Syne',sans-serif; font-size:9px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase; pointer-events:none;
+}
+.panel-divider { height:3px; background:var(--border); flex-shrink:0; }
+
+/* loading */
+#chart-loading {
+  position:absolute; inset:0; background:var(--bg);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:10px; z-index:20;
+}
+.spinner {
+  width:20px; height:20px; border:2px solid var(--border);
+  border-top-color:var(--accent); border-radius:50%;
+  animation:spin 0.7s linear infinite;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+.loading-txt { font-family:'Syne',sans-serif; font-size:11px; color:var(--muted); letter-spacing:1px; }
+
+/* TABLE TAB */
+.table-outer { flex:1; overflow:auto; padding:16px 20px; }
+
+table { border-collapse:collapse; width:max-content; font-size:11px; }
+
+thead tr:first-child th { position:sticky; top:0; z-index:6; }
+thead tr:last-child  th { position:sticky; top:32px; z-index:5; }
+
+.th-base {
+  background:#0b0d12; color:var(--text);
+  font-family:'Syne',sans-serif; font-size:9px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:9px 12px; text-align:center; border:1px solid var(--border);
+}
+.th-sticky { position:sticky; left:0; z-index:8; background:#0b0d12; }
+
+.th-cat {
+  font-family:'Syne',sans-serif; font-size:9px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:9px 10px; text-align:center;
+  border:1px solid rgba(255,255,255,0.04);
+}
+.th-metric {
+  font-family:'Syne',sans-serif; font-size:8px; font-weight:600;
+  letter-spacing:0.6px; text-transform:uppercase;
+  padding:6px 8px; text-align:center;
+  border:1px solid rgba(255,255,255,0.04);
+  color:rgba(255,255,255,0.45); white-space:nowrap;
+}
+td {
+  padding:6px 10px; text-align:right; border:1px solid var(--border);
+  white-space:nowrap; font-variant-numeric:tabular-nums; color:var(--text);
+}
+.td-date {
+  text-align:center; position:sticky; left:0; z-index:2;
+  background:#0b0d12; color:var(--muted); font-size:10px;
+  border-right:2px solid var(--border);
+}
+.td-muted { color:var(--muted); }
+tr:nth-child(even) td            { background:rgba(255,255,255,0.015); }
+tr:nth-child(even) .td-date      { background:#0b0d12; }
+tr:hover td                      { background:rgba(56,189,248,0.04) !important; }
+tr:hover .td-date                { background:#0b0d12 !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">COT <span>/</span></div>
+  <div class="status"><div class="dot"></div><span id="hdr-status">Loading...</span></div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('chart')">Chart</div>
+  <div class="tab"        onclick="switchTab('table')">Table</div>
+</div>
+
+<!-- CHART TAB -->
+<div class="content active" id="tab-chart">
+  <div class="chart-layout">
+    <div class="sidebar">
+
+      <div class="s-section">
+        <div class="s-label">Price Chart</div>
+        <select class="ctrl-select" id="sel-chart-type" onchange="rebuildPanels()">
+          <option value="candle">Candlestick</option>
+          <option value="line">Line</option>
+        </select>
+      </div>
+
+      <div class="s-section">
+        <div class="s-label">COT Metric</div>
+        <select class="ctrl-select" id="sel-metric" onchange="onMetricChange()">
+          <option value="net">Net (L − S)</option>
+          <option value="chg_net">Chg Net</option>
+          <option value="longs">Longs</option>
+          <option value="shorts">Shorts</option>
+        </select>
+      </div>
+
+      <div class="s-section">
+        <div class="s-label">Categories</div>
+        <div class="tog-row" onclick="toggleCat('dealer')">
+          <div class="tog-label on" id="lbl-dealer"><div class="cdot" style="background:var(--dealer)"></div>Dealer</div>
+          <div class="tog-sw on"   id="sw-dealer"></div>
+        </div>
+        <div class="tog-row" onclick="toggleCat('assetmgr')">
+          <div class="tog-label on" id="lbl-assetmgr"><div class="cdot" style="background:var(--assetmgr)"></div>Asset Mgr</div>
+          <div class="tog-sw on"   id="sw-assetmgr"></div>
+        </div>
+        <div class="tog-row" onclick="toggleCat('levfunds')">
+          <div class="tog-label on" id="lbl-levfunds"><div class="cdot" style="background:var(--levfunds)"></div>Lev Funds</div>
+          <div class="tog-sw on"   id="sw-levfunds"></div>
+        </div>
+        <div class="tog-row" onclick="toggleCat('other')">
+          <div class="tog-label" id="lbl-other"><div class="cdot" style="background:var(--other)"></div>Other Rept</div>
+          <div class="tog-sw"   id="sw-other"></div>
+        </div>
+        <div class="tog-row" onclick="toggleCat('nonrept')">
+          <div class="tog-label" id="lbl-nonrept"><div class="cdot" style="background:var(--nonrept)"></div>Non-Rept</div>
+          <div class="tog-sw"   id="sw-nonrept"></div>
+        </div>
+      </div>
+
+      <div class="s-section">
+        <div class="s-label">Extra</div>
+        <div class="tog-row" onclick="toggleCat('oi')">
+          <div class="tog-label" id="lbl-oi"><div class="cdot" style="background:var(--oi-color)"></div>Open Interest</div>
+          <div class="tog-sw"   id="sw-oi"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="panels-area" id="panels-area">
+      <div id="chart-loading">
+        <div class="spinner"></div>
+        <div class="loading-txt" id="loading-txt">Fetching data...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE TAB -->
+<div class="content" id="tab-table">
+  <div class="table-outer">
+    <div id="tbl-container"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════
+const POLYGON_KEY = 'M42LpG3a9LFDCvSo_0BTdVzV_iZiduL8';
+const POLYGON_TICKER = 'SPY';   // SPY = S&P 500 ETF, weekly, free tier
+const CFTC_API   = 'https://publicreporting.cftc.gov/resource/gpe5-46if.json';
+const WEEKS      = 52;
+
+const CATS = ['dealer','assetmgr','levfunds','other','nonrept'];
+const CAT_COLORS = {
+  dealer:'#3b82f6', assetmgr:'#22c55e', levfunds:'#a855f7',
+  other:'#f97316',  nonrept:'#94a3b8',  oi:'#fbbf24'
+};
+const CAT_LABELS = {
+  dealer:'DEALER / INTERMEDIARY', assetmgr:'ASSET MANAGER / INSTITUTIONAL',
+  levfunds:'LEVERAGED FUNDS', other:'OTHER REPORTABLE', nonrept:'NON-REPORTABLE'
+};
+const CAT_TH_COLORS = {
+  dealer:'#1565C0', assetmgr:'#2E7D32', levfunds:'#6A1B9A',
+  other:'#B71C1C',  nonrept:'#37474F'
+};
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let cotData    = [];
+let spyCandles = [];
+let visible    = { dealer:true, assetmgr:true, levfunds:true, other:false, nonrept:false, oi:false };
+let lwCharts   = {};   // key -> LW chart instance
+let lwSeries   = {};   // key -> series
+let tableBuilt = false;
+let _syncing   = false;
+
+// ════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((el,i) =>
+    el.classList.toggle('active', (name==='chart'&&i===0)||(name==='table'&&i===1)));
+  document.getElementById('tab-chart').classList.toggle('active', name==='chart');
+  document.getElementById('tab-table').classList.toggle('active', name==='table');
+  if (name==='table' && !tableBuilt && cotData.length) { renderTable(); tableBuilt=true; }
+}
+
+// ════════════════════════════════════════════════
+// FETCH — Polygon.io SPY weekly
+// ════════════════════════════════════════════════
+async function fetchSPY() {
+  // 2 years of weekly bars
+  const to   = new Date().toISOString().slice(0,10);
+  const from = new Date(Date.now() - 730*864e5).toISOString().slice(0,10);
+  const url  = `https://api.polygon.io/v2/aggs/ticker/${POLYGON_TICKER}/range/1/week/${from}/${to}?adjusted=true&sort=asc&limit=200&apiKey=${POLYGON_KEY}`;
+
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Polygon ${r.status}: ${await r.text()}`);
+  const j = await r.json();
+  if (!j.results?.length) throw new Error('Polygon returned no results');
+
+  return j.results.map(bar => ({
+    // Polygon gives ms timestamp — convert to seconds, keep as Monday date string
+    time:  toDateStr(bar.t),
+    open:  +bar.o.toFixed(2),
+    high:  +bar.h.toFixed(2),
+    low:   +bar.l.toFixed(2),
+    close: +bar.c.toFixed(2),
+  }));
+}
+
+// ════════════════════════════════════════════════
+// FETCH — CFTC COT TFF
+// ════════════════════════════════════════════════
+async function fetchCOT() {
+  const fields = [
+    'report_date_as_yyyy_mm_dd','open_interest_all',
+    'dealer_positions_long_all','dealer_positions_short_all','change_in_dealer_long_all','change_in_dealer_short_all','pct_of_oi_dealer_long_all','pct_of_oi_dealer_short_all',
+    'asset_mgr_positions_long','asset_mgr_positions_short','change_in_asset_mgr_long','change_in_asset_mgr_short','pct_of_oi_asset_mgr_long','pct_of_oi_asset_mgr_short',
+    'lev_money_positions_long','lev_money_positions_short','change_in_lev_money_long','change_in_lev_money_short','pct_of_oi_lev_money_long','pct_of_oi_lev_money_short',
+    'other_rept_positions_long','other_rept_positions_short','change_in_other_rept_long','change_in_other_rept_short','pct_of_oi_other_rept_long','pct_of_oi_other_rept_short',
+    'nonrept_positions_long_all','nonrept_positions_short_all','change_in_nonrept_long_all','change_in_nonrept_short_all','pct_of_oi_nonrept_long_all','pct_of_oi_nonrept_short_all'
+  ].join(',');
+  const url = `${CFTC_API}?market_and_exchange_names=E-MINI%20S%26P%20500%20-%20CHICAGO%20MERCANTILE%20EXCHANGE&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${WEEKS}&$select=${fields}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`CFTC API ${r.status}`);
+  return r.json();
+}
+
+// ════════════════════════════════════════════════
+// DATE HELPERS
+// ════════════════════════════════════════════════
+function toDateStr(ms) {
+  // ms → 'YYYY-MM-DD' in UTC
+  const d = new Date(ms);
+  return d.toISOString().slice(0,10);
+}
+
+// COT report date is Tuesday. Polygon weekly bar starts Monday.
+// We map each COT row to the Monday of that same week (subtract 1 day).
+function cotDateToChartDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() - 1); // Tuesday → Monday
+  return d.toISOString().slice(0,10);
+}
+
+// ════════════════════════════════════════════════
+// PARSE COT
+// ════════════════════════════════════════════════
+const nf = v => parseFloat(v) || 0;
+function parseCOT(raw) {
+  return raw.map(r => {
+    const reportDate = r.report_date_as_yyyy_mm_dd.slice(0,10);
+    const chartDate  = cotDateToChartDate(reportDate); // aligned to Monday
+    const mk = (L,S,cL,cS,pL,pS) => ({
+      L, S, net:L-S, chg_net:cL-cS, chgL:cL, chgS:cS,
+      longs:L, shorts:S, pctL:nf(pL), pctS:nf(pS)
+    });
+    return {
+      date: reportDate,        // original Tuesday date (for table)
+      time: chartDate,         // Monday date (for chart x-axis alignment)
+      oi:   nf(r.open_interest_all),
+      dealer:   mk(nf(r.dealer_positions_long_all),  nf(r.dealer_positions_short_all),  nf(r.change_in_dealer_long_all),   nf(r.change_in_dealer_short_all),   r.pct_of_oi_dealer_long_all,  r.pct_of_oi_dealer_short_all),
+      assetmgr: mk(nf(r.asset_mgr_positions_long),   nf(r.asset_mgr_positions_short),   nf(r.change_in_asset_mgr_long),    nf(r.change_in_asset_mgr_short),    r.pct_of_oi_asset_mgr_long,   r.pct_of_oi_asset_mgr_short),
+      levfunds: mk(nf(r.lev_money_positions_long),   nf(r.lev_money_positions_short),   nf(r.change_in_lev_money_long),    nf(r.change_in_lev_money_short),    r.pct_of_oi_lev_money_long,   r.pct_of_oi_lev_money_short),
+      other:    mk(nf(r.other_rept_positions_long),  nf(r.other_rept_positions_short),  nf(r.change_in_other_rept_long),   nf(r.change_in_other_rept_short),   r.pct_of_oi_other_rept_long,  r.pct_of_oi_other_rept_short),
+      nonrept:  mk(nf(r.nonrept_positions_long_all), nf(r.nonrept_positions_short_all), nf(r.change_in_nonrept_long_all),  nf(r.change_in_nonrept_short_all),  r.pct_of_oi_nonrept_long_all, r.pct_of_oi_nonrept_short_all),
+    };
+  }).sort((a,b) => a.time < b.time ? -1 : 1);
+}
+
+// ════════════════════════════════════════════════
+// CHART BUILDING
+// ════════════════════════════════════════════════
+const BASE_OPTS = {
+  layout:      { background:{color:'#0b0d12'}, textColor:'#475569' },
+  grid:        { vertLines:{color:'#161b25'}, horzLines:{color:'#161b25'} },
+  crosshair:   { mode:1 },
+  timeScale:   { borderColor:'#1e2535', timeVisible:false, rightOffset:3 },
+  rightPriceScale: { borderColor:'#1e2535', minimumWidth:72 },
+  handleScale: { mouseWheel:true, pinch:true },
+  handleScroll:{ mouseWheel:true, pressedMouseMove:true },
+};
+
+function getActiveCats() {
+  return [...CATS.filter(c => visible[c]), ...(visible.oi ? ['oi'] : [])];
+}
+
+function getMetricLabel() {
+  return { net:'Net', chg_net:'Chg Net', longs:'Longs', shorts:'Shorts' }[document.getElementById('sel-metric').value] || 'Net';
+}
+
+function getCOTData(cat) {
+  if (cat === 'oi') return cotData.map(d => ({ time:d.time, value:d.oi }));
+  const m = document.getElementById('sel-metric').value;
+  return cotData.map(d => ({ time:d.time, value:d[cat][m] }));
+}
+
+function rebuildPanels() {
+  const area = document.getElementById('panels-area');
+  // Remove all panels but keep loading div
+  area.querySelectorAll('.panel,.panel-divider').forEach(el => el.remove());
+  lwCharts = {}; lwSeries = {};
+
+  const activeCats = getActiveCats();
+  const totalH     = area.clientHeight;
+  const esH        = Math.floor(totalH * (activeCats.length ? 0.52 : 1.0));
+  const cotH       = activeCats.length ? Math.floor((totalH - esH) / activeCats.length) : 0;
+  const areaW      = area.clientWidth;
+
+  // ── SPY / ES panel ──
+  const esPanel = document.createElement('div');
+  esPanel.className = 'panel';
+  esPanel.style.height = esH + 'px';
+  esPanel.innerHTML = `<div class="panel-label" style="color:var(--muted)">SPY — Weekly</div><div id="es-el" style="width:100%;height:100%"></div>`;
+  area.appendChild(esPanel);
+
+  const esChart = LightweightCharts.createChart(document.getElementById('es-el'), {
+    ...BASE_OPTS, width:areaW, height:esH,
+  });
+  lwCharts['spy'] = esChart;
+
+  const chartType = document.getElementById('sel-chart-type').value;
+  let esSeries;
+  if (chartType === 'candle') {
+    esSeries = esChart.addCandlestickSeries({
+      upColor:'#22c55e', downColor:'#f43f5e',
+      borderUpColor:'#22c55e', borderDownColor:'#f43f5e',
+      wickUpColor:'#22c55e', wickDownColor:'#f43f5e',
+    });
+  } else {
+    esSeries = esChart.addLineSeries({ color:'#38bdf8', lineWidth:2 });
+  }
+  lwSeries['spy'] = esSeries;
+
+  if (spyCandles.length) {
+    if (chartType === 'candle') esSeries.setData(spyCandles);
+    else esSeries.setData(spyCandles.map(d => ({ time:d.time, value:d.close })));
+  }
+
+  esChart.timeScale().subscribeVisibleLogicalRangeChange(r => syncCharts('spy', r));
+
+  // ── COT panels ──
+  activeCats.forEach((cat, i) => {
+    if (i > 0 || true) { // always add divider before each COT panel
+      const div = document.createElement('div');
+      div.className = 'panel-divider';
+      area.appendChild(div);
+    }
+
+    const color = CAT_COLORS[cat];
+    const label = cat === 'oi'
+      ? 'OPEN INTEREST'
+      : `${CAT_LABELS[cat]} — ${getMetricLabel()}`;
+
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+    panel.style.height = cotH + 'px';
+    panel.innerHTML = `
+      <div class="panel-label" id="plabel-${cat}" style="color:${color}">${label}</div>
+      <div id="cot-el-${cat}" style="width:100%;height:100%"></div>`;
+    area.appendChild(panel);
+
+    const lc = LightweightCharts.createChart(document.getElementById(`cot-el-${cat}`), {
+      ...BASE_OPTS, width:areaW, height:cotH,
+    });
+    lwCharts[cat] = lc;
+
+    // zero baseline
+    if (cat !== 'oi') {
+      const z = lc.addLineSeries({
+        color:'#1e2535', lineWidth:1,
+        priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false
+      });
+      z.setData(cotData.map(d => ({ time:d.time, value:0 })));
+    }
+
+    const s = lc.addLineSeries({ color, lineWidth:2, priceLineVisible:false, lastValueVisible:true });
+    lwSeries[cat] = s;
+    s.setData(getCOTData(cat));
+
+    lc.timeScale().subscribeVisibleLogicalRangeChange(r => syncCharts(cat, r));
+  });
+}
+
+function syncCharts(source, range) {
+  if (_syncing || !range) return;
+  _syncing = true;
+  Object.entries(lwCharts).forEach(([key, chart]) => {
+    if (key !== source) chart.timeScale().setVisibleLogicalRange(range);
+  });
+  _syncing = false;
+}
+
+// ════════════════════════════════════════════════
+// CONTROLS
+// ════════════════════════════════════════════════
+function toggleCat(cat) {
+  visible[cat] = !visible[cat];
+  document.getElementById('sw-'+cat).classList.toggle('on', visible[cat]);
+  document.getElementById('lbl-'+cat).classList.toggle('on', visible[cat]);
+  rebuildPanels();
+}
+
+function onMetricChange() {
+  const m = document.getElementById('sel-metric').value;
+  CATS.forEach(cat => {
+    if (lwSeries[cat]) lwSeries[cat].setData(getCOTData(cat));
+    const lbl = document.getElementById('plabel-'+cat);
+    if (lbl) lbl.textContent = `${CAT_LABELS[cat]} — ${getMetricLabel()}`;
+  });
+}
+
+// ════════════════════════════════════════════════
+// TABLE
+// ════════════════════════════════════════════════
+const METRICS_DEF = [
+  { key:'net',     label:'Net'        },
+  { key:'chg_net', label:'Chg Net'    },
+  { key:'chgL',    label:'Chg Longs'  },
+  { key:'chgS',    label:'Chg Shorts' },
+  { key:'longs',   label:'Longs'      },
+  { key:'shorts',  label:'Shorts'     },
+];
+
+function fmt(v) {
+  if (v==null||isNaN(v)) return '—';
+  return Math.round(v).toLocaleString('ru-RU');
+}
+
+function gradStyle(v) {
+  if (!v || v===0) return '';
+  const max  = 150000;
+  const a    = Math.min(0.08 + Math.abs(v)/max * 0.55, 0.63).toFixed(2);
+  if (v > 0) return `background:rgba(56,189,248,${a});color:${Math.abs(v)>70000?'#bae6fd':'#7dd3fc'}`;
+  else        return `background:rgba(244,63,94,${a});color:${Math.abs(v)>70000?'#fecdd3':'#fda4af'}`;
+}
+
+function renderTable() {
+  const data = [...cotData].reverse();
+  let h = `<table><thead><tr>
+    <th class="th-base th-sticky" rowspan="2">Date</th>
+    <th class="th-base" rowspan="2">Open Interest</th>`;
+
+  CATS.forEach(cat => {
+    const col = CAT_TH_COLORS[cat];
+    h += `<th class="th-cat" colspan="${METRICS_DEF.length+1}"
+      style="background:${col}22;color:${col};border-top:2px solid ${col}55">
+      ${CAT_LABELS[cat]}</th>`;
+  });
+  h += `</tr><tr>`;
+  CATS.forEach(cat => {
+    const col = CAT_TH_COLORS[cat];
+    METRICS_DEF.forEach(m => {
+      h += `<th class="th-metric" style="background:${col}14">${m.label}</th>`;
+    });
+    h += `<th class="th-metric" style="background:${col}14">% OI Net</th>`;
+  });
+  h += `</tr></thead><tbody>`;
+
+  data.forEach(d => {
+    h += `<tr><td class="td-date">${d.date}</td><td class="td-muted">${fmt(d.oi)}</td>`;
+    CATS.forEach(cat => {
+      const c = d[cat];
+      METRICS_DEF.forEach(m => {
+        const isGrad = m.key==='chgL' || m.key==='chgS';
+        const style  = isGrad ? gradStyle(c[m.key]) : '';
+        h += `<td class="${style?'':'td-muted'}" style="${style}">${fmt(c[m.key])}</td>`;
+      });
+      const pct = (c.pctL - c.pctS).toFixed(1);
+      h += `<td class="td-muted">${pct>0?'+':''}${pct}%</td>`;
+    });
+    h += `</tr>`;
+  });
+
+  h += `</tbody></table>`;
+  document.getElementById('tbl-container').innerHTML = h;
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+async function init() {
+  const loadTxt = document.getElementById('loading-txt');
+  try {
+    loadTxt.textContent = 'Fetching COT data...';
+    const rawCOT = await fetchCOT();
+    cotData = parseCOT(rawCOT);
+
+    loadTxt.textContent = 'Fetching SPY price data...';
+    spyCandles = await fetchSPY();
+
+    const last = cotData[cotData.length-1]?.date || '—';
+    document.getElementById('hdr-status').textContent = 'COT: ' + last + ' · SPY: ' + (spyCandles[spyCandles.length-1]?.time || '—');
+
+    document.getElementById('chart-loading').style.display = 'none';
+    rebuildPanels();
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('chart-loading').innerHTML = `
+      <div style="color:var(--red);font-family:'Syne',sans-serif;font-size:12px;text-align:center;padding:20px;max-width:400px">
+        <div style="font-size:16px;margin-bottom:8px">⚠ Error</div>
+        ${e.message}
+      </div>`;
+  }
+}
+
+window.addEventListener('load', init);
+
+window.addEventListener('resize', () => {
+  const w = document.getElementById('panels-area').clientWidth;
+  Object.values(lwCharts).forEach(c => c.applyOptions({ width:w }));
+});
+</script>
+</body>
+</html>
