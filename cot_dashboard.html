@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Euthanasia / LEDGER v3.7</title>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <title>Euthanasia / LEDGER v3.8</title>
+    <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@800&display=swap');
         :root { --bg: #0b0d12; --bg2: #10131a; --border: #1e2535; --text: #cbd5e1; --accent: #38bdf8; }
@@ -15,69 +15,74 @@
         .logo span { color: var(--accent); margin: 0 5px; }
 
         .tabs { display: flex; background: var(--bg2); border-bottom: 1px solid var(--border); }
-        .tab { padding: 10px 25px; cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #475569; border-bottom: 2px solid transparent; }
+        .tab { padding: 12px 25px; cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #475569; border-bottom: 2px solid transparent; }
         .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
         main { flex: 1; display: flex; overflow: hidden; position: relative; }
         #sidebar { width: 220px; background: var(--bg2); border-right: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
         .s-lbl { font-size: 9px; color: #475569; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
-        select { width: 100%; background: #161b25; border: 1px solid var(--border); color: #fff; padding: 6px; font-size: 11px; border-radius: 4px; margin-bottom: 10px; }
+        select { width: 100%; background: #161b25; border: 1px solid var(--border); color: #fff; padding: 6px; font-size: 11px; border-radius: 4px; margin-bottom: 10px; cursor: pointer; }
         
-        .tog-row { display: flex; align-items: center; justify-content: space-between; font-size: 10px; padding: 5px 0; cursor: pointer; }
-        .tog-sw { width: 30px; height: 15px; background: #1e2535; border-radius: 10px; position: relative; transition: .2s; }
+        .tog-row { display: flex; align-items: center; justify-content: space-between; font-size: 10px; padding: 6px 0; cursor: pointer; }
+        .tog-sw { width: 30px; height: 15px; background: #1e2535; border-radius: 10px; position: relative; }
         .tog-sw.on { background: rgba(56, 189, 248, 0.3); }
         .tog-sw::after { content: ''; position: absolute; left: 2px; top: 2px; width: 11px; height: 11px; background: #475569; border-radius: 50%; transition: .2s; }
         .tog-sw.on::after { left: 17px; background: var(--accent); }
 
-        #viewport { flex: 1; position: relative; display: flex; flex-direction: column; }
-        #page-chart, #page-table { position: absolute; inset: 0; display: none; }
+        #viewport { flex: 1; position: relative; }
+        #page-chart, #page-table { position: absolute; inset: 0; display: none; overflow: hidden; }
         #page-chart.active, #page-table.active { display: flex; flex-direction: column; }
 
-        .panel { flex: 1; position: relative; border-bottom: 1px solid var(--border); }
-        .panel-label { position: absolute; top: 10px; left: 10px; z-index: 5; font-size: 10px; font-weight: bold; color: #475569; pointer-events: none; }
+        .panel { width: 100%; position: relative; border-bottom: 1px solid var(--border); }
+        .panel-label { position: absolute; top: 10px; left: 10px; z-index: 5; font-size: 10px; font-weight: bold; color: rgba(71, 85, 105, 0.8); pointer-events: none; text-transform: uppercase; }
 
-        #table-container { overflow: auto; padding: 20px; }
+        #table-container { overflow: auto; padding: 20px; height: 100%; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: right; }
-        th { position: sticky; top: 0; background: var(--bg2); padding: 10px; border: 1px solid var(--border); font-size: 9px; color: var(--accent); }
-        td { padding: 8px 10px; border: 1px solid var(--border); }
-        .td-date { text-align: left; color: var(--accent); font-weight: bold; }
+        th { position: sticky; top: 0; background: var(--bg2); padding: 12px; border: 1px solid var(--border); font-size: 9px; color: var(--accent); z-index: 10; }
+        td { padding: 10px; border: 1px solid var(--border); background: var(--bg); }
+        .td-date { text-align: left; color: var(--accent); font-weight: bold; position: sticky; left: 0; background: var(--bg2); }
 
-        #loader { position: absolute; inset: 0; z-index: 100; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--accent); }
+        #loader { position: absolute; inset: 0; z-index: 100; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; color: var(--accent); }
+        .spinner { width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">Euthanasia<span>/</span>Ledger v3.7</div>
-    <div style="font-size: 10px; color: #475569;" id="status">● SYNCING...</div>
+    <div class="logo">Euthanasia<span>/</span>Ledger v3.8</div>
+    <div style="font-size: 10px; color: #475569;" id="status">● CONNECTING TO CME...</div>
 </header>
 
 <div class="tabs">
-    <div class="tab active" onclick="switchTab('chart')">Chart</div>
-    <div class="tab" onclick="switchTab('table')">Table</div>
+    <div class="tab active" onclick="switchTab('chart')">Analytics Chart</div>
+    <div class="tab" onclick="switchTab('table')">COT Data Table</div>
 </div>
 
 <main>
-    <div id="loader">INITIALIZING DATA STREAMS...</div>
+    <div id="loader">
+        <div class="spinner"></div>
+        <div id="loader-msg">LOADING MARKET MICROSTRUCTURE...</div>
+    </div>
     
     <div id="sidebar">
         <div class="s-section">
-            <div class="s-lbl">Market</div>
+            <div class="s-lbl">Price Display</div>
             <select id="priceType" onchange="rebuild()">
                 <option value="Candlestick">Candlestick</option>
-                <option value="Line">Line</option>
+                <option value="Line">Baseline</option>
             </select>
         </div>
         <div class="s-section">
-            <div class="s-lbl">COT Metric</div>
+            <div class="s-lbl">Metric Mode</div>
             <select id="cotMetric" onchange="rebuild()">
-                <option value="net">Net Position</option>
-                <option value="longs">Longs</option>
-                <option value="shorts">Shorts</option>
+                <option value="net">Net (Long - Short)</option>
+                <option value="longs">Absolute Longs</option>
+                <option value="shorts">Absolute Shorts</option>
             </select>
         </div>
         <div class="s-section" id="toggles">
-            <div class="s-lbl">Groups</div>
+            <div class="s-lbl">Reportable Groups</div>
         </div>
     </div>
 
@@ -91,7 +96,6 @@
 
 <script>
 const POLYGON_KEY = 'M42LpG3a9LFDCvSo_0BTdVzV_iZiduL8';
-const WEEKS = 150; // Увеличено для полноты данных
 const GROUPS = {
     dealer:   { name: 'Dealer', col: '#3b82f6', active: true },
     assetmgr: { name: 'Asset Mgr', col: '#22c55e', active: true },
@@ -100,45 +104,40 @@ const GROUPS = {
     nonrept:  { name: 'Non-Rept', col: '#94a3b8', active: false }
 };
 
-let cotData = [], spyData = [], charts = [], series = {};
-
-// Ждем загрузки библиотеки перед стартом
-window.onload = () => {
-    if (typeof LightweightCharts === 'undefined') {
-        setTimeout(window.onload, 100);
-        return;
-    }
-    init();
-};
+let cotData = [], spyData = [], charts = [];
 
 async function init() {
     renderToggles();
     try {
         const [cot, spy] = await Promise.all([fetchCOT(), fetchSPY()]);
+        if (!cot.length || !spy.length) throw new Error("Data empty");
         cotData = cot; spyData = spy;
         document.getElementById('loader').style.display = 'none';
-        document.getElementById('status').innerText = '● ACTIVE: SPY';
+        document.getElementById('status').innerText = '● SYSTEM ONLINE';
         rebuild();
     } catch (e) {
-        document.getElementById('loader').innerText = 'SYNC ERROR: CHECK CONSOLE';
+        document.getElementById('loader-msg').innerHTML = `<span style="color:#f43f5e">SYNC ERROR</span><br><small>${e.message}</small>`;
         console.error(e);
     }
 }
 
 async function fetchCOT() {
-    const url = `https://publicreporting.cftc.gov/resource/gpe5-46if.json?market_and_exchange_names=E-MINI S%26P 500 - CHICAGO MERCANTILE EXCHANGE&$order=report_date_as_yyyy_mm_dd DESC&$limit=${WEEKS}`;
+    const url = `https://publicreporting.cftc.gov/resource/gpe5-46if.json?market_and_exchange_names=E-MINI S%26P 500 - CHICAGO MERCANTILE EXCHANGE&$order=report_date_as_yyyy_mm_dd DESC&$limit=150`;
     const res = await fetch(url);
     const data = await res.json();
-    return data.map(r => ({
-        time: Math.floor(new Date(r.report_date_as_yyyy_mm_dd).getTime() / 1000),
-        date: r.report_date_as_yyyy_mm_dd.split('T')[0],
-        oi: Number(r.open_interest_all),
-        dealer:   { net: Number(r.dealer_positions_long_all) - Number(r.dealer_positions_short_all), longs: Number(r.dealer_positions_long_all), shorts: Number(r.dealer_positions_short_all) },
-        assetmgr: { net: Number(r.asset_mgr_positions_long) - Number(r.asset_mgr_positions_short), longs: Number(r.asset_mgr_positions_long), shorts: Number(r.asset_mgr_positions_short) },
-        levfunds: { net: Number(r.lev_money_positions_long) - Number(r.lev_money_positions_short), longs: Number(r.lev_money_positions_long), shorts: Number(r.lev_money_positions_short) },
-        other:    { net: Number(r.other_rept_positions_long) - Number(r.other_rept_positions_short), longs: Number(r.other_rept_positions_long), shorts: Number(r.other_rept_positions_short) },
-        nonrept:  { net: Number(r.nonrept_positions_long_all) - Number(r.nonrept_positions_short_all), longs: Number(r.nonrept_positions_long_all), shorts: Number(r.nonrept_positions_short_all) }
-    })).sort((a,b) => a.time - b.time);
+    return data.map(r => {
+        const d = new Date(r.report_date_as_yyyy_mm_dd);
+        return {
+            time: Math.floor(d.getTime() / 1000),
+            date: r.report_date_as_yyyy_mm_dd.split('T')[0],
+            oi: Number(r.open_interest_all),
+            dealer:   { net: Number(r.dealer_positions_long_all) - Number(r.dealer_positions_short_all), longs: Number(r.dealer_positions_long_all), shorts: Number(r.dealer_positions_short_all) },
+            assetmgr: { net: Number(r.asset_mgr_positions_long) - Number(r.asset_mgr_positions_short), longs: Number(r.asset_mgr_positions_long), shorts: Number(r.asset_mgr_positions_short) },
+            levfunds: { net: Number(r.lev_money_positions_long) - Number(r.lev_money_positions_short), longs: Number(r.lev_money_positions_long), shorts: Number(r.lev_money_positions_short) },
+            other:    { net: Number(r.other_rept_positions_long) - Number(r.other_rept_positions_short), longs: Number(r.other_rept_positions_long), shorts: Number(r.other_rept_positions_short) },
+            nonrept:  { net: Number(r.nonrept_positions_long_all) - Number(r.nonrept_positions_short_all), longs: Number(r.nonrept_positions_long_all), shorts: Number(r.nonrept_positions_short_all) }
+        };
+    }).sort((a,b) => a.time - b.time);
 }
 
 async function fetchSPY() {
@@ -154,22 +153,22 @@ async function fetchSPY() {
 function rebuild() {
     const container = document.getElementById('page-chart');
     container.innerHTML = '';
-    charts = []; series = {};
+    charts = [];
     
     const activeKeys = Object.keys(GROUPS).filter(k => GROUPS[k].active);
     const totalPanels = activeKeys.length + 1;
-    const height = container.clientHeight / totalPanels;
+    const pHeight = container.clientHeight / totalPanels;
 
-    // Price Panel
-    createPanel('SPY WEEKLY', height, true);
-    // COT Panels
-    activeKeys.forEach(k => createPanel(GROUPS[k].name, height, false, k));
+    // 1. Price Panel
+    addChartPanel('SPY / Market Price', pHeight, true);
+    // 2. COT Panels
+    activeKeys.forEach(k => addChartPanel(`${GROUPS[k].name} (${document.getElementById('cotMetric').value})`, pHeight, false, k));
 
-    syncCharts();
+    syncTimeScales();
     buildTable();
 }
 
-function createPanel(title, h, isMain, groupKey = null) {
+function addChartPanel(title, h, isPrice, gKey = null) {
     const div = document.createElement('div');
     div.className = 'panel';
     div.style.height = h + 'px';
@@ -177,25 +176,30 @@ function createPanel(title, h, isMain, groupKey = null) {
     document.getElementById('page-chart').appendChild(div);
 
     const chart = LightweightCharts.createChart(div, {
-        layout: { background: { color: '#0b0d12' }, textColor: '#475569' },
+        layout: { background: { color: '#0b0d12' }, textColor: '#475569', fontSize: 10 },
         grid: { vertLines: { color: '#161b25' }, horzLines: { color: '#161b25' } },
         width: div.clientWidth, height: h,
-        timeScale: { visible: !groupKey || groupKey === Object.keys(GROUPS).filter(k => GROUPS[k].active).pop() }
+        timeScale: { borderColor: '#1e2535', visible: !gKey || gKey === Object.keys(GROUPS).filter(k => GROUPS[k].active).pop() }
     });
 
-    if (isMain) {
+    if (isPrice) {
         const type = document.getElementById('priceType').value;
-        const s = type === 'Candlestick' ? chart.addCandlestickSeries({ upColor: '#22c55e', downColor: '#f43f5e', borderVisible: false }) : chart.addLineSeries({ color: '#38bdf8' });
-        s.setData(type === 'Candlestick' ? spyData : spyData.map(d => ({ time: d.time, value: d.close })));
+        if (type === 'Candlestick') {
+            const s = chart.addCandlestickSeries({ upColor: '#22c55e', downColor: '#f43f5e', borderVisible: false, wickUpColor: '#22c55e', wickDownColor: '#f43f5e' });
+            s.setData(spyData);
+        } else {
+            const s = chart.addLineSeries({ color: '#38bdf8', lineWidth: 2 });
+            s.setData(spyData.map(d => ({ time: d.time, value: d.close })));
+        }
     } else {
-        const s = chart.addLineSeries({ color: GROUPS[groupKey].col, lineWidth: 2 });
-        const metric = document.getElementById('cotMetric').value;
-        s.setData(cotData.map(d => ({ time: d.time, value: d[groupKey][metric] })));
+        const s = chart.addLineSeries({ color: GROUPS[gKey].col, lineWidth: 2 });
+        const m = document.getElementById('cotMetric').value;
+        s.setData(cotData.map(d => ({ time: d.time, value: d[gKey][m] })));
     }
     charts.push(chart);
 }
 
-function syncCharts() {
+function syncTimeScales() {
     charts.forEach(c => {
         c.timeScale().subscribeVisibleLogicalRangeChange(range => {
             charts.forEach(other => { if(other !== c) other.timeScale().setVisibleLogicalRange(range); });
@@ -204,8 +208,8 @@ function syncCharts() {
 }
 
 function buildTable() {
-    let html = `<table><thead><tr><th>DATE</th><th>OPEN INTEREST</th>`;
-    Object.keys(GROUPS).forEach(k => html += `<th style="color:${GROUPS[k].col}">${GROUPS[k].name.toUpperCase()} (NET)</th>`);
+    let html = `<table><thead><tr><th class="td-date">DATE</th><th>OPEN INT</th>`;
+    Object.keys(GROUPS).forEach(k => html += `<th style="color:${GROUPS[k].col}">${GROUPS[k].name} (NET)</th>`);
     html += `</tr></thead><tbody>`;
     [...cotData].reverse().forEach(d => {
         html += `<tr><td class="td-date">${d.date}</td><td>${d.oi.toLocaleString()}</td>`;
@@ -217,11 +221,12 @@ function buildTable() {
 
 function renderToggles() {
     const cont = document.getElementById('toggles');
+    cont.innerHTML = '<div class="s-lbl">Reportable Groups</div>';
     Object.keys(GROUPS).forEach(k => {
         const row = document.createElement('div');
         row.className = 'tog-row';
         row.onclick = () => { GROUPS[k].active = !GROUPS[k].active; rebuild(); renderToggles(); };
-        row.innerHTML = `<span><i style="color:${GROUPS[k].col}">●</i> ${GROUPS[k].name}</span><div class="tog-sw ${GROUPS[k].active?'on':''}"></div>`;
+        row.innerHTML = `<span><i style="color:${GROUPS[k].col}; font-style: normal; margin-right: 5px;">●</i> ${GROUPS[k].name}</span><div class="tog-sw ${GROUPS[k].active?'on':''}"></div>`;
         cont.appendChild(row);
     });
 }
@@ -232,6 +237,13 @@ function switchTab(t) {
     document.getElementById('page-chart').classList.toggle('active', t === 'chart');
     document.getElementById('page-table').classList.toggle('active', t === 'table');
 }
+
+// Запуск после загрузки страницы
+if (document.readyState === 'complete') init();
+else window.addEventListener('load', init);
+
+// Ресайз
+window.addEventListener('resize', () => rebuild());
 </script>
 </body>
 </html>
