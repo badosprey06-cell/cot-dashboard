@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Euthanasia / LEDGER v4.2</title>
-    <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
+    <title>Euthanasia / LEDGER v5.0</title>
+    <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@800&display=swap');
         :root { --bg: #0b0d12; --bg2: #0f121a; --border: #1e2535; --text: #cbd5e1; --accent: #38bdf8; --up: #22c55e; --down: #f43f5e; }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
         header { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background: var(--bg2); border-bottom: 1px solid var(--border); }
         .logo { font-family: 'Syne', sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 2px; }
         .logo span { color: var(--accent); }
 
         .tabs { display: flex; background: var(--bg2); border-bottom: 1px solid var(--border); }
-        .tab { padding: 12px 25px; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; color: #475569; border-bottom: 2px solid transparent; transition: 0.2s; }
+        .tab { padding: 12px 25px; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; color: #475569; border-bottom: 2px solid transparent; }
         .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(56, 189, 248, 0.05); }
 
         main { flex: 1; display: flex; overflow: hidden; position: relative; }
-        #sidebar { width: 260px; background: var(--bg2); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; z-index: 10; }
+        #sidebar { width: 260px; background: var(--bg2); border-right: 1px solid var(--border); padding: 20px; overflow-y: auto; }
         #sidebar.hidden { display: none; }
         
-        .s-lbl { font-size: 9px; color: #475569; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+        .s-lbl { font-size: 9px; color: #475569; font-weight: 800; text-transform: uppercase; margin: 15px 0 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
         select { width: 100%; background: #161b25; border: 1px solid var(--border); color: #fff; padding: 8px; font-size: 11px; border-radius: 4px; outline: none; }
         
         .tog-row { display: flex; align-items: center; justify-content: space-between; font-size: 10px; padding: 6px 0; cursor: pointer; }
@@ -31,131 +31,126 @@
         .tog-sw::after { content: ''; position: absolute; left: 2px; top: 2px; width: 10px; height: 10px; background: #475569; border-radius: 50%; transition: 0.2s; }
         .tog-sw.on::after { left: 16px; background: var(--accent); }
 
-        #viewport { flex: 1; position: relative; overflow: hidden; }
-        #page-chart, #page-table { position: absolute; inset: 0; display: none; }
-        #page-chart.active, #page-table.active { display: flex; flex-direction: column; }
+        #viewport { flex: 1; position: relative; }
+        .page { position: absolute; inset: 0; display: none; flex-direction: column; }
+        .page.active { display: flex; }
 
         .panel { width: 100%; position: relative; border-bottom: 1px solid var(--border); }
-        .panel-label { position: absolute; top: 10px; left: 15px; z-index: 5; font-size: 10px; font-weight: bold; color: rgba(203, 213, 225, 0.3); pointer-events: none; text-transform: uppercase; }
+        .p-lbl { position: absolute; top: 10px; left: 15px; z-index: 5; font-size: 10px; font-weight: bold; color: rgba(203, 213, 225, 0.3); pointer-events: none; text-transform: uppercase; }
 
-        #table-container { overflow: auto; height: 100%; background: var(--bg); }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10px; text-align: right; min-width: 2600px; }
+        #table-wrapper { overflow: auto; height: 100%; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10px; text-align: right; min-width: 2400px; }
         th { position: sticky; top: 0; background: #161b25; padding: 12px 8px; border: 1px solid var(--border); color: var(--accent); z-index: 20; }
-        td { padding: 8px; border: 1px solid #161b25; white-space: nowrap; }
-        .td-date { text-align: left; color: #fff; font-weight: bold; position: sticky; left: 0; background: #0f121a; z-index: 15; border-right: 2px solid var(--border); }
+        td { padding: 8px; border-bottom: 1px solid #161b25; border-right: 1px solid #161b25; white-space: nowrap; }
+        .sticky-col { position: sticky; left: 0; background: #0f121a; z-index: 10; border-right: 2px solid var(--border); font-weight: bold; text-align: left; }
         
-        .val-up { color: #22c55e; }
-        .val-down { color: #f43f5e; }
-        #loader { position: absolute; inset: 0; z-index: 100; background: var(--bg); display: flex; align-items: center; justify-content: center; color: var(--accent); font-weight: bold; }
+        #loader { position: absolute; inset: 0; z-index: 100; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+        .spinner { width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">EUTHANASIA <span>/</span> LEDGER v4.2</div>
-    <div style="font-size: 9px; color: #475569;" id="status">● CONNECTING...</div>
+    <div class="logo">EUTHANASIA <span>/</span> LEDGER v5.0</div>
+    <div id="status" style="font-size: 9px; color: #475569;">● SYSTEM OFFLINE</div>
 </header>
 
 <div class="tabs">
-    <div class="tab active" data-tab="chart">Analytics Chart</div>
-    <div class="tab" data-tab="table">Data Table (Full)</div>
+    <div class="tab active" data-target="chart">Analytics Chart</div>
+    <div class="tab" data-target="table">Data Table (Full)</div>
 </div>
 
 <main>
-    <div id="loader">INITIALIZING...</div>
+    <div id="loader"><div class="spinner"></div><div id="load-msg">LOADING MARKET DATA...</div></div>
     
     <div id="sidebar">
-        <div>
-            <div class="s-lbl">Price Display</div>
-            <select id="priceType" onchange="rebuild()">
-                <option value="Candlestick">Candlestick</option>
-                <option value="Line">Line View</option>
-            </select>
-        </div>
-        <div>
-            <div class="s-lbl">Visualization Metric</div>
-            <select id="cotMetric" onchange="rebuild()">
-                <option value="net">Net Position</option>
-                <option value="chgNet">Change Net</option>
-                <option value="chgLongs">Change Longs</option>
-                <option value="chgShorts">Change Shorts</option>
-                <option value="longs">Absolute Longs</option>
-                <option value="shorts">Absolute Shorts</option>
-            </select>
-        </div>
-        <div id="group-toggles"></div>
-        <div>
-            <div class="s-lbl">Extra</div>
-            <div class="tog-row" onclick="toggleOI()">
-                <span>Open Interest</span>
-                <div id="sw-oi" class="tog-sw"></div>
-            </div>
+        <div class="s-lbl">Price View</div>
+        <select id="priceType" onchange="renderCharts()">
+            <option value="Candlestick">Candlestick</option>
+            <option value="Line">Line</option>
+        </select>
+
+        <div class="s-lbl">COT Metric</div>
+        <select id="metric" onchange="renderCharts()">
+            <option value="net">Net Position</option>
+            <option value="chgNet">Change Net</option>
+            <option value="longs">Longs</option>
+            <option value="shorts">Shorts</option>
+        </select>
+
+        <div id="cat-list"></div>
+
+        <div class="s-lbl">Options</div>
+        <div class="tog-row" onclick="toggleOI()">
+            <span>Show Open Interest</span>
+            <div id="oi-sw" class="tog-sw"></div>
         </div>
     </div>
 
     <div id="viewport">
-        <div id="page-chart" class="active"></div>
-        <div id="page-table"><div id="table-container"></div></div>
+        <div id="page-chart" class="page active"></div>
+        <div id="page-table" class="page"><div id="table-wrapper"></div></div>
     </div>
 </main>
 
 <script>
-const POLYGON_KEY = 'M42LpG3a9LFDCvSo_0BTdVzV_iZiduL8';
-const GROUPS = {
-    dealer:   { name: 'Dealer', col: '#3b82f6', active: true, pfx: 'dealer' },
-    assetmgr: { name: 'Asset Mgr', col: '#22c55e', active: true, pfx: 'asset_mgr' },
-    levfunds: { name: 'Lev Funds', col: '#a855f7', active: true, pfx: 'lev_money' },
-    other:    { name: 'Other', col: '#f97316', active: true, pfx: 'other_rept' },
-    nonrept:  { name: 'Non-Rept', col: '#94a3b8', active: true, pfx: 'nonrept' }
+const CONFIG = {
+    POLYGON_API: 'M42LpG3a9LFDCvSo_0BTdVzV_iZiduL8',
+    GROUPS: {
+        dealer:   { name: 'Dealer', col: '#3b82f6', active: true, pfx: 'dealer' },
+        assetmgr: { name: 'Asset Mgr', col: '#22c55e', active: true, pfx: 'asset_mgr' },
+        levfunds: { name: 'Lev Funds', col: '#a855f7', active: true, pfx: 'lev_money' },
+        other:    { name: 'Other', col: '#f97316', active: true, pfx: 'other_rept' },
+        nonrept:  { name: 'Non-Rept', col: '#94a3b8', active: true, pfx: 'nonrept' }
+    }
 };
 
-let cotData = [], spyData = [], showOI = false, charts = [];
+let rawCOT = [], rawSPY = [], showOI = false, charts = [];
 
-async function init() {
-    renderToggles();
-    setupTabs();
+async function start() {
+    setupUI();
     try {
-        const [rawCot, rawSpy] = await Promise.all([fetchCOT(), fetchSPY()]);
+        const [cot, spy] = await Promise.all([fetchCOT(), fetchSPY()]);
         
-        // Sync Time: Привязываем бары SPY к ближайшему отчету COT (вторнику)
-        const cotTimes = new Set(rawCot.map(d => d.time));
-        spyData = rawSpy.map(s => {
+        // Фильтруем данные: оставляем только те даты, где есть и COT, и SPY
+        const cotMap = new Map(cot.map(d => [d.time, d]));
+        rawSPY = spy.map(s => {
             const d = new Date(s.t);
             const day = d.getUTCDay();
-            const diff = (day <= 2) ? (2 - day) : (9 - day);
-            d.setUTCDate(d.getUTCDate() + diff);
-            s.time = Math.floor(d.getTime() / 1000);
-            return s;
-        }).filter(s => cotTimes.has(s.time));
+            const offset = (day <= 2) ? (2 - day) : (9 - day);
+            d.setUTCDate(d.getUTCDate() + offset);
+            return { ...s, time: Math.floor(d.getTime() / 1000) };
+        }).filter(s => cotMap.has(s.time));
 
-        const spyTimes = new Set(spyData.map(s => s.time));
-        cotData = rawCot.filter(d => spyTimes.has(d.time));
+        const spyTimes = new Set(rawSPY.map(s => s.time));
+        rawCOT = cot.filter(d => spyTimes.has(d.time));
 
         document.getElementById('loader').style.display = 'none';
         document.getElementById('status').innerText = '● SYSTEM ONLINE';
-        rebuild();
+        renderCharts();
+        buildTable();
     } catch (e) {
-        document.getElementById('loader').innerHTML = `<span style="color:red">ERROR: ${e.message}</span>`;
+        document.getElementById('load-msg').innerHTML = `<span style="color:red">BOOT ERROR: ${e.message}</span>`;
     }
 }
 
 async function fetchCOT() {
-    const res = await fetch(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?market_and_exchange_names=E-MINI S%26P 500 - CHICAGO MERCANTILE EXCHANGE&$order=report_date_as_yyyy_mm_dd DESC&$limit=200`);
-    const data = await res.json();
-    return data.map(r => {
-        const oi = Number(r.open_interest_all || 0);
+    const r = await fetch(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?market_and_exchange_names=E-MINI S%26P 500 - CHICAGO MERCANTILE EXCHANGE&$limit=100&$order=report_date_as_yyyy_mm_dd DESC`);
+    const data = await r.json();
+    return data.map(row => {
+        const oi = Number(row.open_interest_all || 0);
         const entry = {
-            time: Math.floor(new Date(r.report_date_as_yyyy_mm_dd).getTime() / 1000),
-            date: r.report_date_as_yyyy_mm_dd.split('T')[0],
+            time: Math.floor(new Date(row.report_date_as_yyyy_mm_dd).getTime() / 1000),
+            date: row.report_date_as_yyyy_mm_dd.split('T')[0],
             oi: oi
         };
-        Object.keys(GROUPS).forEach(k => {
-            const p = GROUPS[k].pfx;
-            const l = Number(r[`${p}_positions_long_all`] || r[`${p}_positions_long`] || 0);
-            const s = Number(r[`${p}_positions_short_all`] || r[`${p}_positions_short`] || 0);
-            const cl = Number(r[`change_in_${p}_long_all`] || r[`change_in_${p}_long`] || 0);
-            const cs = Number(r[`change_in_${p}_short_all`] || r[`change_in_${p}_short`] || 0);
-            entry[k] = {
+        Object.entries(CONFIG.GROUPS).forEach(([key, cfg]) => {
+            const l = Number(row[`${cfg.pfx}_positions_long_all`] || 0);
+            const s = Number(row[`${cfg.pfx}_positions_short_all`] || 0);
+            const cl = Number(row[`change_in_${cfg.pfx}_long_all`] || 0);
+            const cs = Number(row[`change_in_${cfg.pfx}_short_all`] || 0);
+            entry[key] = {
                 longs: l, shorts: s, net: l - s,
                 chgLongs: cl, chgShorts: cs, chgNet: cl - cs,
                 pctOI: oi > 0 ? (( (l - s) / oi) * 100).toFixed(1) + '%' : '0%'
@@ -166,34 +161,37 @@ async function fetchCOT() {
 }
 
 async function fetchSPY() {
-    const res = await fetch(`https://api.polygon.io/v2/aggs/ticker/SPY/range/1/week/2023-01-01/${new Date().toISOString().split('T')[0]}?apiKey=${POLYGON_KEY}`);
-    const data = await res.json();
-    return data.results || [];
+    const r = await fetch(`https://api.polygon.io/v2/aggs/ticker/SPY/range/1/week/2023-01-01/${new Date().toISOString().split('T')[0]}?apiKey=${CONFIG.POLYGON_API}`);
+    const d = await r.json();
+    return d.results || [];
 }
 
-function rebuild() {
+function renderCharts() {
     const container = document.getElementById('page-chart');
     if (!container.classList.contains('active')) return;
     
     container.innerHTML = ''; charts = [];
-    const activeGroups = Object.keys(GROUPS).filter(k => GROUPS[k].active);
-    const totalPanels = activeGroups.length + 1 + (showOI?1:0);
-    const h = container.clientHeight / totalPanels;
+    const activeKeys = Object.keys(CONFIG.GROUPS).filter(k => CONFIG.GROUPS[k].active);
+    const count = activeKeys.length + 1 + (showOI ? 1 : 0);
+    const h = container.clientHeight / count;
 
-    addPanel('SPY / WEEKLY PRICE', h, 'price');
-    if(showOI) addPanel('Open Interest', h, 'oi');
-    activeGroups.forEach(k => addPanel(`${GROUPS[k].name} / ${document.getElementById('cotMetric').value.toUpperCase()}`, h, 'cot', k));
-    
+    // 1. Price
+    createPanel('SPY / WEEKLY PRICE', h, 'price');
+    // 2. OI
+    if(showOI) createPanel('Open Interest', h, 'oi');
+    // 3. COT Groups
+    activeKeys.forEach(k => createPanel(`${CONFIG.GROUPS[k].name} / ${document.getElementById('metric').value.toUpperCase()}`, h, 'cot', k));
+
+    // Sync
     charts.forEach(c => c.timeScale().subscribeVisibleLogicalRangeChange(range => {
-        charts.forEach(o => { if(o !== c) o.timeScale().setVisibleLogicalRange(range); });
+        charts.forEach(other => { if(other !== c) other.timeScale().setVisibleLogicalRange(range); });
     }));
-    buildTable();
 }
 
-function addPanel(title, h, type, gKey = null) {
+function createPanel(title, h, type, key = null) {
     const div = document.createElement('div');
-    div.className = 'panel'; div.style.height = h+'px';
-    div.innerHTML = `<div class="panel-label">${title}</div>`;
+    div.className = 'panel'; div.style.height = h + 'px';
+    div.innerHTML = `<div class="p-lbl">${title}</div>`;
     document.getElementById('page-chart').appendChild(div);
 
     const chart = LightweightCharts.createChart(div, {
@@ -204,82 +202,88 @@ function addPanel(title, h, type, gKey = null) {
     });
 
     if(type === 'price') {
-        const s = document.getElementById('priceType').value === 'Candlestick' ? chart.addCandlestickSeries({ upColor: '#22c55e', downColor: '#f43f5e', borderVisible: false }) : chart.addLineSeries({ color: '#38bdf8' });
-        s.setData(document.getElementById('priceType').value === 'Candlestick' ? spyData : spyData.map(d => ({ time: d.time, value: d.close })));
+        const isCandle = document.getElementById('priceType').value === 'Candlestick';
+        const s = isCandle ? chart.addCandlestickSeries({ upColor: '#22c55e', downColor: '#f43f5e', borderVisible: false }) : chart.addLineSeries({ color: '#38bdf8' });
+        s.setData(isCandle ? rawSPY : rawSPY.map(d => ({ time: d.time, value: d.c })));
     } else if(type === 'oi') {
         const s = chart.addAreaSeries({ lineColor: '#eab308', topColor: 'rgba(234, 179, 8, 0.2)', bottomColor: 'transparent' });
-        s.setData(cotData.map(d => ({ time: d.time, value: d.oi })));
+        s.setData(rawCOT.map(d => ({ time: d.time, value: d.oi })));
     } else {
-        const s = chart.addLineSeries({ color: GROUPS[gKey].col, lineWidth: 2 });
-        const m = document.getElementById('cotMetric').value;
-        s.setData(cotData.map(d => ({ time: d.time, value: d[gKey][m] })));
+        const s = chart.addLineSeries({ color: CONFIG.GROUPS[key].col, lineWidth: 2 });
+        const m = document.getElementById('metric').value;
+        s.setData(rawCOT.map(d => ({ time: d.time, value: d[key][m] })));
     }
     charts.push(chart);
 }
 
 function buildTable() {
-    let html = `<table><thead><tr><th class="td-date">DATE</th><th>OI</th>`;
-    Object.keys(GROUPS).forEach(k => {
-        html += `<th colspan="7" style="border-bottom: 2px solid ${GROUPS[k].col}; color: ${GROUPS[k].col}">${GROUPS[k].name}</th>`;
+    const wrap = document.getElementById('table-wrapper');
+    let html = `<table><thead><tr><th class="sticky-col">DATE</th><th>OPEN INT</th>`;
+    
+    Object.values(CONFIG.GROUPS).forEach(g => {
+        html += `<th colspan="7" style="border-bottom: 2px solid ${g.col}; color: ${g.col}">${g.name}</th>`;
     });
-    html += `</tr><tr><th class="td-date"></th><th></th>`;
-    Object.keys(GROUPS).forEach(() => html += `<th>Net</th><th>Chg Net</th><th>Chg Longs</th><th>Chg Shorts</th><th>Longs</th><th>Shorts</th><th>% OI Net</th>`);
+    
+    html += `</tr><tr><th class="sticky-col"></th><th></th>`;
+    Object.values(CONFIG.GROUPS).forEach(() => {
+        html += `<th>Net</th><th>Chg Net</th><th>Chg Longs</th><th>Chg Shorts</th><th>Longs</th><th>Shorts</th><th>% OI</th>`;
+    });
     html += `</tr></thead><tbody>`;
 
-    const getHeat = (val) => {
-        if (val === 0) return '';
-        const op = Math.min(Math.abs(val) / 100000, 0.4);
-        return `background: rgba(${val > 0 ? '34,197,94' : '244,63,94'}, ${op})`;
+    const getBg = (v) => {
+        if (!v) return '';
+        const op = Math.min(Math.abs(v) / 150000, 0.5);
+        return `background: rgba(${v > 0 ? '34,197,94' : '244,63,94'}, ${op})`;
     };
 
-    [...cotData].reverse().forEach(d => {
-        html += `<tr><td class="td-date">${d.date}</td><td>${d.oi.toLocaleString()}</td>`;
-        Object.keys(GROUPS).forEach(k => {
-            const g = d[k];
-            html += `<td style="${getHeat(g.net)}">${g.net.toLocaleString()}</td>`;
-            html += `<td style="${getHeat(g.chgNet)}">${(g.chgNet>0?'+':'')+g.chgNet.toLocaleString()}</td>`;
-            html += `<td style="${getHeat(g.chgLongs)}">${(g.chgLongs>0?'+':'')+g.chgLongs.toLocaleString()}</td>`;
-            html += `<td style="${getHeat(g.chgShorts)}">${(g.chgShorts>0?'+':'')+g.chgShorts.toLocaleString()}</td>`;
+    [...rawCOT].reverse().forEach(row => {
+        html += `<tr><td class="sticky-col">${row.date}</td><td>${row.oi.toLocaleString()}</td>`;
+        Object.keys(CONFIG.GROUPS).forEach(k => {
+            const g = row[k];
+            html += `<td style="${getBg(g.net)}">${g.net.toLocaleString()}</td>`;
+            html += `<td style="${getBg(g.chgNet)}">${(g.chgNet>0?'+':'')+g.chgNet.toLocaleString()}</td>`;
+            html += `<td style="${getBg(g.chgLongs)}">${(g.chgLongs>0?'+':'')+g.chgLongs.toLocaleString()}</td>`;
+            html += `<td style="${getBg(g.chgShorts)}">${(g.chgShorts>0?'+':'')+g.chgShorts.toLocaleString()}</td>`;
             html += `<td>${g.longs.toLocaleString()}</td><td>${g.shorts.toLocaleString()}</td><td>${g.pctOI}</td>`;
         });
         html += `</tr>`;
     });
-    document.getElementById('table-container').innerHTML = html + '</tbody></table>';
+
+    wrap.innerHTML = html + '</tbody></table>';
 }
 
-function setupTabs() {
+function setupUI() {
+    // Tabs
     document.querySelectorAll('.tab').forEach(t => {
         t.onclick = () => {
-            document.querySelectorAll('.tab, #viewport > div').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab, .page').forEach(el => el.classList.remove('active'));
             t.classList.add('active');
-            const id = t.dataset.tab;
-            document.getElementById('page-' + id).classList.add('active');
-            document.getElementById('sidebar').classList.toggle('hidden', id === 'table');
-            if(id === 'chart') rebuild();
+            document.getElementById('page-' + t.dataset.target).classList.add('active');
+            document.getElementById('sidebar').classList.toggle('hidden', t.dataset.target === 'table');
+            if(t.dataset.target === 'chart') renderCharts();
         };
     });
-}
 
-function renderToggles() {
-    const cont = document.getElementById('group-toggles');
-    cont.innerHTML = '<div class="s-lbl">Categories</div>';
-    Object.keys(GROUPS).forEach(k => {
-        const row = document.createElement('div');
-        row.className = 'tog-row';
-        row.onclick = () => { GROUPS[k].active = !GROUPS[k].active; rebuild(); renderToggles(); };
-        row.innerHTML = `<span><i style="color:${GROUPS[k].col};font-style:normal">●</i> ${GROUPS[k].name}</span><div class="tog-sw ${GROUPS[k].active?'on':''}"></div>`;
-        cont.appendChild(row);
+    // Categories
+    const list = document.getElementById('cat-list');
+    list.innerHTML = '<div class="s-lbl">Reportable Groups</div>';
+    Object.entries(CONFIG.GROUPS).forEach(([key, cfg]) => {
+        const div = document.createElement('div');
+        div.className = 'tog-row';
+        div.onclick = () => { cfg.active = !cfg.active; setupUI(); renderCharts(); };
+        div.innerHTML = `<span><i style="color:${cfg.col};font-style:normal">●</i> ${cfg.name}</span><div class="tog-sw ${cfg.active?'on':''}"></div>`;
+        list.appendChild(div);
     });
 }
 
 function toggleOI() {
     showOI = !showOI;
-    document.getElementById('sw-oi').classList.toggle('on', showOI);
-    rebuild();
+    document.getElementById('oi-sw').classList.toggle('on', showOI);
+    renderCharts();
 }
 
-window.onload = init;
-window.onresize = rebuild;
+window.onload = start;
+window.onresize = renderCharts;
 </script>
 </body>
 </html>
