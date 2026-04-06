@@ -1,313 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>COT Dashboard | Euthanasia Edition</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lightweight-charts/4.1.1/lightweight-charts.standalone.production.js"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;800&display=swap');
+    <meta charset="UTF-8">
+    <title>Euthanasia / LEDGER v3.7</title>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@800&display=swap');
+        :root { --bg: #0b0d12; --bg2: #10131a; --border: #1e2535; --text: #cbd5e1; --accent: #38bdf8; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
+        header { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background: var(--bg2); border-bottom: 1px solid var(--border); }
+        .logo { font-family: 'Syne', sans-serif; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .logo span { color: var(--accent); margin: 0 5px; }
 
-:root {
-  --bg:      #0b0d12;
-  --bg2:     #10131a;
-  --bg3:     #161b25;
-  --border:  #1e2535;
-  --text:    #cbd5e1;
-  --muted:   #475569;
-  --accent:  #38bdf8;
-  --green:   #22c55e;
-  --red:     #f43f5e;
-}
+        .tabs { display: flex; background: var(--bg2); border-bottom: 1px solid var(--border); }
+        .tab { padding: 10px 25px; cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #475569; border-bottom: 2px solid transparent; }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-* { margin:0; padding:0; box-sizing:border-box; }
-html, body { width:100%; height:100%; background:var(--bg); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:12px; overflow:hidden; }
+        main { flex: 1; display: flex; overflow: hidden; position: relative; }
+        #sidebar { width: 220px; background: var(--bg2); border-right: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+        .s-lbl { font-size: 9px; color: #475569; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+        select { width: 100%; background: #161b25; border: 1px solid var(--border); color: #fff; padding: 6px; font-size: 11px; border-radius: 4px; margin-bottom: 10px; }
+        
+        .tog-row { display: flex; align-items: center; justify-content: space-between; font-size: 10px; padding: 5px 0; cursor: pointer; }
+        .tog-sw { width: 30px; height: 15px; background: #1e2535; border-radius: 10px; position: relative; transition: .2s; }
+        .tog-sw.on { background: rgba(56, 189, 248, 0.3); }
+        .tog-sw::after { content: ''; position: absolute; left: 2px; top: 2px; width: 11px; height: 11px; background: #475569; border-radius: 50%; transition: .2s; }
+        .tog-sw.on::after { left: 17px; background: var(--accent); }
 
-#app { display:flex; flex-direction:column; width:100%; height:100%; }
+        #viewport { flex: 1; position: relative; display: flex; flex-direction: column; }
+        #page-chart, #page-table { position: absolute; inset: 0; display: none; }
+        #page-chart.active, #page-table.active { display: flex; flex-direction: column; }
 
-#header { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:9px 18px; background:var(--bg2); border-bottom:1px solid var(--border); }
-.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:15px; }
-.logo span { color:var(--accent); }
-#hdr-status { font-size:10px; color:var(--muted); }
-.dot { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--green); margin-right:5px; vertical-align:middle; animation:pulse 2s infinite; }
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+        .panel { flex: 1; position: relative; border-bottom: 1px solid var(--border); }
+        .panel-label { position: absolute; top: 10px; left: 10px; z-index: 5; font-size: 10px; font-weight: bold; color: #475569; pointer-events: none; }
 
-#tabs { flex:0 0 auto; display:flex; background:var(--bg2); border-bottom:1px solid var(--border); padding:0 18px; }
-.tab { padding:7px 16px; cursor:pointer; color:var(--muted); font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; border-bottom:2px solid transparent; transition:all .15s; }
-.tab:hover { color:var(--text); }
-.tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+        #table-container { overflow: auto; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: right; }
+        th { position: sticky; top: 0; background: var(--bg2); padding: 10px; border: 1px solid var(--border); font-size: 9px; color: var(--accent); }
+        td { padding: 8px 10px; border: 1px solid var(--border); }
+        .td-date { text-align: left; color: var(--accent); font-weight: bold; }
 
-#page-chart, #page-table { display:none; flex:1 1 0; min-height:0; }
-#page-chart.active { display:flex; }
-#page-table.active { display:flex; flex-direction:column; }
-
-#sidebar { flex:0 0 188px; background:var(--bg2); border-right:1px solid var(--border); padding:12px 10px; overflow-y:auto; display:flex; flex-direction:column; gap:14px; }
-.s-section { display:flex; flex-direction:column; gap:5px; }
-.s-lbl { font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; color:var(--muted); padding-bottom:4px; border-bottom:1px solid var(--border); }
-.ctrl-sel { background:var(--bg3); border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:10px; padding:5px 7px; border-radius:3px; width:100%; cursor:pointer; outline:none; }
-
-.tog-row { display:flex; align-items:center; justify-content:space-between; padding:4px 0; cursor:pointer; }
-.tog-lbl { display:flex; align-items:center; gap:6px; font-size:10px; color:var(--muted); }
-.tog-lbl.on { color:var(--text); }
-.cdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-.tog-sw { width:26px; height:13px; background:var(--border); border-radius:7px; position:relative; transition:background .2s; }
-.tog-sw::after { content:''; position:absolute; left:2px; top:1.5px; width:100%; height:10px; border-radius:50%; background:var(--muted); transition:all .2s; max-width: 10px; }
-.tog-sw.on { background:rgba(56,189,248,.25); }
-.tog-sw.on::after { left:14px; background:var(--accent); }
-
-#panels-area { flex:1 1 0; min-width:0; min-height:0; display:flex; flex-direction:column; position:relative; overflow:hidden; }
-
-#loading { position:absolute; inset:0; z-index:50; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
-.spinner { width:18px; height:18px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
-@keyframes spin{to{transform:rotate(360deg)}}
-#loading-txt { font-family:'Syne',sans-serif; font-size:11px; color:var(--muted); }
-
-.c-panel { position:relative; flex-shrink:0; overflow:hidden; }
-.c-panel-lbl { position:absolute; top:6px; left:8px; z-index:5; font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; text-transform:uppercase; pointer-events:none; }
-.c-divider { flex:0 0 3px; background:var(--border); }
-
-.tbl-outer { flex:1 1 0; overflow:auto; padding:14px 18px; background: var(--bg); }
-table { border-collapse:collapse; width:100%; font-size:10.5px; min-width: 800px; }
-thead tr th { position:sticky; top:0; z-index:6; background:var(--bg2); color:var(--text); font-family:'Syne',sans-serif; font-size:8.5px; padding:8px 11px; border:1px solid var(--border); text-transform: uppercase; }
-.td-date { text-align:left; position:sticky; left:0; z-index:2; background:var(--bg2); color:var(--accent); font-weight:bold; }
-td { padding:6px 9px; text-align:right; border:1px solid var(--border); color:var(--text); }
-tr:hover td { background: var(--bg3); }
-</style>
+        #loader { position: absolute; inset: 0; z-index: 100; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--accent); }
+    </style>
 </head>
 <body>
-<div id="app">
-  <div id="header">
-    <div class="logo">EUTHANASIA <span>/</span> LEDGER v3.6</div>
-    <div id="hdr-status"><span class="dot"></span>Initializing...</div>
-  </div>
 
-  <div id="tabs">
-    <div class="tab active" onclick="showTab('chart')">Chart</div>
-    <div class="tab" onclick="showTab('table')">Table</div>
-  </div>
+<header>
+    <div class="logo">Euthanasia<span>/</span>Ledger v3.7</div>
+    <div style="font-size: 10px; color: #475569;" id="status">● SYNCING...</div>
+</header>
 
-  <div id="page-chart" class="active">
-    <div id="sidebar">
-      <div class="s-section">
-        <div class="s-lbl">Price Chart</div>
-        <select class="ctrl-sel" id="sel-type" onchange="rebuild()">
-          <option value="candle">Candlestick</option>
-          <option value="line">Line</option>
-        </select>
-      </div>
-      <div class="s-section">
-        <div class="s-lbl">COT Metric</div>
-        <select class="ctrl-sel" id="sel-metric" onchange="onMetric()">
-          <option value="net">Net (L − S)</option>
-          <option value="chg_net">Chg Net</option>
-          <option value="longs">Longs</option>
-          <option value="shorts">Shorts</option>
-        </select>
-      </div>
-      <div class="s-section" id="cat-toggles">
-        <div class="s-lbl">Categories</div>
-      </div>
-    </div>
-
-    <div id="panels-area">
-      <div id="loading">
-        <div class="spinner"></div>
-        <div id="loading-txt">Connecting to Markets...</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="page-table">
-    <div class="tbl-outer"><div id="tbl"></div></div>
-  </div>
+<div class="tabs">
+    <div class="tab active" onclick="switchTab('chart')">Chart</div>
+    <div class="tab" onclick="switchTab('table')">Table</div>
 </div>
 
+<main>
+    <div id="loader">INITIALIZING DATA STREAMS...</div>
+    
+    <div id="sidebar">
+        <div class="s-section">
+            <div class="s-lbl">Market</div>
+            <select id="priceType" onchange="rebuild()">
+                <option value="Candlestick">Candlestick</option>
+                <option value="Line">Line</option>
+            </select>
+        </div>
+        <div class="s-section">
+            <div class="s-lbl">COT Metric</div>
+            <select id="cotMetric" onchange="rebuild()">
+                <option value="net">Net Position</option>
+                <option value="longs">Longs</option>
+                <option value="shorts">Shorts</option>
+            </select>
+        </div>
+        <div class="s-section" id="toggles">
+            <div class="s-lbl">Groups</div>
+        </div>
+    </div>
+
+    <div id="viewport">
+        <div id="page-chart" class="active"></div>
+        <div id="page-table">
+            <div id="table-container"></div>
+        </div>
+    </div>
+</main>
+
 <script>
-const POLYGON_KEY    = 'M42LpG3a9LFDCvSo_0BTdVzV_iZiduL8';
-const POLYGON_TICKER = 'SPY';
-const CFTC_URL       = 'https://publicreporting.cftc.gov/resource/gpe5-46if.json';
-const WEEKS          = 104;
+const POLYGON_KEY = 'M42LpG3a9LFDCvSo_0BTdVzV_iZiduL8';
+const WEEKS = 150; // Увеличено для полноты данных
+const GROUPS = {
+    dealer:   { name: 'Dealer', col: '#3b82f6', active: true },
+    assetmgr: { name: 'Asset Mgr', col: '#22c55e', active: true },
+    levfunds: { name: 'Lev Funds', col: '#a855f7', active: true },
+    other:    { name: 'Other', col: '#f97316', active: false },
+    nonrept:  { name: 'Non-Rept', col: '#94a3b8', active: false }
+};
 
-const CATS    = ['dealer','assetmgr','levfunds','other','nonrept'];
-const C_COLOR = { dealer:'#3b82f6', assetmgr:'#22c55e', levfunds:'#a855f7', other:'#f97316', nonrept:'#94a3b8', oi:'#fbbf24' };
-const C_LABEL = { dealer:'DEALER', assetmgr:'ASSET MGR', levfunds:'LEV FUNDS', other:'OTHER', nonrept:'NON-REPT' };
+let cotData = [], spyData = [], charts = [], series = {};
 
-let cotData = [], spyBars = [];
-let vis = { dealer:true, assetmgr:true, levfunds:true, other:false, nonrept:false, oi:false };
-let LWC = {}, SER = {};
-let syncing = false;
+// Ждем загрузки библиотеки перед стартом
+window.onload = () => {
+    if (typeof LightweightCharts === 'undefined') {
+        setTimeout(window.onload, 100);
+        return;
+    }
+    init();
+};
 
-function showTab(t) {
-  document.getElementById('page-chart').classList.toggle('active', t==='chart');
-  document.getElementById('page-table').classList.toggle('active', t==='table');
-  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', (t==='chart'&&i===0)||(t==='table'&&i===1)));
-  if (t==='table') buildTable();
-}
-
-async function fetchViaProxy(url) {
-  // Используем более стабильный прокси
-  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-  const r = await fetch(proxy);
-  const j = await r.json();
-  return JSON.parse(j.contents);
-}
-
-async function fetchSPY() {
-  const to = new Date().toISOString().slice(0,10);
-  const url = `https://api.polygon.io/v2/aggs/ticker/${POLYGON_TICKER}/range/1/week/2024-01-01/${to}?apiKey=${POLYGON_KEY}`;
-  let j;
-  try {
-    const r = await fetch(url);
-    j = await r.json();
-    if(!j.results) throw new Error();
-  } catch(e) {
-    j = await fetchViaProxy(url);
-  }
-  
-  const seen = new Set();
-  return j.results.map(b => ({
-    time: Math.floor(b.t / 1000),
-    open: b.o, high: b.h, low: b.l, close: b.c
-  })).filter(b => !seen.has(b.time) && seen.add(b.time)).sort((a,b) => a.time - b.time);
+async function init() {
+    renderToggles();
+    try {
+        const [cot, spy] = await Promise.all([fetchCOT(), fetchSPY()]);
+        cotData = cot; spyData = spy;
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('status').innerText = '● ACTIVE: SPY';
+        rebuild();
+    } catch (e) {
+        document.getElementById('loader').innerText = 'SYNC ERROR: CHECK CONSOLE';
+        console.error(e);
+    }
 }
 
 async function fetchCOT() {
-  const url = `${CFTC_URL}?market_and_exchange_names=E-MINI%20S%26P%20500%20-%20CHICAGO%20MERCANTILE%20EXCHANGE&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${WEEKS}`;
-  
-  let raw;
-  try {
-    const r = await fetch(url);
-    if(!r.ok) throw new Error();
-    raw = await r.json();
-  } catch(e) {
-    // Если прямой запрос заблокирован CORS, идем через прокси
-    raw = await fetchViaProxy(url);
-  }
-  
-  const nf = v => parseFloat(v) || 0;
-  const mk = (L,S,cL,cS) => ({ net:L-S, chg_net:cL-cS, longs:L, shorts:S });
+    const url = `https://publicreporting.cftc.gov/resource/gpe5-46if.json?market_and_exchange_names=E-MINI S%26P 500 - CHICAGO MERCANTILE EXCHANGE&$order=report_date_as_yyyy_mm_dd DESC&$limit=${WEEKS}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.map(r => ({
+        time: Math.floor(new Date(r.report_date_as_yyyy_mm_dd).getTime() / 1000),
+        date: r.report_date_as_yyyy_mm_dd.split('T')[0],
+        oi: Number(r.open_interest_all),
+        dealer:   { net: Number(r.dealer_positions_long_all) - Number(r.dealer_positions_short_all), longs: Number(r.dealer_positions_long_all), shorts: Number(r.dealer_positions_short_all) },
+        assetmgr: { net: Number(r.asset_mgr_positions_long) - Number(r.asset_mgr_positions_short), longs: Number(r.asset_mgr_positions_long), shorts: Number(r.asset_mgr_positions_short) },
+        levfunds: { net: Number(r.lev_money_positions_long) - Number(r.lev_money_positions_short), longs: Number(r.lev_money_positions_long), shorts: Number(r.lev_money_positions_short) },
+        other:    { net: Number(r.other_rept_positions_long) - Number(r.other_rept_positions_short), longs: Number(r.other_rept_positions_long), shorts: Number(r.other_rept_positions_short) },
+        nonrept:  { net: Number(r.nonrept_positions_long_all) - Number(r.nonrept_positions_short_all), longs: Number(r.nonrept_positions_long_all), shorts: Number(r.nonrept_positions_short_all) }
+    })).sort((a,b) => a.time - b.time);
+}
 
-  const seen = new Set();
-  const parsed = raw.map(r => {
-    const dateStr = r.report_date_as_yyyy_mm_dd.slice(0,10);
-    const d = new Date(dateStr + 'T00:00:00Z');
-    d.setUTCDate(d.getUTCDate() - 1);
-    return {
-      date: dateStr,
-      time: Math.floor(d.getTime() / 1000),
-      oi: nf(r.open_interest_all),
-      dealer:   mk(nf(r.dealer_positions_long_all), nf(r.dealer_positions_short_all), nf(r.change_in_dealer_long_all), nf(r.change_in_dealer_short_all)),
-      assetmgr: mk(nf(r.asset_mgr_positions_long), nf(r.asset_mgr_positions_short), nf(r.change_in_asset_mgr_long), nf(r.change_in_asset_mgr_short)),
-      levfunds: mk(nf(r.lev_money_positions_long), nf(r.lev_money_positions_short), nf(r.change_in_lev_money_long), nf(r.change_in_lev_money_short)),
-      other:    mk(nf(r.other_rept_positions_long), nf(r.other_rept_positions_short), nf(r.change_in_other_rept_long), nf(r.change_in_other_rept_short)),
-      nonrept:  mk(nf(r.nonrept_positions_long_all), nf(r.nonrept_positions_short_all), nf(r.change_in_nonrept_long_all), nf(r.change_in_nonrept_short_all)),
-    };
-  });
-
-  return parsed.filter(b => !seen.has(b.time) && seen.add(b.time)).sort((a,b) => a.time - b.time);
+async function fetchSPY() {
+    const url = `https://api.polygon.io/v2/aggs/ticker/SPY/range/1/week/2023-01-01/${new Date().toISOString().split('T')[0]}?apiKey=${POLYGON_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.results.map(b => ({
+        time: Math.floor(b.t / 1000),
+        open: b.o, high: b.h, low: b.l, close: b.c
+    })).sort((a,b) => a.time - b.time);
 }
 
 function rebuild() {
-  const area = document.getElementById('panels-area');
-  area.querySelectorAll('.c-panel,.c-divider').forEach(el => el.remove());
-  LWC = {}; SER = {};
+    const container = document.getElementById('page-chart');
+    container.innerHTML = '';
+    charts = []; series = {};
+    
+    const activeKeys = Object.keys(GROUPS).filter(k => GROUPS[k].active);
+    const totalPanels = activeKeys.length + 1;
+    const height = container.clientHeight / totalPanels;
 
-  const active = [...CATS.filter(c => vis[c]), ...(vis.oi ? ['oi'] : [])];
-  const aH = area.clientHeight;
-  const esH = Math.floor(aH * (active.length ? 0.55 : 1));
-  const cotH = active.length ? Math.floor((aH - esH - (active.length * 3)) / active.length) : 0;
+    // Price Panel
+    createPanel('SPY WEEKLY', height, true);
+    // COT Panels
+    activeKeys.forEach(k => createPanel(GROUPS[k].name, height, false, k));
 
-  // Main Chart
-  const esEl = mkPanel('SPY WEEKLY', '#475569', esH, 'spy');
-  area.appendChild(esEl);
-  const pc = LightweightCharts.createChart(esEl.querySelector('.c-inner'), {
-    layout:{background:{color:'#0b0d12'}, textColor:'#475569'},
-    grid:{vertLines:{color:'#161b25'}, horzLines:{color:'#161b25'}},
-    width:area.clientWidth, height:esH, timeScale:{visible: active.length === 0}
-  });
-  LWC['spy'] = pc;
-  const type = document.getElementById('sel-type').value;
-  SER['spy'] = type === 'candle' ? pc.addCandlestickSeries({upColor:'#22c55e', downColor:'#f43f5e', borderVisible:false, wickUpColor:'#22c55e', wickDownColor:'#f43f5e'}) : pc.addLineSeries({color:'#38bdf8', lineWidth:2});
-  SER['spy'].setData(type==='candle' ? spyBars : spyBars.map(b=>({time:b.time, value:b.close})));
+    syncCharts();
+    buildTable();
+}
 
-  // COT Charts
-  active.forEach((cat, i) => {
-    area.appendChild(Object.assign(document.createElement('div'), {className:'c-divider'}));
-    const pEl = mkPanel(cat==='oi'?'OPEN INTEREST':C_LABEL[cat], C_COLOR[cat], cotH, cat);
-    area.appendChild(pEl);
-    const cc = LightweightCharts.createChart(pEl.querySelector('.c-inner'), {
-      layout:{background:{color:'#0b0d12'}, textColor:'#475569'},
-      grid:{vertLines:{color:'#161b25'}, horzLines:{color:'#161b25'}},
-      width:area.clientWidth, height:cotH, timeScale:{visible: i === active.length - 1}
+function createPanel(title, h, isMain, groupKey = null) {
+    const div = document.createElement('div');
+    div.className = 'panel';
+    div.style.height = h + 'px';
+    div.innerHTML = `<div class="panel-label">${title}</div>`;
+    document.getElementById('page-chart').appendChild(div);
+
+    const chart = LightweightCharts.createChart(div, {
+        layout: { background: { color: '#0b0d12' }, textColor: '#475569' },
+        grid: { vertLines: { color: '#161b25' }, horzLines: { color: '#161b25' } },
+        width: div.clientWidth, height: h,
+        timeScale: { visible: !groupKey || groupKey === Object.keys(GROUPS).filter(k => GROUPS[k].active).pop() }
     });
-    LWC[cat] = cc;
-    const s = cc.addLineSeries({color:C_COLOR[cat], lineWidth:2});
-    SER[cat] = s;
-    s.setData(getMetricData(cat));
-  });
 
-  // Sync
-  const charts = Object.values(LWC);
-  charts.forEach(chart => {
-    chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
-      if (syncing) return;
-      syncing = true;
-      charts.forEach(c => { if(c !== chart) c.timeScale().setVisibleLogicalRange(range); });
-      syncing = false;
+    if (isMain) {
+        const type = document.getElementById('priceType').value;
+        const s = type === 'Candlestick' ? chart.addCandlestickSeries({ upColor: '#22c55e', downColor: '#f43f5e', borderVisible: false }) : chart.addLineSeries({ color: '#38bdf8' });
+        s.setData(type === 'Candlestick' ? spyData : spyData.map(d => ({ time: d.time, value: d.close })));
+    } else {
+        const s = chart.addLineSeries({ color: GROUPS[groupKey].col, lineWidth: 2 });
+        const metric = document.getElementById('cotMetric').value;
+        s.setData(cotData.map(d => ({ time: d.time, value: d[groupKey][metric] })));
+    }
+    charts.push(chart);
+}
+
+function syncCharts() {
+    charts.forEach(c => {
+        c.timeScale().subscribeVisibleLogicalRangeChange(range => {
+            charts.forEach(other => { if(other !== c) other.timeScale().setVisibleLogicalRange(range); });
+        });
     });
-  });
 }
-
-function mkPanel(lbl, col, h, id) {
-  const d = document.createElement('div');
-  d.className = 'c-panel'; d.style.height = h+'px';
-  d.innerHTML = `<div class="c-panel-lbl" style="color:${col}">${lbl}</div><div class="c-inner"></div>`;
-  return d;
-}
-
-function getMetricData(cat) {
-  const m = document.getElementById('sel-metric').value;
-  return cat === 'oi' ? cotData.map(d=>({time:d.time, value:d.oi})) : cotData.map(d=>({time:d.time, value:d[cat][m]}));
-}
-
-function onMetric() { rebuild(); }
-function tog(c) { vis[c]=!vis[c]; document.getElementById('ts-'+c).classList.toggle('on'); document.getElementById('tl-'+c).classList.toggle('on'); rebuild(); }
 
 function buildTable() {
-  if(!cotData.length) return;
-  let h = `<table><thead><tr><th>Date</th><th>Open Interest</th>`;
-  CATS.forEach(c => h += `<th style="color:${C_COLOR[c]}">${C_LABEL[c]} (Net)</th>`);
-  h += `</tr></thead><tbody>`;
-  [...cotData].reverse().forEach(d => {
-    h += `<tr><td class="td-date">${d.date}</td><td>${Math.round(d.oi).toLocaleString()}</td>`;
-    CATS.forEach(c => h += `<td>${Math.round(d[c].net).toLocaleString()}</td>`);
-    h += `</tr>`;
-  });
-  document.getElementById('tbl').innerHTML = h+'</tbody></table>';
+    let html = `<table><thead><tr><th>DATE</th><th>OPEN INTEREST</th>`;
+    Object.keys(GROUPS).forEach(k => html += `<th style="color:${GROUPS[k].col}">${GROUPS[k].name.toUpperCase()} (NET)</th>`);
+    html += `</tr></thead><tbody>`;
+    [...cotData].reverse().forEach(d => {
+        html += `<tr><td class="td-date">${d.date}</td><td>${d.oi.toLocaleString()}</td>`;
+        Object.keys(GROUPS).forEach(k => html += `<td>${d[k].net.toLocaleString()}</td>`);
+        html += `</tr>`;
+    });
+    document.getElementById('table-container').innerHTML = html + '</tbody></table>';
 }
 
-window.onload = async () => {
-  const toggles = document.getElementById('cat-toggles');
-  [...CATS, 'oi'].forEach(c => {
-    toggles.innerHTML += `<div class="tog-row" onclick="tog('${c}')">
-      <div class="tog-lbl ${vis[c]?'on':''}" id="tl-${c}"><div class="cdot" style="background:${C_COLOR[c]}"></div>${c.toUpperCase()}</div>
-      <div class="tog-sw ${vis[c]?'on':''}" id="ts-${c}"></div>
-    </div>`;
-  });
+function renderToggles() {
+    const cont = document.getElementById('toggles');
+    Object.keys(GROUPS).forEach(k => {
+        const row = document.createElement('div');
+        row.className = 'tog-row';
+        row.onclick = () => { GROUPS[k].active = !GROUPS[k].active; rebuild(); renderToggles(); };
+        row.innerHTML = `<span><i style="color:${GROUPS[k].col}">●</i> ${GROUPS[k].name}</span><div class="tog-sw ${GROUPS[k].active?'on':''}"></div>`;
+        cont.appendChild(row);
+    });
+}
 
-  try {
-    const [c, s] = await Promise.all([fetchCOT(), fetchSPY()]);
-    cotData = c; spyBars = s;
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('hdr-status').innerHTML = `<span class="dot"></span>MARKETS ONLINE`;
-    rebuild();
-  } catch(e) {
-    console.error(e);
-    document.getElementById('loading-txt').innerHTML = `<span style="color:red">SYNC ERROR</span>`;
-  }
-};
-
-window.onresize = () => rebuild();
+function switchTab(t) {
+    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+    document.querySelector(`.tab[onclick="switchTab('${t}')"]`).classList.add('active');
+    document.getElementById('page-chart').classList.toggle('active', t === 'chart');
+    document.getElementById('page-table').classList.toggle('active', t === 'table');
+}
 </script>
 </body>
 </html>
