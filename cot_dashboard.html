@@ -51,7 +51,7 @@ html, body { width:100%; height:100%; background:var(--bg); color:var(--text); f
 .tog-lbl.on { color:var(--text); }
 .cdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 .tog-sw { width:26px; height:13px; background:var(--border); border-radius:7px; position:relative; transition:background .2s; }
-.tog-sw::after { content:''; position:absolute; left:2px; top:1.5px; width:10px; height:10px; border-radius:50%; background:var(--muted); transition:all .2s; }
+.tog-sw::after { content:''; position:absolute; left:2px; top:1.5px; width:100%; height:10px; border-radius:50%; background:var(--muted); transition:all .2s; max-width: 10px; }
 .tog-sw.on { background:rgba(56,189,248,.25); }
 .tog-sw.on::after { left:14px; background:var(--accent); }
 
@@ -66,19 +66,19 @@ html, body { width:100%; height:100%; background:var(--bg); color:var(--text); f
 .c-panel-lbl { position:absolute; top:6px; left:8px; z-index:5; font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; text-transform:uppercase; pointer-events:none; }
 .c-divider { flex:0 0 3px; background:var(--border); }
 
-.tbl-outer { flex:1 1 0; overflow:auto; padding:14px 18px; }
-table { border-collapse:collapse; width:max-content; font-size:10.5px; }
-thead tr:first-child th { position:sticky; top:0; z-index:6; background:#0a0c11; }
-.th-base { color:var(--text); font-family:'Syne',sans-serif; font-size:8.5px; padding:8px 11px; border:1px solid var(--border); }
-.td-date { text-align:center; position:sticky; left:0; z-index:2; background:#0a0c11; color:var(--muted); border-right:2px solid var(--border); }
-td { padding:5px 9px; text-align:right; border:1px solid var(--border); color:var(--text); }
+.tbl-outer { flex:1 1 0; overflow:auto; padding:14px 18px; background: var(--bg); }
+table { border-collapse:collapse; width:100%; font-size:10.5px; min-width: 800px; }
+thead tr th { position:sticky; top:0; z-index:6; background:var(--bg2); color:var(--text); font-family:'Syne',sans-serif; font-size:8.5px; padding:8px 11px; border:1px solid var(--border); text-transform: uppercase; }
+.td-date { text-align:left; position:sticky; left:0; z-index:2; background:var(--bg2); color:var(--accent); font-weight:bold; }
+td { padding:6px 9px; text-align:right; border:1px solid var(--border); color:var(--text); }
+tr:hover td { background: var(--bg3); }
 </style>
 </head>
 <body>
 <div id="app">
   <div id="header">
     <div class="logo">EUTHANASIA <span>/</span> LEDGER v3.6</div>
-    <div id="hdr-status"><span class="dot"></span>Syncing...</div>
+    <div id="hdr-status"><span class="dot"></span>Initializing...</div>
   </div>
 
   <div id="tabs">
@@ -106,7 +106,7 @@ td { padding:5px 9px; text-align:right; border:1px solid var(--border); color:va
       </div>
       <div class="s-section" id="cat-toggles">
         <div class="s-lbl">Categories</div>
-        </div>
+      </div>
     </div>
 
     <div id="panels-area">
@@ -130,7 +130,7 @@ const WEEKS          = 104;
 
 const CATS    = ['dealer','assetmgr','levfunds','other','nonrept'];
 const C_COLOR = { dealer:'#3b82f6', assetmgr:'#22c55e', levfunds:'#a855f7', other:'#f97316', nonrept:'#94a3b8', oi:'#fbbf24' };
-const C_LABEL = { dealer:'DEALER / INTERMEDIARY', assetmgr:'ASSET MANAGER / INSTITUTIONAL', levfunds:'LEVERAGED FUNDS', other:'OTHER REPORTABLE', nonrept:'NON-REPORTABLE' };
+const C_LABEL = { dealer:'DEALER', assetmgr:'ASSET MGR', levfunds:'LEV FUNDS', other:'OTHER', nonrept:'NON-REPT' };
 
 let cotData = [], spyBars = [];
 let vis = { dealer:true, assetmgr:true, levfunds:true, other:false, nonrept:false, oi:false };
@@ -145,15 +145,24 @@ function showTab(t) {
 }
 
 async function fetchViaProxy(url) {
-  const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+  // Используем более стабильный прокси
+  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+  const r = await fetch(proxy);
   const j = await r.json();
   return JSON.parse(j.contents);
 }
 
 async function fetchSPY() {
-  const url = `https://api.polygon.io/v2/aggs/ticker/${POLYGON_TICKER}/range/1/week/2024-01-01/${new Date().toISOString().slice(0,10)}?apiKey=${POLYGON_KEY}`;
+  const to = new Date().toISOString().slice(0,10);
+  const url = `https://api.polygon.io/v2/aggs/ticker/${POLYGON_TICKER}/range/1/week/2024-01-01/${to}?apiKey=${POLYGON_KEY}`;
   let j;
-  try { j = await (await fetch(url)).json(); } catch(e) { j = await fetchViaProxy(url); }
+  try {
+    const r = await fetch(url);
+    j = await r.json();
+    if(!j.results) throw new Error();
+  } catch(e) {
+    j = await fetchViaProxy(url);
+  }
   
   const seen = new Set();
   return j.results.map(b => ({
@@ -164,20 +173,28 @@ async function fetchSPY() {
 
 async function fetchCOT() {
   const url = `${CFTC_URL}?market_and_exchange_names=E-MINI%20S%26P%20500%20-%20CHICAGO%20MERCANTILE%20EXCHANGE&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${WEEKS}`;
-  const r = await fetch(url);
-  const raw = await r.json();
+  
+  let raw;
+  try {
+    const r = await fetch(url);
+    if(!r.ok) throw new Error();
+    raw = await r.json();
+  } catch(e) {
+    // Если прямой запрос заблокирован CORS, идем через прокси
+    raw = await fetchViaProxy(url);
+  }
   
   const nf = v => parseFloat(v) || 0;
   const mk = (L,S,cL,cS) => ({ net:L-S, chg_net:cL-cS, longs:L, shorts:S });
 
   const seen = new Set();
-  return raw.map(r => {
-    const d = new Date(r.report_date_as_yyyy_mm_dd.slice(0,10) + 'T00:00:00Z');
+  const parsed = raw.map(r => {
+    const dateStr = r.report_date_as_yyyy_mm_dd.slice(0,10);
+    const d = new Date(dateStr + 'T00:00:00Z');
     d.setUTCDate(d.getUTCDate() - 1);
-    const ts = Math.floor(d.getTime() / 1000);
     return {
-      date: r.report_date_as_yyyy_mm_dd.slice(0,10),
-      time: ts,
+      date: dateStr,
+      time: Math.floor(d.getTime() / 1000),
       oi: nf(r.open_interest_all),
       dealer:   mk(nf(r.dealer_positions_long_all), nf(r.dealer_positions_short_all), nf(r.change_in_dealer_long_all), nf(r.change_in_dealer_short_all)),
       assetmgr: mk(nf(r.asset_mgr_positions_long), nf(r.asset_mgr_positions_short), nf(r.change_in_asset_mgr_long), nf(r.change_in_asset_mgr_short)),
@@ -185,7 +202,9 @@ async function fetchCOT() {
       other:    mk(nf(r.other_rept_positions_long), nf(r.other_rept_positions_short), nf(r.change_in_other_rept_long), nf(r.change_in_other_rept_short)),
       nonrept:  mk(nf(r.nonrept_positions_long_all), nf(r.nonrept_positions_short_all), nf(r.change_in_nonrept_long_all), nf(r.change_in_nonrept_short_all)),
     };
-  }).filter(b => !seen.has(b.time) && seen.add(b.time)).sort((a,b) => a.time - b.time);
+  });
+
+  return parsed.filter(b => !seen.has(b.time) && seen.add(b.time)).sort((a,b) => a.time - b.time);
 }
 
 function rebuild() {
@@ -195,24 +214,26 @@ function rebuild() {
 
   const active = [...CATS.filter(c => vis[c]), ...(vis.oi ? ['oi'] : [])];
   const aH = area.clientHeight;
-  const esH = Math.floor(aH * (active.length ? 0.6 : 1));
-  const cotH = active.length ? Math.floor((aH - esH) / active.length) : 0;
+  const esH = Math.floor(aH * (active.length ? 0.55 : 1));
+  const cotH = active.length ? Math.floor((aH - esH - (active.length * 3)) / active.length) : 0;
 
+  // Main Chart
   const esEl = mkPanel('SPY WEEKLY', '#475569', esH, 'spy');
   area.appendChild(esEl);
   const pc = LightweightCharts.createChart(esEl.querySelector('.c-inner'), {
     layout:{background:{color:'#0b0d12'}, textColor:'#475569'},
     grid:{vertLines:{color:'#161b25'}, horzLines:{color:'#161b25'}},
-    width:area.clientWidth, height:esH, timeScale:{visible:false}
+    width:area.clientWidth, height:esH, timeScale:{visible: active.length === 0}
   });
   LWC['spy'] = pc;
   const type = document.getElementById('sel-type').value;
-  SER['spy'] = type === 'candle' ? pc.addCandlestickSeries({upColor:'#22c55e', downColor:'#f43f5e', borderVisible:false, wickUpColor:'#22c55e', wickDownColor:'#f43f5e'}) : pc.addLineSeries({color:'#38bdf8'});
+  SER['spy'] = type === 'candle' ? pc.addCandlestickSeries({upColor:'#22c55e', downColor:'#f43f5e', borderVisible:false, wickUpColor:'#22c55e', wickDownColor:'#f43f5e'}) : pc.addLineSeries({color:'#38bdf8', lineWidth:2});
   SER['spy'].setData(type==='candle' ? spyBars : spyBars.map(b=>({time:b.time, value:b.close})));
 
+  // COT Charts
   active.forEach((cat, i) => {
     area.appendChild(Object.assign(document.createElement('div'), {className:'c-divider'}));
-    const pEl = mkPanel(cat==='oi'?'OI':C_LABEL[cat], C_COLOR[cat], cotH, cat);
+    const pEl = mkPanel(cat==='oi'?'OPEN INTEREST':C_LABEL[cat], C_COLOR[cat], cotH, cat);
     area.appendChild(pEl);
     const cc = LightweightCharts.createChart(pEl.querySelector('.c-inner'), {
       layout:{background:{color:'#0b0d12'}, textColor:'#475569'},
@@ -225,11 +246,13 @@ function rebuild() {
     s.setData(getMetricData(cat));
   });
 
-  Object.values(LWC).forEach(chart => {
+  // Sync
+  const charts = Object.values(LWC);
+  charts.forEach(chart => {
     chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
       if (syncing) return;
       syncing = true;
-      Object.values(LWC).forEach(c => { if(c !== chart) c.timeScale().setVisibleLogicalRange(range); });
+      charts.forEach(c => { if(c !== chart) c.timeScale().setVisibleLogicalRange(range); });
       syncing = false;
     });
   });
@@ -238,7 +261,7 @@ function rebuild() {
 function mkPanel(lbl, col, h, id) {
   const d = document.createElement('div');
   d.className = 'c-panel'; d.style.height = h+'px';
-  d.innerHTML = `<div class="c-panel-lbl" style="color:${col}">${lbl}</div><div class="c-inner" style="width:100%;height:100%"></div>`;
+  d.innerHTML = `<div class="c-panel-lbl" style="color:${col}">${lbl}</div><div class="c-inner"></div>`;
   return d;
 }
 
@@ -248,11 +271,12 @@ function getMetricData(cat) {
 }
 
 function onMetric() { rebuild(); }
-function tog(c) { vis[c]=!vis[c]; document.getElementById('ts-'+c).classList.toggle('on'); rebuild(); }
+function tog(c) { vis[c]=!vis[c]; document.getElementById('ts-'+c).classList.toggle('on'); document.getElementById('tl-'+c).classList.toggle('on'); rebuild(); }
 
 function buildTable() {
-  let h = `<table><thead><tr><th class="th-base">Date</th><th class="th-base">OI</th>`;
-  CATS.forEach(c => h += `<th class="th-base" style="color:${C_COLOR[c]}">${C_LABEL[c]} (Net)</th>`);
+  if(!cotData.length) return;
+  let h = `<table><thead><tr><th>Date</th><th>Open Interest</th>`;
+  CATS.forEach(c => h += `<th style="color:${C_COLOR[c]}">${C_LABEL[c]} (Net)</th>`);
   h += `</tr></thead><tbody>`;
   [...cotData].reverse().forEach(d => {
     h += `<tr><td class="td-date">${d.date}</td><td>${Math.round(d.oi).toLocaleString()}</td>`;
@@ -277,7 +301,10 @@ window.onload = async () => {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('hdr-status').innerHTML = `<span class="dot"></span>MARKETS ONLINE`;
     rebuild();
-  } catch(e) { document.getElementById('loading-txt').innerText = "DATA ERROR"; }
+  } catch(e) {
+    console.error(e);
+    document.getElementById('loading-txt').innerHTML = `<span style="color:red">SYNC ERROR</span>`;
+  }
 };
 
 window.onresize = () => rebuild();
