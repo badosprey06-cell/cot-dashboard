@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Euthanasia / LEDGER v4.1</title>
+    <title>Euthanasia / LEDGER v4.2</title>
     <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@800&display=swap');
@@ -39,21 +39,21 @@
         .panel-label { position: absolute; top: 10px; left: 15px; z-index: 5; font-size: 10px; font-weight: bold; color: rgba(203, 213, 225, 0.3); pointer-events: none; text-transform: uppercase; }
 
         #table-container { overflow: auto; height: 100%; background: var(--bg); }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10px; text-align: right; min-width: 2800px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10px; text-align: right; min-width: 2600px; }
         th { position: sticky; top: 0; background: #161b25; padding: 12px 8px; border: 1px solid var(--border); color: var(--accent); z-index: 20; }
-        td { padding: 8px; border: 1px solid #161b25; }
+        td { padding: 8px; border: 1px solid #161b25; white-space: nowrap; }
         .td-date { text-align: left; color: #fff; font-weight: bold; position: sticky; left: 0; background: #0f121a; z-index: 15; border-right: 2px solid var(--border); }
         
-        .val-up { color: var(--up); }
-        .val-down { color: var(--down); }
+        .val-up { color: #22c55e; }
+        .val-down { color: #f43f5e; }
         #loader { position: absolute; inset: 0; z-index: 100; background: var(--bg); display: flex; align-items: center; justify-content: center; color: var(--accent); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">EUTHANASIA <span>/</span> LEDGER v4.1</div>
-    <div style="font-size: 9px; color: #475569;" id="status">● SYNCING DATA...</div>
+    <div class="logo">EUTHANASIA <span>/</span> LEDGER v4.2</div>
+    <div style="font-size: 9px; color: #475569;" id="status">● CONNECTING...</div>
 </header>
 
 <div class="tabs">
@@ -62,7 +62,7 @@
 </div>
 
 <main>
-    <div id="loader">LOADING DATA FROM CFTC...</div>
+    <div id="loader">INITIALIZING...</div>
     
     <div id="sidebar">
         <div>
@@ -102,11 +102,11 @@
 <script>
 const POLYGON_KEY = 'M42LpG3a9LFDCvSo_0BTdVzV_iZiduL8';
 const GROUPS = {
-    dealer:   { name: 'Dealer', col: '#3b82f6', active: true },
-    assetmgr: { name: 'Asset Mgr', col: '#22c55e', active: true },
-    levfunds: { name: 'Lev Funds', col: '#a855f7', active: true },
-    other:    { name: 'Other', col: '#f97316', active: false },
-    nonrept:  { name: 'Non-Rept', col: '#94a3b8', active: false }
+    dealer:   { name: 'Dealer', col: '#3b82f6', active: true, pfx: 'dealer' },
+    assetmgr: { name: 'Asset Mgr', col: '#22c55e', active: true, pfx: 'asset_mgr' },
+    levfunds: { name: 'Lev Funds', col: '#a855f7', active: true, pfx: 'lev_money' },
+    other:    { name: 'Other', col: '#f97316', active: true, pfx: 'other_rept' },
+    nonrept:  { name: 'Non-Rept', col: '#94a3b8', active: true, pfx: 'nonrept' }
 };
 
 let cotData = [], spyData = [], showOI = false, charts = [];
@@ -117,19 +117,17 @@ async function init() {
     try {
         const [rawCot, rawSpy] = await Promise.all([fetchCOT(), fetchSPY()]);
         
-        // Синхронизация времени
+        // Sync Time: Привязываем бары SPY к ближайшему отчету COT (вторнику)
         const cotTimes = new Set(rawCot.map(d => d.time));
-        spyData = rawSpy.filter(s => {
+        spyData = rawSpy.map(s => {
             const d = new Date(s.t);
             const day = d.getUTCDay();
             const diff = (day <= 2) ? (2 - day) : (9 - day);
             d.setUTCDate(d.getUTCDate() + diff);
-            const syncTime = Math.floor(d.getTime() / 1000);
-            if (cotTimes.has(syncTime)) { s.time = syncTime; return true; }
-            return false;
-        });
+            s.time = Math.floor(d.getTime() / 1000);
+            return s;
+        }).filter(s => cotTimes.has(s.time));
 
-        // Берем только те данные COT, для которых есть цена (чтобы графики начинались в одной точке)
         const spyTimes = new Set(spyData.map(s => s.time));
         cotData = rawCot.filter(d => spyTimes.has(d.time));
 
@@ -145,38 +143,38 @@ async function fetchCOT() {
     const res = await fetch(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?market_and_exchange_names=E-MINI S%26P 500 - CHICAGO MERCANTILE EXCHANGE&$order=report_date_as_yyyy_mm_dd DESC&$limit=200`);
     const data = await res.json();
     return data.map(r => {
-        const parseG = (pfx) => {
-            const l = Number(r[`${pfx}_positions_long_all`] || r[`${pfx}_positions_long`] || 0);
-            const s = Number(r[`${pfx}_positions_short_all`] || r[`${pfx}_positions_short`] || 0);
-            const cl = Number(r[`change_in_${pfx}_long_all`] || r[`change_in_${pfx}_long`] || 0);
-            const cs = Number(r[`change_in_${pfx}_short_all`] || r[`change_in_${pfx}_short`] || 0);
-            return { net: l - s, longs: l, shorts: s, chgLongs: cl, chgShorts: cs, chgNet: cl - cs };
-        };
-        const oi = Number(r.open_interest_all);
-        const d = {
+        const oi = Number(r.open_interest_all || 0);
+        const entry = {
             time: Math.floor(new Date(r.report_date_as_yyyy_mm_dd).getTime() / 1000),
             date: r.report_date_as_yyyy_mm_dd.split('T')[0],
-            oi: oi,
-            dealer: parseG('dealer'),
-            assetmgr: parseG('asset_mgr'),
-            levfunds: parseG('lev_money'),
-            other: parseG('other_rept'),
-            nonrept: parseG('nonrept')
+            oi: oi
         };
-        // Доп. расчет % OI
-        Object.keys(GROUPS).forEach(k => d[k].pctOI = ((d[k].net / oi) * 100).toFixed(1) + '%');
-        return d;
+        Object.keys(GROUPS).forEach(k => {
+            const p = GROUPS[k].pfx;
+            const l = Number(r[`${p}_positions_long_all`] || r[`${p}_positions_long`] || 0);
+            const s = Number(r[`${p}_positions_short_all`] || r[`${p}_positions_short`] || 0);
+            const cl = Number(r[`change_in_${p}_long_all`] || r[`change_in_${p}_long`] || 0);
+            const cs = Number(r[`change_in_${p}_short_all`] || r[`change_in_${p}_short`] || 0);
+            entry[k] = {
+                longs: l, shorts: s, net: l - s,
+                chgLongs: cl, chgShorts: cs, chgNet: cl - cs,
+                pctOI: oi > 0 ? (( (l - s) / oi) * 100).toFixed(1) + '%' : '0%'
+            };
+        });
+        return entry;
     }).sort((a,b) => a.time - b.time);
 }
 
 async function fetchSPY() {
     const res = await fetch(`https://api.polygon.io/v2/aggs/ticker/SPY/range/1/week/2023-01-01/${new Date().toISOString().split('T')[0]}?apiKey=${POLYGON_KEY}`);
     const data = await res.json();
-    return data.results.map(b => ({ t: b.t, open: b.o, high: b.h, low: b.l, close: b.c }));
+    return data.results || [];
 }
 
 function rebuild() {
     const container = document.getElementById('page-chart');
+    if (!container.classList.contains('active')) return;
+    
     container.innerHTML = ''; charts = [];
     const activeGroups = Object.keys(GROUPS).filter(k => GROUPS[k].active);
     const totalPanels = activeGroups.length + 1 + (showOI?1:0);
@@ -202,7 +200,7 @@ function addPanel(title, h, type, gKey = null) {
         layout: { background: { color: '#0b0d12' }, textColor: '#475569', fontSize: 10 },
         grid: { vertLines: { color: '#161b25' }, horzLines: { color: '#161b25' } },
         width: div.clientWidth, height: h,
-        timeScale: { borderColor: '#1e2535', visible: charts.length === (Object.keys(GROUPS).filter(k => GROUPS[k].active).length + (showOI?1:0)) }
+        timeScale: { borderColor: '#1e2535' }
     });
 
     if(type === 'price') {
@@ -228,14 +226,20 @@ function buildTable() {
     Object.keys(GROUPS).forEach(() => html += `<th>Net</th><th>Chg Net</th><th>Chg Longs</th><th>Chg Shorts</th><th>Longs</th><th>Shorts</th><th>% OI Net</th>`);
     html += `</tr></thead><tbody>`;
 
+    const getHeat = (val) => {
+        if (val === 0) return '';
+        const op = Math.min(Math.abs(val) / 100000, 0.4);
+        return `background: rgba(${val > 0 ? '34,197,94' : '244,63,94'}, ${op})`;
+    };
+
     [...cotData].reverse().forEach(d => {
         html += `<tr><td class="td-date">${d.date}</td><td>${d.oi.toLocaleString()}</td>`;
         Object.keys(GROUPS).forEach(k => {
             const g = d[k];
-            html += `<td style="background:rgba(255,255,255,0.02)">${g.net.toLocaleString()}</td>`;
-            html += `<td class="${g.chgNet>=0?'val-up':'val-down'}">${(g.chgNet>0?'+':'')+g.chgNet.toLocaleString()}</td>`;
-            html += `<td class="${g.chgLongs>=0?'val-up':'val-down'}">${(g.chgLongs>0?'+':'')+g.chgLongs.toLocaleString()}</td>`;
-            html += `<td class="${g.chgShorts>=0?'val-up':'val-down'}">${(g.chgShorts>0?'+':'')+g.chgShorts.toLocaleString()}</td>`;
+            html += `<td style="${getHeat(g.net)}">${g.net.toLocaleString()}</td>`;
+            html += `<td style="${getHeat(g.chgNet)}">${(g.chgNet>0?'+':'')+g.chgNet.toLocaleString()}</td>`;
+            html += `<td style="${getHeat(g.chgLongs)}">${(g.chgLongs>0?'+':'')+g.chgLongs.toLocaleString()}</td>`;
+            html += `<td style="${getHeat(g.chgShorts)}">${(g.chgShorts>0?'+':'')+g.chgShorts.toLocaleString()}</td>`;
             html += `<td>${g.longs.toLocaleString()}</td><td>${g.shorts.toLocaleString()}</td><td>${g.pctOI}</td>`;
         });
         html += `</tr>`;
