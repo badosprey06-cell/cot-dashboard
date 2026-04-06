@@ -2,95 +2,96 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Euthanasia / LEDGER v3.8</title>
+    <title>Euthanasia / LEDGER v3.9</title>
     <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@800&display=swap');
-        :root { --bg: #0b0d12; --bg2: #10131a; --border: #1e2535; --text: #cbd5e1; --accent: #38bdf8; }
+        :root { --bg: #0b0d12; --bg2: #0f121a; --border: #1e2535; --text: #cbd5e1; --accent: #38bdf8; }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        header { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background: var(--bg2); border-bottom: 1px solid var(--border); }
-        .logo { font-family: 'Syne', sans-serif; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
-        .logo span { color: var(--accent); margin: 0 5px; }
+        header { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: var(--bg2); border-bottom: 1px solid var(--border); }
+        .logo { font-family: 'Syne', sans-serif; font-size: 14px; text-transform: uppercase; letter-spacing: 2px; }
+        .logo span { color: var(--accent); margin: 0 4px; }
 
-        .tabs { display: flex; background: var(--bg2); border-bottom: 1px solid var(--border); }
-        .tab { padding: 12px 25px; cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #475569; border-bottom: 2px solid transparent; }
-        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tabs { display: flex; background: var(--bg2); border-bottom: 1px solid var(--border); padding-left: 10px; }
+        .tab { padding: 12px 20px; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; color: #475569; border-bottom: 2px solid transparent; transition: 0.2s; }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(56, 189, 248, 0.05); }
 
-        main { flex: 1; display: flex; overflow: hidden; position: relative; }
-        #sidebar { width: 220px; background: var(--bg2); border-right: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
-        .s-lbl { font-size: 9px; color: #475569; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
-        select { width: 100%; background: #161b25; border: 1px solid var(--border); color: #fff; padding: 6px; font-size: 11px; border-radius: 4px; margin-bottom: 10px; cursor: pointer; }
+        main { flex: 1; display: flex; overflow: hidden; }
+        #sidebar { width: 240px; background: var(--bg2); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 25px; overflow-y: auto; }
+        .s-lbl { font-size: 9px; color: #475569; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 5px; letter-spacing: 1px; }
+        select { width: 100%; background: #161b25; border: 1px solid var(--border); color: #fff; padding: 8px; font-size: 11px; border-radius: 4px; margin-bottom: 10px; outline: none; }
         
-        .tog-row { display: flex; align-items: center; justify-content: space-between; font-size: 10px; padding: 6px 0; cursor: pointer; }
-        .tog-sw { width: 30px; height: 15px; background: #1e2535; border-radius: 10px; position: relative; }
-        .tog-sw.on { background: rgba(56, 189, 248, 0.3); }
-        .tog-sw::after { content: ''; position: absolute; left: 2px; top: 2px; width: 11px; height: 11px; background: #475569; border-radius: 50%; transition: .2s; }
-        .tog-sw.on::after { left: 17px; background: var(--accent); }
+        .tog-row { display: flex; align-items: center; justify-content: space-between; font-size: 10px; padding: 7px 0; cursor: pointer; }
+        .tog-sw { width: 28px; height: 14px; background: #1e2535; border-radius: 10px; position: relative; transition: 0.3s; }
+        .tog-sw.on { background: rgba(56, 189, 248, 0.4); }
+        .tog-sw::after { content: ''; position: absolute; left: 2px; top: 2px; width: 10px; height: 10px; background: #475569; border-radius: 50%; transition: 0.2s; }
+        .tog-sw.on::after { left: 16px; background: var(--accent); }
 
-        #viewport { flex: 1; position: relative; }
-        #page-chart, #page-table { position: absolute; inset: 0; display: none; overflow: hidden; }
+        #viewport { flex: 1; position: relative; background: var(--bg); }
+        #page-chart, #page-table { position: absolute; inset: 0; display: none; }
         #page-chart.active, #page-table.active { display: flex; flex-direction: column; }
 
         .panel { width: 100%; position: relative; border-bottom: 1px solid var(--border); }
-        .panel-label { position: absolute; top: 10px; left: 10px; z-index: 5; font-size: 10px; font-weight: bold; color: rgba(71, 85, 105, 0.8); pointer-events: none; text-transform: uppercase; }
+        .panel-label { position: absolute; top: 12px; left: 15px; z-index: 5; font-size: 10px; font-weight: bold; color: rgba(203, 213, 225, 0.4); pointer-events: none; text-transform: uppercase; }
 
-        #table-container { overflow: auto; padding: 20px; height: 100%; }
-        table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: right; }
-        th { position: sticky; top: 0; background: var(--bg2); padding: 12px; border: 1px solid var(--border); font-size: 9px; color: var(--accent); z-index: 10; }
-        td { padding: 10px; border: 1px solid var(--border); background: var(--bg); }
-        .td-date { text-align: left; color: var(--accent); font-weight: bold; position: sticky; left: 0; background: var(--bg2); }
+        #table-container { overflow: auto; padding: 0; height: 100%; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; text-align: right; min-width: 1200px; }
+        th { position: sticky; top: 0; background: #1a1f2b; padding: 12px 8px; border: 1px solid var(--border); color: var(--accent); font-size: 9px; z-index: 20; text-transform: uppercase; }
+        td { padding: 8px; border: 1px solid var(--border); background: var(--bg); border-color: #161b25; }
+        .td-date { text-align: left; color: #fff; font-weight: bold; position: sticky; left: 0; background: #0f121a; z-index: 10; border-right: 2px solid var(--border); }
+        .val-pos { color: #22c55e; } .val-neg { color: #f43f5e; }
 
-        #loader { position: absolute; inset: 0; z-index: 100; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; color: var(--accent); }
-        .spinner { width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        #loader { position: absolute; inset: 0; z-index: 100; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--accent); gap: 10px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">Euthanasia<span>/</span>Ledger v3.8</div>
-    <div style="font-size: 10px; color: #475569;" id="status">● CONNECTING TO CME...</div>
+    <div class="logo">Euthanasia<span>/</span>Ledger v3.9</div>
+    <div style="font-size: 9px; color: #475569;" id="status">● CONNECTING DATA...</div>
 </header>
 
 <div class="tabs">
-    <div class="tab active" onclick="switchTab('chart')">Analytics Chart</div>
-    <div class="tab" onclick="switchTab('table')">COT Data Table</div>
+    <div class="tab active" onclick="switchTab('chart')">Chart View</div>
+    <div class="tab" onclick="switchTab('table')">Data Table</div>
 </div>
 
 <main>
-    <div id="loader">
-        <div class="spinner"></div>
-        <div id="loader-msg">LOADING MARKET MICROSTRUCTURE...</div>
-    </div>
+    <div id="loader">LOADING MARKET DATA...</div>
     
     <div id="sidebar">
-        <div class="s-section">
-            <div class="s-lbl">Price Display</div>
+        <div>
+            <div class="s-lbl">Price Chart</div>
             <select id="priceType" onchange="rebuild()">
                 <option value="Candlestick">Candlestick</option>
-                <option value="Line">Baseline</option>
+                <option value="Line">Line View</option>
             </select>
         </div>
-        <div class="s-section">
-            <div class="s-lbl">Metric Mode</div>
+        <div>
+            <div class="s-lbl">COT Metric</div>
             <select id="cotMetric" onchange="rebuild()">
-                <option value="net">Net (Long - Short)</option>
+                <option value="net">Net Position</option>
                 <option value="longs">Absolute Longs</option>
                 <option value="shorts">Absolute Shorts</option>
             </select>
         </div>
-        <div class="s-section" id="toggles">
-            <div class="s-lbl">Reportable Groups</div>
+        <div id="group-toggles">
+            <div class="s-lbl">Categories</div>
+        </div>
+        <div id="extra-toggles">
+            <div class="s-lbl">Extra</div>
+            <div class="tog-row" onclick="toggleExtra('oi')">
+                <span>Open Interest</span>
+                <div id="sw-oi" class="tog-sw"></div>
+            </div>
         </div>
     </div>
 
     <div id="viewport">
         <div id="page-chart" class="active"></div>
-        <div id="page-table">
-            <div id="table-container"></div>
-        </div>
+        <div id="page-table"><div id="table-container"></div></div>
     </div>
 </main>
 
@@ -103,51 +104,54 @@ const GROUPS = {
     other:    { name: 'Other', col: '#f97316', active: false },
     nonrept:  { name: 'Non-Rept', col: '#94a3b8', active: false }
 };
-
+let showOI = false;
 let cotData = [], spyData = [], charts = [];
 
 async function init() {
     renderToggles();
     try {
-        const [cot, spy] = await Promise.all([fetchCOT(), fetchSPY()]);
-        if (!cot.length || !spy.length) throw new Error("Data empty");
-        cotData = cot; spyData = spy;
+        const [cot, spyRaw] = await Promise.all([fetchCOT(), fetchSPY()]);
+        
+        // Синхронизация времени: привязываем SPY к датам COT (вторникам)
+        spyData = spyRaw.map(s => {
+            const date = new Date(s.time * 1000);
+            const day = date.getUTCDay();
+            const diff = (day <= 2) ? (2 - day) : (9 - day);
+            date.setUTCDate(date.getUTCDate() + diff);
+            return { ...s, time: Math.floor(date.getTime() / 1000) };
+        });
+
+        cotData = cot;
         document.getElementById('loader').style.display = 'none';
-        document.getElementById('status').innerText = '● SYSTEM ONLINE';
+        document.getElementById('status').innerText = '● SYSTEM ONLINE / ES';
         rebuild();
     } catch (e) {
-        document.getElementById('loader-msg').innerHTML = `<span style="color:#f43f5e">SYNC ERROR</span><br><small>${e.message}</small>`;
+        document.getElementById('loader').innerText = 'ERROR: ' + e.message;
         console.error(e);
     }
 }
 
 async function fetchCOT() {
-    const url = `https://publicreporting.cftc.gov/resource/gpe5-46if.json?market_and_exchange_names=E-MINI S%26P 500 - CHICAGO MERCANTILE EXCHANGE&$order=report_date_as_yyyy_mm_dd DESC&$limit=150`;
+    const url = `https://publicreporting.cftc.gov/resource/gpe5-46if.json?market_and_exchange_names=E-MINI S%26P 500 - CHICAGO MERCANTILE EXCHANGE&$order=report_date_as_yyyy_mm_dd DESC&$limit=100`;
     const res = await fetch(url);
     const data = await res.json();
-    return data.map(r => {
-        const d = new Date(r.report_date_as_yyyy_mm_dd);
-        return {
-            time: Math.floor(d.getTime() / 1000),
-            date: r.report_date_as_yyyy_mm_dd.split('T')[0],
-            oi: Number(r.open_interest_all),
-            dealer:   { net: Number(r.dealer_positions_long_all) - Number(r.dealer_positions_short_all), longs: Number(r.dealer_positions_long_all), shorts: Number(r.dealer_positions_short_all) },
-            assetmgr: { net: Number(r.asset_mgr_positions_long) - Number(r.asset_mgr_positions_short), longs: Number(r.asset_mgr_positions_long), shorts: Number(r.asset_mgr_positions_short) },
-            levfunds: { net: Number(r.lev_money_positions_long) - Number(r.lev_money_positions_short), longs: Number(r.lev_money_positions_long), shorts: Number(r.lev_money_positions_short) },
-            other:    { net: Number(r.other_rept_positions_long) - Number(r.other_rept_positions_short), longs: Number(r.other_rept_positions_long), shorts: Number(r.other_rept_positions_short) },
-            nonrept:  { net: Number(r.nonrept_positions_long_all) - Number(r.nonrept_positions_short_all), longs: Number(r.nonrept_positions_long_all), shorts: Number(r.nonrept_positions_short_all) }
-        };
-    }).sort((a,b) => a.time - b.time);
+    return data.map(r => ({
+        time: Math.floor(new Date(r.report_date_as_yyyy_mm_dd).getTime() / 1000),
+        date: r.report_date_as_yyyy_mm_dd.split('T')[0],
+        oi: Number(r.open_interest_all),
+        dealer:   { net: Number(r.dealer_positions_long_all) - Number(r.dealer_positions_short_all), longs: Number(r.dealer_positions_long_all), shorts: Number(r.dealer_positions_short_all) },
+        assetmgr: { net: Number(r.asset_mgr_positions_long) - Number(r.asset_mgr_positions_short), longs: Number(r.asset_mgr_positions_long), shorts: Number(r.asset_mgr_positions_short) },
+        levfunds: { net: Number(r.lev_money_positions_long) - Number(r.lev_money_positions_short), longs: Number(r.lev_money_positions_long), shorts: Number(r.lev_money_positions_short) },
+        other:    { net: Number(r.other_rept_positions_long) - Number(r.other_rept_positions_short), longs: Number(r.other_rept_positions_long), shorts: Number(r.other_rept_positions_short) },
+        nonrept:  { net: Number(r.nonrept_positions_long_all) - Number(r.nonrept_positions_short_all), longs: Number(r.nonrept_positions_long_all), shorts: Number(r.nonrept_positions_short_all) }
+    })).sort((a,b) => a.time - b.time);
 }
 
 async function fetchSPY() {
     const url = `https://api.polygon.io/v2/aggs/ticker/SPY/range/1/week/2023-01-01/${new Date().toISOString().split('T')[0]}?apiKey=${POLYGON_KEY}`;
     const res = await fetch(url);
     const data = await res.json();
-    return data.results.map(b => ({
-        time: Math.floor(b.t / 1000),
-        open: b.o, high: b.h, low: b.l, close: b.c
-    })).sort((a,b) => a.time - b.time);
+    return data.results.map(b => ({ time: Math.floor(b.t / 1000), open: b.o, high: b.h, low: b.l, close: b.c }));
 }
 
 function rebuild() {
@@ -156,19 +160,18 @@ function rebuild() {
     charts = [];
     
     const activeKeys = Object.keys(GROUPS).filter(k => GROUPS[k].active);
-    const totalPanels = activeKeys.length + 1;
+    const totalPanels = activeKeys.length + 1 + (showOI ? 1 : 0);
     const pHeight = container.clientHeight / totalPanels;
 
-    // 1. Price Panel
-    addChartPanel('SPY / Market Price', pHeight, true);
-    // 2. COT Panels
-    activeKeys.forEach(k => addChartPanel(`${GROUPS[k].name} (${document.getElementById('cotMetric').value})`, pHeight, false, k));
+    addPanel('SPY / WEEKLY', pHeight, 'price');
+    if (showOI) addPanel('Open Interest', pHeight, 'oi');
+    activeKeys.forEach(k => addPanel(`${GROUPS[k].name} (${document.getElementById('cotMetric').value})`, pHeight, 'cot', k));
 
-    syncTimeScales();
+    syncCharts();
     buildTable();
 }
 
-function addChartPanel(title, h, isPrice, gKey = null) {
+function addPanel(title, h, type, gKey = null) {
     const div = document.createElement('div');
     div.className = 'panel';
     div.style.height = h + 'px';
@@ -179,18 +182,15 @@ function addChartPanel(title, h, isPrice, gKey = null) {
         layout: { background: { color: '#0b0d12' }, textColor: '#475569', fontSize: 10 },
         grid: { vertLines: { color: '#161b25' }, horzLines: { color: '#161b25' } },
         width: div.clientWidth, height: h,
-        timeScale: { borderColor: '#1e2535', visible: !gKey || gKey === Object.keys(GROUPS).filter(k => GROUPS[k].active).pop() }
+        timeScale: { borderColor: '#1e2535', visible: charts.length === 0 || type === 'cot' && gKey === Object.keys(GROUPS).filter(k => GROUPS[k].active).pop() }
     });
 
-    if (isPrice) {
-        const type = document.getElementById('priceType').value;
-        if (type === 'Candlestick') {
-            const s = chart.addCandlestickSeries({ upColor: '#22c55e', downColor: '#f43f5e', borderVisible: false, wickUpColor: '#22c55e', wickDownColor: '#f43f5e' });
-            s.setData(spyData);
-        } else {
-            const s = chart.addLineSeries({ color: '#38bdf8', lineWidth: 2 });
-            s.setData(spyData.map(d => ({ time: d.time, value: d.close })));
-        }
+    if (type === 'price') {
+        const s = document.getElementById('priceType').value === 'Candlestick' ? chart.addCandlestickSeries({ upColor: '#22c55e', downColor: '#f43f5e', borderVisible: false }) : chart.addLineSeries({ color: '#38bdf8' });
+        s.setData(document.getElementById('priceType').value === 'Candlestick' ? spyData : spyData.map(d => ({ time: d.time, value: d.close })));
+    } else if (type === 'oi') {
+        const s = chart.addAreaSeries({ lineColor: '#eab308', topColor: 'rgba(234, 179, 8, 0.2)', bottomColor: 'transparent' });
+        s.setData(cotData.map(d => ({ time: d.time, value: d.oi })));
     } else {
         const s = chart.addLineSeries({ color: GROUPS[gKey].col, lineWidth: 2 });
         const m = document.getElementById('cotMetric').value;
@@ -199,36 +199,51 @@ function addChartPanel(title, h, isPrice, gKey = null) {
     charts.push(chart);
 }
 
-function syncTimeScales() {
+function syncCharts() {
     charts.forEach(c => {
         c.timeScale().subscribeVisibleLogicalRangeChange(range => {
-            charts.forEach(other => { if(other !== c) other.timeScale().setVisibleLogicalRange(range); });
+            charts.forEach(o => { if(o !== c) o.timeScale().setVisibleLogicalRange(range); });
         });
     });
 }
 
 function buildTable() {
-    let html = `<table><thead><tr><th class="td-date">DATE</th><th>OPEN INT</th>`;
-    Object.keys(GROUPS).forEach(k => html += `<th style="color:${GROUPS[k].col}">${GROUPS[k].name} (NET)</th>`);
+    let html = `<table><thead><tr><th class="td-date">DATE</th><th>OI</th>`;
+    Object.keys(GROUPS).forEach(k => {
+        html += `<th style="color:${GROUPS[k].col}">${GROUPS[k].name}<br>NET</th>`;
+        html += `<th style="color:#475569">LONG</th><th style="color:#475569">SHORT</th>`;
+    });
     html += `</tr></thead><tbody>`;
     [...cotData].reverse().forEach(d => {
         html += `<tr><td class="td-date">${d.date}</td><td>${d.oi.toLocaleString()}</td>`;
-        Object.keys(GROUPS).forEach(k => html += `<td>${d[k].net.toLocaleString()}</td>`);
+        Object.keys(GROUPS).forEach(k => {
+            const n = d[k].net;
+            html += `<td class="${n>=0?'val-pos':'val-neg'}">${n.toLocaleString()}</td>`;
+            html += `<td>${d[k].longs.toLocaleString()}</td><td>${d[k].shorts.toLocaleString()}</td>`;
+        });
         html += `</tr>`;
     });
     document.getElementById('table-container').innerHTML = html + '</tbody></table>';
 }
 
 function renderToggles() {
-    const cont = document.getElementById('toggles');
-    cont.innerHTML = '<div class="s-lbl">Reportable Groups</div>';
+    const cont = document.getElementById('group-toggles');
+    cont.innerHTML = '<div class="s-lbl">Categories</div>';
     Object.keys(GROUPS).forEach(k => {
         const row = document.createElement('div');
         row.className = 'tog-row';
         row.onclick = () => { GROUPS[k].active = !GROUPS[k].active; rebuild(); renderToggles(); };
-        row.innerHTML = `<span><i style="color:${GROUPS[k].col}; font-style: normal; margin-right: 5px;">●</i> ${GROUPS[k].name}</span><div class="tog-sw ${GROUPS[k].active?'on':''}"></div>`;
+        row.innerHTML = `<span><i style="color:${GROUPS[k].col};font-style:normal">●</i> ${GROUPS[k].name}</span><div class="tog-sw ${GROUPS[k].active?'on':''}"></div>`;
         cont.appendChild(row);
     });
+}
+
+function toggleExtra(type) {
+    if (type === 'oi') {
+        showOI = !showOI;
+        document.getElementById('sw-oi').classList.toggle('on', showOI);
+        rebuild();
+    }
 }
 
 function switchTab(t) {
@@ -238,12 +253,8 @@ function switchTab(t) {
     document.getElementById('page-table').classList.toggle('active', t === 'table');
 }
 
-// Запуск после загрузки страницы
-if (document.readyState === 'complete') init();
-else window.addEventListener('load', init);
-
-// Ресайз
-window.addEventListener('resize', () => rebuild());
+window.onload = init;
+window.onresize = rebuild;
 </script>
 </body>
 </html>
