@@ -1,310 +1,246 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>COT Dashboard v6.2 - Fixed</title>
-<script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;800&display=swap');
+    <meta charset="UTF-8">
+    <title>EUTHANASIA / LEDGER V6.2</title>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0b0e11;
+            --panel-bg: #151921;
+            --text-main: #d1d4dc;
+            --accent-blue: #2962ff;
+            --border-color: #2a2e39;
+            --dealer-color: #3179f5;
+            --asset-color: #00ff88;
+            --lev-color: #bb00ff;
+            --other-color: #ff9800;
+        }
 
-:root {
-  --bg:     #0b0d12;
-  --bg2:    #0f121a;
-  --bg3:    #161b25;
-  --border: #1e2535;
-  --text:   #cbd5e1;
-  --muted:  #475569;
-  --accent: #38bdf8;
-  --green:  #22c55e;
-  --red:    #f43f5e;
-}
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-* { margin:0; padding:0; box-sizing:border-box; }
-html, body { width:100%; height:100%; background:var(--bg); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:12px; overflow:hidden; }
-#app { display:flex; flex-direction:column; width:100%; height:100%; }
+        /* Sidebar */
+        #sidebar {
+            width: 260px;
+            background: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-#header { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:9px 18px; background:var(--bg2); border-bottom:1px solid var(--border); }
-.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:15px; }
-.logo span { color:var(--accent); }
-#hdr-status { font-size:10px; color:var(--muted); }
-.dot { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--green); margin-right:5px; vertical-align:middle; animation:pulse 2s infinite; }
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+        .section-title { font-size: 10px; color: #848e9c; text-transform: uppercase; letter-spacing: 1px; }
 
-#tabs { flex:0 0 auto; display:flex; background:var(--bg2); border-bottom:1px solid var(--border); padding:0 18px; }
-.tab { padding:7px 16px; cursor:pointer; color:var(--muted); font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; border-bottom:2px solid transparent; transition:all .15s; }
-.tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+        /* Main Content */
+        #main-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-#main { flex:1 1 0; min-height:0; display:flex; overflow:hidden; }
-#sidebar { flex:0 0 190px; background:var(--bg2); border-right:1px solid var(--border); padding:12px 10px; overflow-y:auto; display:flex; flex-direction:column; gap:14px; }
-#sidebar.hidden { display:none; }
-.s-section { display:flex; flex-direction:column; gap:5px; }
-.s-lbl { font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; color:var(--muted); padding-bottom:4px; border-bottom:1px solid var(--border); }
-.ctrl-sel { background:var(--bg3); border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:10px; padding:5px 7px; border-radius:3px; width:100%; cursor:pointer; outline:none; }
+        #chart-container {
+            height: 65%;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
 
-#viewport { flex:1 1 0; min-width:0; position:relative; display:flex; }
-.page { position:absolute; inset:0; display:none; flex-direction:column; }
-.page.active { display:flex; }
+        /* Таблица с фиксированным заголовком */
+        #table-wrapper {
+            height: 35%;
+            overflow: auto;
+            background: var(--panel-bg);
+        }
 
-#loading { position:absolute; inset:0; z-index:50; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
-.spinner { width:18px; height:18px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
-@keyframes spin{to{transform:rotate(360deg)}}
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            text-align: right;
+        }
 
-.c-panel { position:relative; flex-shrink:0; overflow:hidden; }
-.c-lbl { position:absolute; top:6px; left:8px; z-index:5; font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; pointer-events:none; }
-.c-divider { flex:0 0 3px; background:var(--border); flex-shrink:0; }
+        thead {
+            position: sticky;
+            top: 0;
+            background: var(--panel-bg);
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
 
-/* Table Styles */
-.tbl-scroll { flex:1 1 0; overflow:auto; padding:14px 18px; }
-table { border-collapse:collapse; width:max-content; font-size:10.5px; }
-.th-base { background:#0a0c11; color:var(--text); font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; padding:8px 11px; border:1px solid var(--border); position:sticky; top:0; z-index:6; }
-.td-date { text-align:center; position:sticky; left:0; z-index:2; background:#0a0c11; border-right:2px solid var(--border); }
-.tog-row { display:flex; align-items:center; justify-content:space-between; padding:4px 0; cursor:pointer; }
-.tog-sw { width:26px; height:13px; background:var(--border); border-radius:7px; position:relative; }
-.tog-sw.on { background:rgba(56,189,248,.25); }
-.tog-sw.on::after { left:14px; background:var(--accent); }
-.tog-sw::after { content:''; position:absolute; left:2px; top:1.5px; width:10px; height:10px; border-radius:50%; background:var(--muted); transition:0.2s; }
-.cdot { width:7px; height:7px; border-radius:50%; margin-right:5px; display:inline-block; }
-</style>
+        th {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            color: #848e9c;
+            font-weight: 500;
+        }
+
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #1e222d;
+        }
+
+        .sticky-date {
+            position: sticky;
+            left: 0;
+            background: var(--panel-bg);
+            text-align: left;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        /* Цветовые индикаторы для групп */
+        .group-header-dealer { border-bottom: 2px solid var(--dealer-color); }
+        .group-header-asset { border-bottom: 2px solid var(--asset-color); }
+        .group-header-lev { border-bottom: 2px solid var(--lev-color); }
+
+        .neg { color: #ff5252; }
+        .pos { color: #00c853; }
+        
+        /* Градиенты для колонок изменений */
+        .gradient-cell { font-weight: 500; }
+    </style>
 </head>
 <body>
-<div id="app">
-  <div id="header">
-    <div class="logo">COT <span>/</span> DASHBOARD</div>
-    <div id="hdr-status"><span class="dot"></span>Initializing...</div>
-  </div>
 
-  <div id="tabs">
-    <div class="tab active" data-page="chart">Chart</div>
-    <div class="tab" data-page="table">Table</div>
-  </div>
-
-  <div id="main">
-    <div id="sidebar">
-      <div class="s-section">
-        <div class="s-lbl">Price Type</div>
-        <select class="ctrl-sel" id="sel-type" onchange="renderCharts()">
-          <option value="candle">Candlestick</option>
-          <option value="line">Line</option>
-        </select>
-      </div>
-      <div class="s-section">
-        <div class="s-lbl">COT Metric</div>
-        <select class="ctrl-sel" id="sel-metric" onchange="renderCharts()">
-          <option value="net">Net Position</option>
-          <option value="chgNet">Change Net</option>
-          <option value="longs">Longs</option>
-          <option value="shorts">Shorts</option>
-        </select>
-      </div>
-      <div class="s-section" id="cat-toggles"></div>
-      <div class="s-section">
-        <div class="s-lbl">Extra</div>
-        <div class="tog-row" onclick="toggleOI()">
-          <div class="tog-lbl"><div class="cdot" style="background:#fbbf24"></div>Open Interest</div>
-          <div class="tog-sw" id="ts-oi"></div>
-        </div>
-      </div>
+<div id="sidebar">
+    <div class="section-title">EUTHANASIA / LEDGER</div>
+    <div id="controls">
+        <p style="font-size: 11px;">System Online: 2026</p>
     </div>
+</div>
 
-    <div id="viewport">
-      <div id="loading">
-        <div class="spinner"></div>
-        <div class="load-txt" id="load-txt">Loading Financial Data...</div>
-      </div>
-      <div class="page active" id="page-chart"><div id="panels-wrap" style="flex:1; display:flex; flex-direction:column;"></div></div>
-      <div class="page" id="page-table"><div class="tbl-scroll"><div id="tbl"></div></div></div>
+<div id="main-container">
+    <div id="chart-container"></div>
+    <div id="table-wrapper">
+        <table id="cotTable">
+            <thead>
+                <tr>
+                    <th class="sticky-date">DATE (MON)</th>
+                    <th>OI</th>
+                    <th colspan="3" class="group-header-dealer">DEALER / INTERMEDIARY</th>
+                    <th colspan="3" class="group-header-asset">ASSET MGR / INST</th>
+                    <th colspan="3" class="group-header-lev">LEVERAGED FUNDS</th>
+                </tr>
+                <tr>
+                    <th class="sticky-date"></th>
+                    <th>Total</th>
+                    <th>Net</th><th>Long</th><th>Short</th>
+                    <th>Net</th><th>Long</th><th>Short</th>
+                    <th>Net</th><th>Long</th><th>Short</th>
+                </tr>
+            </thead>
+            <tbody id="cotTableBody">
+                </tbody>
+        </table>
     </div>
-  </div>
 </div>
 
 <script>
-const POLYGON_KEY = 'M42LpG3a9LFDCvSo_0BTdVzV_iZiduL8';
-const CFTC_URL    = 'https://publicreporting.cftc.gov/resource/gpe5-46if.json';
-const WEEKS       = 60; // Берем чуть больше для запаса
-
-const CATS = {
-  dealer:   { label:'Dealer',    color:'#3b82f6', pfxL:'dealer_positions_long_all',   pfxS:'dealer_positions_short_all',   active:true  },
-  assetmgr: { label:'Asset Mgr',  color:'#22c55e', pfxL:'asset_mgr_positions_long_all', pfxS:'asset_mgr_positions_short_all', active:true  },
-  levfunds: { label:'Lev Funds',  color:'#a855f7', pfxL:'lev_funds_positions_long_all', pfxS:'lev_funds_positions_short_all', active:true  },
-  other:    { label:'Other Rept', color:'#f97316', pfxL:'other_rept_positions_long_all',pfxS:'other_rept_positions_short_all',active:false },
-  nonrept:  { label:'Non-Rept',   color:'#94a3b8', pfxL:'nonrept_positions_long_all',  pfxS:'nonrept_positions_short_all',  active:false },
-};
-
-let cotData = [], spyData = [];
-let showOI = false;
-let lwCharts = [];
-
-// Привязка к понедельнику (для синхронизации с Polygon)
-function getMonday(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00Z');
-  const day = d.getUTCDay();
-  const diff = d.getUTCDate() - (day === 0 ? 6 : day - 1);
-  return new Date(d.setUTCDate(diff)).toISOString().slice(0, 10);
-}
-
-async function fetchData() {
-  const ltxt = document.getElementById('load-txt');
-  
-  // 1. COT Fetch
-  ltxt.textContent = 'Downloading CFTC Data...';
-  const cftcUrl = `${CFTC_URL}?market_and_exchange_names=E-MINI%20S%26P%20500%20-%20CHICAGO%20MERCANTILE%20EXCHANGE&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${WEEKS}`;
-  const cRes = await fetch(cftcUrl);
-  const cJson = await cRes.json();
-  
-  cotData = cJson.map(r => {
-    const reportDate = r.report_date_as_yyyy_mm_dd.slice(0,10);
-    const chartTime = getMonday(reportDate);
-    const res = { date: reportDate, time: chartTime, oi: parseInt(r.open_interest_all) };
-    for (let k in CATS) {
-      const L = parseInt(r[CATS[k].pfxL]) || 0;
-      const S = parseInt(r[CATS[k].pfxS]) || 0;
-      res[k] = { longs: L, shorts: S, net: L - S };
-    }
-    return res;
-  }).sort((a,b) => a.time.localeCompare(b.time));
-
-  // 2. SPY Fetch
-  const startDate = cotData[0].time;
-  const endDate = new Date().toISOString().slice(0,10);
-  ltxt.textContent = 'Syncing Price Chart...';
-  
-  const polyUrl = `https://api.polygon.io/v2/aggs/ticker/SPY/range/1/week/${startDate}/${endDate}?adjusted=true&sort=asc&limit=500&apiKey=${POLYGON_KEY}&cb=${Date.now()}`;
-  const pRes = await fetch(polyUrl);
-  const pJson = await pRes.json();
-  
-  if (pJson.results) {
-    spyData = pJson.results.map(b => ({
-      time: new Date(b.t).toISOString().slice(0,10),
-      open: b.o, high: b.h, low: b.l, close: b.c
-    })).filter(b => b.time >= startDate); // ЖЕСТКАЯ ФИЛЬТРАЦИЯ СДВИГА
-  }
-
-  document.getElementById('loading').style.display = 'none';
-  renderCharts();
-  updateStatus();
-}
-
-function updateStatus() {
-  const lastCOT = cotData[cotData.length-1]?.date;
-  const lastSPY = spyData[spyData.length-1]?.time;
-  document.getElementById('hdr-status').innerHTML = `<span class="dot"></span> COT: ${lastCOT} | SPY Week: ${lastSPY}`;
-}
-
-function renderCharts() {
-  const wrap = document.getElementById('panels-wrap');
-  lwCharts.forEach(c => c.remove());
-  lwCharts = [];
-  wrap.innerHTML = '';
-
-  const activeKeys = Object.keys(CATS).filter(k => CATS[k].active);
-  const totalPanels = 1 + (showOI ? 1 : 0) + activeKeys.length;
-  const height = wrap.clientHeight / totalPanels;
-
-  // 1. Price Panel
-  createPanel('SPY WEEKLY', '#cbd5e1', height, (chart) => {
-    const type = document.getElementById('sel-type').value;
-    const series = type === 'candle' ? chart.addCandlestickSeries() : chart.addLineSeries({color:'#38bdf8'});
-    series.setData(type === 'candle' ? spyData : spyData.map(d => ({time:d.time, value:d.close})));
-  });
-
-  // 2. OI Panel
-  if (showOI) {
-    createPanel('OPEN INTEREST', '#fbbf24', height, (chart) => {
-      const s = chart.addLineSeries({color:'#fbbf24'});
-      s.setData(cotData.map(d => ({time:d.time, value:d.oi})));
-    });
-  }
-
-  // 3. COT Panels
-  const metric = document.getElementById('sel-metric').value;
-  activeKeys.forEach(k => {
-    createPanel(`${CATS[k].label} (${metric})`, CATS[k].color, height, (chart) => {
-      chart.addLineSeries({color:'#1e2535', lineWidth:1}).setData(cotData.map(d => ({time:d.time, value:0})));
-      const s = chart.addLineSeries({color:CATS[k].color, lineWidth:2});
-      s.setData(cotData.map(d => ({time:d.time, value:d[k][metric]})));
-    });
-  });
-
-  // Sync
-  lwCharts.forEach(c => {
-    c.timeScale().subscribeVisibleLogicalRangeChange(range => {
-      lwCharts.forEach(other => { if(other !== c) other.timeScale().setVisibleLogicalRange(range); });
-    });
-  });
-}
-
-function createPanel(label, color, h, callback) {
-  const div = document.createElement('div');
-  div.className = 'c-panel';
-  div.style.height = h + 'px';
-  div.innerHTML = `<div class="c-lbl" style="color:${color}">${label}</div>`;
-  document.getElementById('panels-wrap').appendChild(div);
-  
-  const chart = LightweightCharts.createChart(div, {
-    layout: { background: { color: '#0b0d12' }, textColor: '#475569' },
-    grid: { vertLines: { color: '#161b25' }, horzLines: { color: '#161b25' } },
-    timeScale: { borderColor: '#1e2535' },
-    rightPriceScale: { borderColor: '#1e2535' },
-    width: document.getElementById('panels-wrap').clientWidth,
-    height: h
-  });
-  callback(chart);
-  lwCharts.push(chart);
-}
-
-function buildSidebar() {
-  const cont = document.getElementById('cat-toggles');
-  cont.innerHTML = '<div class="s-lbl">Categories</div>';
-  for (let k in CATS) {
-    const row = document.createElement('div');
-    row.className = 'tog-row';
-    row.innerHTML = `<div class="tog-lbl"><div class="cdot" style="background:${CATS[k].color}"></div>${CATS[k].label}</div><div class="tog-sw ${CATS[k].active?'on':''}" id="ts-${k}"></div>`;
-    row.onclick = () => {
-      CATS[k].active = !CATS[k].active;
-      document.getElementById('ts-'+k).classList.toggle('on');
-      renderCharts();
+    // 1. Конфигурация полей API (Traders in Financial Futures)
+    const FIELD_MAP = {
+        dealer: { long: 'dealer_positions_long_all', short: 'dealer_positions_short_all' },
+        assetMgr: { long: 'asset_mgr_positions_long_all', short: 'asset_mgr_positions_short_all' },
+        levFunds: { long: 'lev_money_positions_long_all', short: 'lev_money_positions_short_all' }
     };
-    cont.appendChild(row);
-  }
-}
 
-function toggleOI() {
-  showOI = !showOI;
-  document.getElementById('ts-oi').classList.toggle('on');
-  renderCharts();
-}
+    let cotData = [];
 
-// Table logic simplified
-function buildTable() {
-  let h = '<table><thead><tr><th class="th-base">Date</th><th class="th-base">OI</th>';
-  for(let k in CATS) h += `<th class="th-base" style="color:${CATS[k].color}">${CATS[k].label} Net</th>`;
-  h += '</tr></thead><tbody>';
-  [...cotData].reverse().forEach(d => {
-    h += `<tr><td class="td-date">${d.date}</td><td>${d.oi.toLocaleString()}</td>`;
-    for(let k in CATS) {
-      const val = d[k].net;
-      const color = val > 0 ? '#22c55e' : '#f43f5e';
-      h += `<style> .v-${k}-${d.date} { color: ${color} } </style>`;
-      h += `<td class="v-${k}-${d.date}">${val.toLocaleString()}</td>`;
+    // 2. Инициализация графика (базовая структура)
+    const chart = LightweightCharts.createChart(document.getElementById('chart-container'), {
+        layout: { backgroundColor: '#151921', textColor: '#d1d4dc' },
+        grid: { vertLines: { color: '#1e222d' }, horzLines: { color: '#1e222d' } },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        timeScale: { borderColor: '#2a2e39', timeVisible: true }
+    });
+
+    const lineSeries = chart.addLineSeries({ color: '#2962ff', lineWidth: 2 });
+
+    // 3. Загрузка и обработка данных
+    async function initDashboard() {
+        try {
+            // Замени URL на свой Google Apps Script
+            const response = await fetch('ТВОЙ_APPS_SCRIPT_URL');
+            const rawData = await response.json();
+            
+            cotData = processData(rawData);
+            renderTable(cotData);
+            renderChart(cotData);
+        } catch (e) {
+            console.error("Ошибка загрузки:", e);
+        }
     }
-    h += '</tr>';
-  });
-  document.getElementById('tbl').innerHTML = h + '</tbody></table>';
-}
 
-document.querySelectorAll('.tab').forEach(t => {
-  t.onclick = () => {
-    document.querySelectorAll('.tab, .page').forEach(el => el.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById('page-' + t.dataset.page).classList.add('active');
-    if(t.dataset.page === 'table') buildTable();
-    if(t.dataset.page === 'chart') setTimeout(renderCharts, 50);
-  }
-});
+    function processData(data) {
+        return data.map(row => {
+            // Логика смещения: COT выходит во вторник, но мы двигаем на понедельник для синхронизации
+            const reportDate = new Date(row.report_date_as_yyyy_mm_dd);
+            reportDate.setDate(reportDate.getDate() - 1); 
+            const syncDate = reportDate.toISOString().split('T')[0];
 
-window.onload = () => { buildSidebar(); fetchData(); };
-window.onresize = () => renderCharts();
+            return {
+                ...row,
+                syncDate: syncDate,
+                formattedDate: row.report_date_as_yyyy_mm_dd // Оригинал для таблицы
+            };
+        });
+    }
+
+    // 4. Отрисовка исправленной таблицы
+    function renderTable(data) {
+        const body = document.getElementById('cotTableBody');
+        body.innerHTML = '';
+
+        data.forEach(row => {
+            const tr = document.createElement('tr');
+            
+            let html = `
+                <td class="sticky-date">${row.formattedDate}</td>
+                <td>${formatNum(row.open_interest_all)}</td>
+            `;
+
+            // Обрабатываем каждую группу
+            Object.keys(FIELD_MAP).forEach(group => {
+                const f = FIELD_MAP[group];
+                const l = parseInt(row[f.long]) || 0;
+                const s = parseInt(row[f.short]) || 0;
+                const net = l - s;
+
+                html += `
+                    <td class="${net >= 0 ? 'pos' : 'neg'}">${formatNum(net)}</td>
+                    <td>${formatNum(l)}</td>
+                    <td>${formatNum(s)}</td>
+                `;
+            });
+
+            tr.innerHTML = html;
+            body.appendChild(tr);
+        });
+    }
+
+    function renderChart(data) {
+        const chartPoints = data.map(row => ({
+            time: row.syncDate,
+            value: parseInt(row[FIELD_MAP.dealer.long]) - parseInt(row[FIELD_MAP.dealer.short])
+        })).sort((a, b) => a.time.localeCompare(b.time));
+
+        lineSeries.setData(chartPoints);
+    }
+
+    function formatNum(n) {
+        return new Intl.NumberFormat('ru-RU').format(n);
+    }
+
+    initDashboard();
 </script>
+
 </body>
 </html>
