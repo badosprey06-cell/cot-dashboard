@@ -21,64 +21,28 @@
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
-html, body {
-  width:100%; height:100%;
-  background:var(--bg); color:var(--text);
-  font-family:'JetBrains Mono',monospace; font-size:12px;
-  overflow:hidden;
-}
+html, body { width:100%; height:100%; background:var(--bg); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:12px; overflow:hidden; }
 #app { display:flex; flex-direction:column; width:100%; height:100%; }
 
-/* HEADER */
-#header {
-  flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
-  padding:9px 18px; background:var(--bg2); border-bottom:1px solid var(--border);
-}
-.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:15px; letter-spacing:-0.3px; }
+#header { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:9px 18px; background:var(--bg2); border-bottom:1px solid var(--border); }
+.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:15px; }
 .logo span { color:var(--accent); }
 #hdr-status { font-size:10px; color:var(--muted); }
-.dot {
-  display:inline-block; width:5px; height:5px; border-radius:50%;
-  background:var(--green); margin-right:5px; vertical-align:middle;
-  animation:pulse 2s infinite;
-}
+.dot { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--green); margin-right:5px; vertical-align:middle; animation:pulse 2s infinite; }
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* TABS */
-#tabs {
-  flex:0 0 auto; display:flex;
-  background:var(--bg2); border-bottom:1px solid var(--border); padding:0 18px;
-}
-.tab {
-  padding:7px 16px; cursor:pointer; color:var(--muted);
-  font-family:'Syne',sans-serif; font-size:10px; font-weight:700;
-  letter-spacing:.8px; text-transform:uppercase;
-  border-bottom:2px solid transparent; transition:all .15s;
-}
+#tabs { flex:0 0 auto; display:flex; background:var(--bg2); border-bottom:1px solid var(--border); padding:0 18px; }
+.tab { padding:7px 16px; cursor:pointer; color:var(--muted); font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; border-bottom:2px solid transparent; transition:all .15s; }
 .tab:hover { color:var(--text); }
 .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 
-/* MAIN */
 #main { flex:1 1 0; min-height:0; display:flex; overflow:hidden; }
 
-/* SIDEBAR */
-#sidebar {
-  flex:0 0 190px; background:var(--bg2); border-right:1px solid var(--border);
-  padding:12px 10px; overflow-y:auto;
-  display:flex; flex-direction:column; gap:14px;
-}
+#sidebar { flex:0 0 190px; background:var(--bg2); border-right:1px solid var(--border); padding:12px 10px; overflow-y:auto; display:flex; flex-direction:column; gap:14px; }
 #sidebar.hidden { display:none; }
 .s-section { display:flex; flex-direction:column; gap:5px; }
-.s-lbl {
-  font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700;
-  letter-spacing:1.4px; text-transform:uppercase; color:var(--muted);
-  padding-bottom:4px; border-bottom:1px solid var(--border);
-}
-.ctrl-sel {
-  background:var(--bg3); border:1px solid var(--border);
-  color:var(--text); font-family:'JetBrains Mono',monospace; font-size:10px;
-  padding:5px 7px; border-radius:3px; width:100%; cursor:pointer; outline:none;
-}
+.s-lbl { font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; color:var(--muted); padding-bottom:4px; border-bottom:1px solid var(--border); }
+.ctrl-sel { background:var(--bg3); border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:10px; padding:5px 7px; border-radius:3px; width:100%; cursor:pointer; outline:none; }
 .ctrl-sel:focus { border-color:var(--accent); }
 .tog-row { display:flex; align-items:center; justify-content:space-between; padding:4px 0; cursor:pointer; }
 .tog-lbl { display:flex; align-items:center; gap:6px; font-size:10px; color:var(--muted); transition:color .15s; }
@@ -89,73 +53,33 @@ html, body {
 .tog-sw.on { background:rgba(56,189,248,.25); }
 .tog-sw.on::after { left:14px; background:var(--accent); }
 
-/* VIEWPORT */
 #viewport { flex:1 1 0; min-width:0; position:relative; display:flex; }
-
-/* PAGES */
 .page { position:absolute; inset:0; display:none; flex-direction:column; }
 .page.active { display:flex; }
 
-/* CHART PAGE */
 #page-chart { overflow:hidden; }
 #panels-wrap { flex:1 1 0; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
 
 .c-panel { position:relative; flex-shrink:0; overflow:hidden; }
-.c-lbl {
-  position:absolute; top:6px; left:8px; z-index:5;
-  font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700;
-  letter-spacing:.9px; text-transform:uppercase; pointer-events:none;
-}
+.c-lbl { position:absolute; top:6px; left:8px; z-index:5; font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; pointer-events:none; }
 .c-divider { flex:0 0 3px; background:var(--border); flex-shrink:0; }
 
-/* loading */
-#loading {
-  position:absolute; inset:0; z-index:50; background:var(--bg);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
-}
+#loading { position:absolute; inset:0; z-index:50; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
 .spinner { width:18px; height:18px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
 @keyframes spin{to{transform:rotate(360deg)}}
 .load-txt { font-family:'Syne',sans-serif; font-size:11px; color:var(--muted); letter-spacing:.8px; }
 
-/* TABLE PAGE */
 #page-table { overflow:hidden; }
 .tbl-scroll { flex:1 1 0; overflow:auto; padding:14px 18px; }
-
 table { border-collapse:collapse; width:max-content; font-size:10.5px; }
-
-/* sticky header — две строки */
 thead tr:first-child th { position:sticky; top:0; z-index:6; }
 thead tr:last-child  th { position:sticky; top:31px; z-index:5; }
-
-.th-base {
-  background:#0a0c11; color:var(--text);
-  font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700;
-  letter-spacing:.9px; text-transform:uppercase;
-  padding:8px 11px; text-align:center; border:1px solid var(--border);
-}
+.th-base { background:#0a0c11; color:var(--text); font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; padding:8px 11px; text-align:center; border:1px solid var(--border); }
 .th-date-sticky { position:sticky; left:0; z-index:9 !important; }
-.th-cat {
-  font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700;
-  letter-spacing:.9px; text-transform:uppercase;
-  padding:8px 10px; text-align:center;
-  border:1px solid rgba(255,255,255,.04);
-}
-.th-m {
-  font-family:'Syne',sans-serif; font-size:7.5px; font-weight:600;
-  letter-spacing:.5px; text-transform:uppercase;
-  padding:5px 8px; text-align:center;
-  border:1px solid rgba(255,255,255,.04);
-  color:rgba(255,255,255,.4); white-space:nowrap;
-}
-td {
-  padding:5px 9px; text-align:right; border:1px solid var(--border);
-  white-space:nowrap; font-variant-numeric:tabular-nums; color:var(--text);
-}
-.td-date {
-  text-align:center; position:sticky; left:0; z-index:2;
-  background:#0a0c11; color:var(--muted); font-size:10px;
-  border-right:2px solid var(--border);
-}
+.th-cat { font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; padding:8px 10px; text-align:center; border:1px solid rgba(255,255,255,.04); }
+.th-m { font-family:'Syne',sans-serif; font-size:7.5px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; padding:5px 8px; text-align:center; border:1px solid rgba(255,255,255,.04); color:rgba(255,255,255,.4); white-space:nowrap; }
+td { padding:5px 9px; text-align:right; border:1px solid var(--border); white-space:nowrap; font-variant-numeric:tabular-nums; color:var(--text); }
+.td-date { text-align:center; position:sticky; left:0; z-index:2; background:#0a0c11; color:var(--muted); font-size:10px; border-right:2px solid var(--border); }
 .td-dim { color:var(--muted); }
 tr:nth-child(even) td       { background:rgba(255,255,255,.013); }
 tr:nth-child(even) .td-date { background:#0a0c11; }
@@ -177,7 +101,6 @@ tr:hover .td-date           { background:#0a0c11 !important; }
   </div>
 
   <div id="main">
-
     <div id="sidebar">
       <div class="s-section">
         <div class="s-lbl">Price Chart</div>
@@ -197,7 +120,6 @@ tr:hover .td-date           { background:#0a0c11 !important; }
       </div>
       <div class="s-section" id="cat-toggles">
         <div class="s-lbl">Categories</div>
-        <!-- injected by JS -->
       </div>
       <div class="s-section">
         <div class="s-lbl">Extra</div>
@@ -213,16 +135,13 @@ tr:hover .td-date           { background:#0a0c11 !important; }
         <div class="spinner"></div>
         <div class="load-txt" id="load-txt">Loading...</div>
       </div>
-
       <div class="page active" id="page-chart">
         <div id="panels-wrap"></div>
       </div>
-
       <div class="page" id="page-table">
         <div class="tbl-scroll"><div id="tbl"></div></div>
       </div>
     </div>
-
   </div>
 </div>
 
@@ -234,13 +153,12 @@ const POLYGON_KEY = 'M42LpG3a9LFDCvSo_0BTdVzV_iZiduL8';
 const CFTC_URL    = 'https://publicreporting.cftc.gov/resource/gpe5-46if.json';
 const WEEKS       = 52;
 
-// Category definitions — pfx matches exact CFTC field prefixes
 const CATS = {
-  dealer:   { label:'Dealer',    color:'#3b82f6', pfx:'dealer',        pfxL:'dealer_positions_long_all',  pfxS:'dealer_positions_short_all',  pfxCL:'change_in_dealer_long_all',   pfxCS:'change_in_dealer_short_all',   pfxPL:'pct_of_oi_dealer_long_all',   pfxPS:'pct_of_oi_dealer_short_all',  active:true  },
-  assetmgr: { label:'Asset Mgr', color:'#22c55e', pfx:'assetmgr',      pfxL:'asset_mgr_positions_long',   pfxS:'asset_mgr_positions_short',   pfxCL:'change_in_asset_mgr_long',    pfxCS:'change_in_asset_mgr_short',    pfxPL:'pct_of_oi_asset_mgr_long',    pfxPS:'pct_of_oi_asset_mgr_short',   active:true  },
-  levfunds: { label:'Lev Funds', color:'#a855f7', pfx:'levfunds',      pfxL:'lev_money_positions_long',   pfxS:'lev_money_positions_short',   pfxCL:'change_in_lev_money_long',    pfxCS:'change_in_lev_money_short',    pfxPL:'pct_of_oi_lev_money_long',    pfxPS:'pct_of_oi_lev_money_short',   active:true  },
-  other:    { label:'Other Rept',color:'#f97316', pfx:'other',         pfxL:'other_rept_positions_long',  pfxS:'other_rept_positions_short',  pfxCL:'change_in_other_rept_long',   pfxCS:'change_in_other_rept_short',   pfxPL:'pct_of_oi_other_rept_long',   pfxPS:'pct_of_oi_other_rept_short',  active:false },
-  nonrept:  { label:'Non-Rept',  color:'#94a3b8', pfx:'nonrept',       pfxL:'nonrept_positions_long_all', pfxS:'nonrept_positions_short_all', pfxCL:'change_in_nonrept_long_all',  pfxCS:'change_in_nonrept_short_all',  pfxPL:'pct_of_oi_nonrept_long_all',  pfxPS:'pct_of_oi_nonrept_short_all', active:false },
+  dealer:   { label:'Dealer',     color:'#3b82f6', pfxL:'dealer_positions_long_all',  pfxS:'dealer_positions_short_all',  pfxCL:'change_in_dealer_long_all',   pfxCS:'change_in_dealer_short_all',   pfxPL:'pct_of_oi_dealer_long_all',   pfxPS:'pct_of_oi_dealer_short_all',  active:true  },
+  assetmgr: { label:'Asset Mgr',  color:'#22c55e', pfxL:'asset_mgr_positions_long',   pfxS:'asset_mgr_positions_short',   pfxCL:'change_in_asset_mgr_long',    pfxCS:'change_in_asset_mgr_short',    pfxPL:'pct_of_oi_asset_mgr_long',    pfxPS:'pct_of_oi_asset_mgr_short',   active:true  },
+  levfunds: { label:'Lev Funds',  color:'#a855f7', pfxL:'lev_money_positions_long',   pfxS:'lev_money_positions_short',   pfxCL:'change_in_lev_money_long',    pfxCS:'change_in_lev_money_short',    pfxPL:'pct_of_oi_lev_money_long',    pfxPS:'pct_of_oi_lev_money_short',   active:true  },
+  other:    { label:'Other Rept', color:'#f97316', pfxL:'other_rept_positions_long',  pfxS:'other_rept_positions_short',  pfxCL:'change_in_other_rept_long',   pfxCS:'change_in_other_rept_short',   pfxPL:'pct_of_oi_other_rept_long',   pfxPS:'pct_of_oi_other_rept_short',  active:false },
+  nonrept:  { label:'Non-Rept',   color:'#94a3b8', pfxL:'nonrept_positions_long_all', pfxS:'nonrept_positions_short_all', pfxCL:'change_in_nonrept_long_all',  pfxCS:'change_in_nonrept_short_all',  pfxPL:'pct_of_oi_nonrept_long_all',  pfxPS:'pct_of_oi_nonrept_short_all', active:false },
 };
 const CAT_THCOL = { dealer:'#1565C0', assetmgr:'#2E7D32', levfunds:'#6A1B9A', other:'#B71C1C', nonrept:'#37474F' };
 const CAT_LABEL = { dealer:'DEALER / INTERMEDIARY', assetmgr:'ASSET MANAGER / INSTITUTIONAL', levfunds:'LEVERAGED FUNDS', other:'OTHER REPORTABLE', nonrept:'NON-REPORTABLE' };
@@ -250,8 +168,35 @@ const CAT_LABEL = { dealer:'DEALER / INTERMEDIARY', assetmgr:'ASSET MANAGER / IN
 // ══════════════════════════════════════════════
 let cotData = [], spyData = [];
 let showOI  = false;
-let lwCharts = [];   // array of LW chart instances for sync
+let lwCharts = [];
 let tblBuilt = false;
+
+// ══════════════════════════════════════════════
+// DATE UTILS
+// ══════════════════════════════════════════════
+
+// Returns Monday of the week containing the given date string
+// Works regardless of what day of week the COT date falls on
+function getMondayOfWeek(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  const day = d.getUTCDay(); // 0=Sun,1=Mon,...,6=Sat
+  // days to subtract to reach Monday
+  const toMon = day === 0 ? 6 : day - 1;
+  d.setUTCDate(d.getUTCDate() - toMon);
+  return d.toISOString().slice(0, 10);
+}
+
+// ms timestamp (Polygon) → YYYY-MM-DD string UTC
+function msToDate(ms) {
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+// YYYY-MM-DD → subtract N days
+function subtractDays(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
 
 // ══════════════════════════════════════════════
 // TABS
@@ -262,28 +207,21 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-'+pg).classList.add('active');
+    document.getElementById('page-' + pg).classList.add('active');
     document.getElementById('sidebar').classList.toggle('hidden', pg === 'table');
-
-    if (pg === 'chart') {
-      // Slight delay so the container has correct dimensions before LWC renders
-      setTimeout(renderCharts, 20);
-    }
-    if (pg === 'table' && !tblBuilt && cotData.length) {
-      buildTable(); tblBuilt = true;
-    }
+    if (pg === 'chart') setTimeout(renderCharts, 20);
+    if (pg === 'table' && !tblBuilt && cotData.length) { buildTable(); tblBuilt = true; }
   };
 });
 
 // ══════════════════════════════════════════════
-// FETCH — CFTC COT
+// FETCH COT
 // ══════════════════════════════════════════════
 async function fetchCOT() {
   const fields = [
-    'report_date_as_yyyy_mm_dd','open_interest_all',
+    'report_date_as_yyyy_mm_dd', 'open_interest_all',
     ...Object.values(CATS).flatMap(c => [c.pfxL, c.pfxS, c.pfxCL, c.pfxCS, c.pfxPL, c.pfxPS])
   ].join(',');
-
   const url = `${CFTC_URL}?market_and_exchange_names=E-MINI%20S%26P%20500%20-%20CHICAGO%20MERCANTILE%20EXCHANGE&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${WEEKS}&$select=${fields}`;
   const r = await fetch(url);
   if (!r.ok) throw new Error(`CFTC HTTP ${r.status}`);
@@ -291,12 +229,14 @@ async function fetchCOT() {
 }
 
 // ══════════════════════════════════════════════
-// FETCH — Polygon SPY weekly
+// FETCH SPY — period matches COT range
 // ══════════════════════════════════════════════
-async function fetchSPY() {
-  const to   = new Date().toISOString().slice(0,10);
-  const from = new Date(Date.now() - 730*864e5).toISOString().slice(0,10);
-  const url  = `https://api.polygon.io/v2/aggs/ticker/SPY/range/1/week/${from}/${to}?adjusted=true&sort=asc&limit=200&apiKey=${POLYGON_KEY}`;
+async function fetchSPY(fromDate) {
+  // fromDate = Monday of oldest COT week, so SPY starts exactly there
+  const to  = new Date().toISOString().slice(0, 10);
+  // Go 2 extra weeks back so SPY covers full COT range
+  const from = subtractDays(fromDate, 14);
+  const url = `https://api.polygon.io/v2/aggs/ticker/SPY/range/1/week/${from}/${to}?adjusted=true&sort=asc&limit=200&apiKey=${POLYGON_KEY}`;
   const r = await fetch(url);
   if (!r.ok) throw new Error(`Polygon HTTP ${r.status}`);
   const j = await r.json();
@@ -306,30 +246,17 @@ async function fetchSPY() {
 }
 
 // ══════════════════════════════════════════════
-// PARSE
+// PARSE COT
 // ══════════════════════════════════════════════
 const nf = v => parseFloat(v) || 0;
 
-// Shift date string by N days (no external libs)
-function shiftDate(dateStr, days) {
-  const d = new Date(dateStr + 'T00:00:00Z');
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0,10);
-}
-
-// Polygon ms timestamp → YYYY-MM-DD string (UTC Monday = start of week)
-function msToDateStr(ms) {
-  return new Date(ms).toISOString().slice(0,10);
-}
-
 function parseCOT(raw) {
   return raw.map(r => {
-    const reportDate = r.report_date_as_yyyy_mm_dd.slice(0,10); // Tuesday
-    const chartDate  = shiftDate(reportDate, -1);               // → Monday, aligns with Polygon week
-
+    const reportDate = r.report_date_as_yyyy_mm_dd.slice(0, 10);
+    // Map to Monday of same week — this matches Polygon's week bar timestamp
+    const chartDate = getMondayOfWeek(reportDate);
     const oi = nf(r.open_interest_all);
     const entry = { date: reportDate, time: chartDate, oi };
-
     Object.entries(CATS).forEach(([key, cfg]) => {
       const L  = nf(r[cfg.pfxL]);
       const S  = nf(r[cfg.pfxS]);
@@ -348,13 +275,15 @@ function parseCOT(raw) {
       };
     });
     return entry;
-  }).sort((a,b) => a.time < b.time ? -1 : 1);
+  }).sort((a, b) => a.time < b.time ? -1 : 1);
 }
 
+// ══════════════════════════════════════════════
+// PARSE SPY
+// ══════════════════════════════════════════════
 function parseSPY(raw) {
-  // Polygon week bar — keep as YYYY-MM-DD string, same format as COT
   return raw.map(b => ({
-    time:  msToDateStr(b.t),
+    time:  msToDate(b.t),      // Polygon week start = Monday, YYYY-MM-DD
     open:  +b.o.toFixed(2),
     high:  +b.h.toFixed(2),
     low:   +b.l.toFixed(2),
@@ -370,7 +299,7 @@ const BASE_OPTS = {
   grid:        { vertLines:{color:'#161b25'}, horzLines:{color:'#161b25'} },
   crosshair:   { mode:1 },
   timeScale:   { borderColor:'#1e2535', timeVisible:false, rightOffset:4 },
-  rightPriceScale: { borderColor:'#1e2535', minimumWidth:68 },
+  rightPriceScale: { borderColor:'#1e2535', minimumWidth:70 },
   handleScale:  { mouseWheel:true, pinch:true },
   handleScroll: { mouseWheel:true, pressedMouseMove:true },
 };
@@ -380,13 +309,11 @@ function getMetricLabel() {
 }
 
 function activeCatKeys() {
-  return Object.entries(CATS).filter(([,c]) => c.active).map(([k]) => k);
+  return Object.entries(CATS).filter(([, c]) => c.active).map(([k]) => k);
 }
 
 function renderCharts() {
   const wrap = document.getElementById('panels-wrap');
-
-  // Destroy existing charts
   lwCharts.forEach(c => { try { c.remove(); } catch(e){} });
   lwCharts = [];
   wrap.innerHTML = '';
@@ -396,11 +323,11 @@ function renderCharts() {
   if (!aW || !aH) { setTimeout(renderCharts, 100); return; }
 
   const active = activeCatKeys();
-  const panels  = 1 + (showOI ? 1 : 0) + active.length;
-  const spyH   = Math.max(100, Math.floor(aH * 0.50));
-  const subH   = Math.max(70,  Math.floor((aH - spyH) / Math.max(panels - 1, 1)));
+  const subCount = (showOI ? 1 : 0) + active.length;
+  const spyH = Math.max(100, Math.floor(aH * (subCount ? 0.50 : 1)));
+  const subH = subCount ? Math.max(70, Math.floor((aH - spyH) / subCount)) : 0;
 
-  // ── SPY ──────────────────────────────────
+  // ── SPY ──
   addPanel(wrap, 'SPY — WEEKLY (E-mini S&P 500 proxy)', '#475569', spyH, el => {
     const chart = LightweightCharts.createChart(el, {...BASE_OPTS, width:aW, height:spyH});
     const type  = document.getElementById('sel-type').value;
@@ -409,12 +336,12 @@ function renderCharts() {
       if (spyData.length) s.setData(spyData);
     } else {
       const s = chart.addLineSeries({color:'#38bdf8', lineWidth:2});
-      if (spyData.length) s.setData(spyData.map(d=>({time:d.time, value:d.close})));
+      if (spyData.length) s.setData(spyData.map(d => ({time:d.time, value:d.close})));
     }
     return chart;
   });
 
-  // ── Open Interest ─────────────────────────
+  // ── OI ──
   if (showOI) {
     addDivider(wrap);
     addPanel(wrap, 'OPEN INTEREST', '#fbbf24', subH, el => {
@@ -425,16 +352,15 @@ function renderCharts() {
     });
   }
 
-  // ── COT panels ────────────────────────────
+  // ── COT panels ──
   const metric = document.getElementById('sel-metric').value;
   const ml     = getMetricLabel();
-
   active.forEach(key => {
     const cfg = CATS[key];
     addDivider(wrap);
     addPanel(wrap, `${CAT_LABEL[key]} — ${ml}`, cfg.color, subH, el => {
       const chart = LightweightCharts.createChart(el, {...BASE_OPTS, width:aW, height:subH});
-      // zero line
+      // zero baseline
       const z = chart.addLineSeries({color:'#1e2535', lineWidth:1, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false});
       z.setData(cotData.map(d => ({time:d.time, value:0})));
       // data
@@ -444,13 +370,11 @@ function renderCharts() {
     });
   });
 
-  // Sync all timescales bidirectionally
+  // Sync timescales
   lwCharts.forEach(src => {
     src.timeScale().subscribeVisibleLogicalRangeChange(range => {
       if (!range) return;
-      lwCharts.forEach(other => {
-        if (other !== src) other.timeScale().setVisibleLogicalRange(range);
-      });
+      lwCharts.forEach(other => { if (other !== src) other.timeScale().setVisibleLogicalRange(range); });
     });
   });
 }
@@ -459,11 +383,9 @@ function addPanel(wrap, label, color, h, buildFn) {
   const panel = document.createElement('div');
   panel.className = 'c-panel';
   panel.style.height = h + 'px';
-  panel.innerHTML = `<div class="c-lbl" style="color:${color}">${label}</div>
-    <div class="c-el" style="width:100%;height:100%"></div>`;
+  panel.innerHTML = `<div class="c-lbl" style="color:${color}">${label}</div><div class="c-el" style="width:100%;height:100%"></div>`;
   wrap.appendChild(panel);
-  const chart = buildFn(panel.querySelector('.c-el'));
-  lwCharts.push(chart);
+  lwCharts.push(buildFn(panel.querySelector('.c-el')));
 }
 
 function addDivider(wrap) {
@@ -473,7 +395,7 @@ function addDivider(wrap) {
 }
 
 // ══════════════════════════════════════════════
-// SIDEBAR TOGGLES
+// SIDEBAR
 // ══════════════════════════════════════════════
 function buildSidebar() {
   const section = document.getElementById('cat-toggles');
@@ -530,24 +452,17 @@ function buildTable() {
   let h = `<table><thead><tr>
     <th class="th-base th-date-sticky" rowspan="2">Date</th>
     <th class="th-base" rowspan="2">Open Interest</th>`;
-
   catKeys.forEach(key => {
     const col = CAT_THCOL[key];
-    h += `<th class="th-cat" colspan="${MDEF.length+1}"
-      style="background:${col}22;color:${col};border-top:2px solid ${col}55">
-      ${CAT_LABEL[key]}</th>`;
+    h += `<th class="th-cat" colspan="${MDEF.length+1}" style="background:${col}22;color:${col};border-top:2px solid ${col}55">${CAT_LABEL[key]}</th>`;
   });
   h += `</tr><tr>`;
   catKeys.forEach(key => {
     const col = CAT_THCOL[key];
-    MDEF.forEach(m => {
-      h += `<th class="th-m" style="background:${col}14">${m.label}</th>`;
-    });
+    MDEF.forEach(m => { h += `<th class="th-m" style="background:${col}14">${m.label}</th>`; });
     h += `<th class="th-m" style="background:${col}14">% OI Net</th>`;
   });
   h += `</tr></thead><tbody>`;
-
-  // newest first
   [...cotData].reverse().forEach(d => {
     h += `<tr><td class="td-date">${d.date}</td><td class="td-dim">${fmt(d.oi)}</td>`;
     catKeys.forEach(key => {
@@ -555,13 +470,12 @@ function buildTable() {
       MDEF.forEach(m => {
         const isGrad = m.key === 'chgL' || m.key === 'chgS';
         const st = isGrad ? gradStyle(c[m.key]) : '';
-        h += `<td class="${st ? '' : 'td-dim'}" style="${st}">${fmt(c[m.key])}</td>`;
+        h += `<td class="${st?'':'td-dim'}" style="${st}">${fmt(c[m.key])}</td>`;
       });
-      h += `<td class="td-dim">${c.pctNet > 0 ? '+' : ''}${c.pctNet}%</td>`;
+      h += `<td class="td-dim">${c.pctNet > 0?'+':''}${c.pctNet}%</td>`;
     });
     h += `</tr>`;
   });
-
   h += `</tbody></table>`;
   document.getElementById('tbl').innerHTML = h;
 }
@@ -571,19 +485,21 @@ function buildTable() {
 // ══════════════════════════════════════════════
 window.onload = async () => {
   buildSidebar();
-
   const ltxt = document.getElementById('load-txt');
   try {
     ltxt.textContent = 'Fetching COT data...';
     const rawCOT = await fetchCOT();
     cotData = parseCOT(rawCOT);
 
+    // Oldest COT date (already mapped to Monday)
+    const oldestCOT = cotData[0]?.time;
+
     ltxt.textContent = 'Fetching SPY (Polygon.io)...';
     try {
-      const rawSPY = await fetchSPY();
+      const rawSPY = await fetchSPY(oldestCOT);
       spyData = parseSPY(rawSPY);
     } catch(e) {
-      console.warn('SPY unavailable:', e.message);
+      console.warn('SPY fetch failed:', e.message);
       spyData = [];
     }
 
