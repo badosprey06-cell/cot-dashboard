@@ -2,11 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Euthanasia / LEDGER v6.0</title>
+    <title>Euthanasia / LEDGER v6.1</title>
     <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@800&display=swap');
-        :root { --bg: #0b0d12; --bg2: #0f121a; --border: #1e2535; --text: #cbd5e1; --accent: #38bdf8; --up: #22c55e; --down: #f43f5e; }
+        
+        :root { 
+            --bg: #0b0d12; --bg2: #0f121a; --border: #1e2535; --text: #cbd5e1; 
+            --accent: #38bdf8; --up: #22c55e; --down: #f43f5e; 
+        }
+        
         * { margin:0; padding:0; box-sizing:border-box; }
         body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
@@ -15,43 +20,55 @@
         .logo span { color: var(--accent); }
 
         .tabs { display: flex; background: var(--bg2); border-bottom: 1px solid var(--border); }
-        .tab { padding: 12px 25px; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; color: #475569; border-bottom: 2px solid transparent; }
+        .tab { padding: 12px 25px; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; color: #475569; border-bottom: 2px solid transparent; transition: 0.2s; }
+        .tab:hover { color: #fff; }
         .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(56, 189, 248, 0.05); }
 
         main { flex: 1; display: flex; overflow: hidden; position: relative; }
-        #sidebar { width: 260px; background: var(--bg2); border-right: 1px solid var(--border); padding: 20px; overflow-y: auto; }
+        
+        #sidebar { width: 260px; background: var(--bg2); border-right: 1px solid var(--border); padding: 20px; overflow-y: auto; flex-shrink: 0; }
         #sidebar.hidden { display: none; }
         
         .s-lbl { font-size: 9px; color: #475569; font-weight: 800; text-transform: uppercase; margin: 15px 0 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
-        select { width: 100%; background: #161b25; border: 1px solid var(--border); color: #fff; padding: 8px; font-size: 11px; border-radius: 4px; outline: none; }
+        select { width: 100%; background: #161b25; border: 1px solid var(--border); color: #fff; padding: 8px; font-size: 11px; border-radius: 4px; outline: none; margin-bottom: 10px; cursor: pointer; }
         
-        .tog-row { display: flex; align-items: center; justify-content: space-between; font-size: 10px; padding: 6px 0; cursor: pointer; }
+        .tog-row { display: flex; align-items: center; justify-content: space-between; font-size: 10px; padding: 6px 0; cursor: pointer; user-select: none; }
+        .tog-row:hover { color: #fff; }
         .tog-sw { width: 28px; height: 14px; background: #1e2535; border-radius: 10px; position: relative; }
         .tog-sw.on { background: rgba(56, 189, 248, 0.4); }
         .tog-sw::after { content: ''; position: absolute; left: 2px; top: 2px; width: 10px; height: 10px; background: #475569; border-radius: 50%; transition: 0.2s; }
         .tog-sw.on::after { left: 16px; background: var(--accent); }
 
-        #viewport { flex: 1; position: relative; }
-        .page { position: absolute; inset: 0; display: none; flex-direction: column; background: var(--bg); }
-        .page.active { display: flex; }
+        #viewport { flex: 1; position: relative; overflow: hidden; }
+        
+        /* Табы позиционируются абсолютно, чтобы не ломать DOM при переключении */
+        .page { position: absolute; inset: 0; opacity: 0; pointer-events: none; transition: opacity 0.2s; display: flex; flex-direction: column; background: var(--bg); }
+        .page.active { opacity: 1; pointer-events: auto; z-index: 10; }
 
-        .panel { width: 100%; position: relative; border-bottom: 1px solid var(--border); }
-        .p-lbl { position: absolute; top: 10px; left: 15px; z-index: 5; font-size: 10px; font-weight: bold; color: rgba(203, 213, 225, 0.3); pointer-events: none; text-transform: uppercase; }
+        .panel { width: 100%; position: relative; border-bottom: 1px solid var(--border); flex: 1; min-height: 100px; }
+        .p-lbl { position: absolute; top: 10px; left: 15px; z-index: 5; font-size: 10px; font-weight: bold; color: rgba(203, 213, 225, 0.4); pointer-events: none; text-transform: uppercase; }
 
         #table-wrapper { overflow: auto; height: 100%; width: 100%; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 10px; text-align: right; min-width: max-content; }
-        th { position: sticky; top: 0; background: #161b25; padding: 12px 8px; border: 1px solid var(--border); color: var(--accent); z-index: 20; }
-        td { padding: 8px; border-bottom: 1px solid #161b25; border-right: 1px solid #161b25; white-space: nowrap; }
-        .sticky-col { position: sticky; left: 0; background: #0f121a; z-index: 10; border-right: 2px solid var(--border); font-weight: bold; text-align: left; }
         
+        /* Настоящие Sticky заголовки */
+        thead th { position: sticky; top: 0; background: #161b25; padding: 12px 8px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); z-index: 20; box-shadow: 0 1px 0 var(--border); }
+        /* Sticky колонка с датой */
+        .sticky-col { position: sticky; left: 0; background: #0f121a; z-index: 10; border-right: 2px solid var(--border); font-weight: bold; text-align: left; box-shadow: 1px 0 0 var(--border); }
+        thead th.sticky-col { z-index: 30; background: #161b25; } 
+        
+        td { padding: 8px; border-bottom: 1px solid #161b25; border-right: 1px solid #161b25; white-space: nowrap; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        tr:hover td.sticky-col { background: #161b25; }
+
         #loader { position: absolute; inset: 0; z-index: 100; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">EUTHANASIA <span>/</span> LEDGER v6.0</div>
-    <div id="status" style="font-size: 9px; color: #475569;">● CONNECTING...</div>
+    <div class="logo">EUTHANASIA <span>/</span> LEDGER v6.1</div>
+    <div id="status" style="font-size: 9px; color: #475569;">● FETCHING DATA...</div>
 </header>
 
 <div class="tabs">
@@ -60,7 +77,7 @@
 </div>
 
 <main>
-    <div id="loader"><span style="color:var(--accent); font-weight:bold;">LOADING CFTC & SPY DATA...</span></div>
+    <div id="loader"><span style="color:var(--accent); font-weight:bold; letter-spacing: 1px;">SYNCING CFTC & POLYGON...</span></div>
     
     <div id="sidebar">
         <div class="s-lbl">Price View</div>
@@ -71,17 +88,16 @@
 
         <div class="s-lbl">COT Metric</div>
         <select id="metric" onchange="renderCharts()">
-            <option value="net">Net Position</option>
-            <option value="chgNet">Change Net</option>
-            <option value="longs">Longs</option>
-            <option value="shorts">Shorts</option>
+            <option value="net">Net (Long - Short)</option>
+            <option value="longs">Absolute Longs</option>
+            <option value="shorts">Absolute Shorts</option>
         </select>
 
         <div id="cat-list"></div>
 
-        <div class="s-lbl">Options</div>
+        <div class="s-lbl">Extra</div>
         <div class="tog-row" onclick="toggleOI()">
-            <span>Show Open Interest</span>
+            <span><i style="color:#eab308;font-style:normal">●</i> Open Interest</span>
             <div id="oi-sw" class="tog-sw"></div>
         </div>
     </div>
@@ -96,115 +112,121 @@
 const CONFIG = {
     POLYGON_API: 'M42LpG3a9LFDCvSo_0BTdVzV_iZiduL8',
     GROUPS: {
-        dealer:   { name: 'Dealer', col: '#3b82f6', active: true, pfx: 'dealer' },
-        assetmgr: { name: 'Asset Mgr', col: '#22c55e', active: true, pfx: 'asset_mgr' },
-        levfunds: { name: 'Lev Funds', col: '#a855f7', active: true, pfx: 'lev_money' },
-        other:    { name: 'Other', col: '#f97316', active: false, pfx: 'other_rept' },
-        nonrept:  { name: 'Non-Rept', col: '#94a3b8', active: false, pfx: 'nonrept' }
+        dealer:   { name: 'Dealer', col: '#3b82f6', active: true, pfx: ['dealer'] },
+        assetmgr: { name: 'Asset Mgr', col: '#22c55e', active: true, pfx: ['asset_mgr'] },
+        levfunds: { name: 'Lev Funds', col: '#a855f7', active: true, pfx: ['lev_money'] },
+        other:    { name: 'Other', col: '#f97316', active: false, pfx: ['other_rept'] },
+        nonrept:  { name: 'Non-Rept', col: '#94a3b8', active: false, pfx: ['nonrept', 'non_reportable'] }
     }
 };
 
 let cotData = [], spyData = [], showOI = false, charts = [];
+
+// Безопасное извлечение данных (фикс пустых колонок по плану Клода)
+const getField = (row, prefixes, suffix) => {
+    for(let pfx of prefixes) {
+        let val = row[`${pfx}_${suffix}`];
+        if(val !== undefined) return Number(val);
+        val = row[`change_in_${pfx}_${suffix.replace('positions_', '')}`]; // Для change полей
+        if(val !== undefined) return Number(val);
+    }
+    return 0;
+};
 
 async function start() {
     setupUI();
     try {
         const [rawCot, rawSpy] = await Promise.all([fetchCOT(), fetchSPY()]);
         
-        // 1. COT Data (Чистая, без фильтрации, чтобы таблица точно работала)
-        cotData = rawCot;
-
-        // 2. SPY Data (Приводим дату к формату YYYY-MM-DD вторника для синхрона с графиком COT)
+        // 1. Полигон отдает timestamp. Превращаем в YYYY-MM-DD
         spyData = rawSpy.map(s => {
             const d = new Date(s.t);
-            const day = d.getUTCDay();
-            const diff = (day <= 2) ? (2 - day) : (9 - day);
-            d.setUTCDate(d.getUTCDate() + diff);
-            return {
-                time: d.toISOString().split('T')[0], // Формат строки для Lightweight Charts
-                open: s.o, high: s.h, low: s.l, close: s.c
-            };
+            return { time: d.toISOString().split('T')[0], open: s.o, high: s.h, low: s.l, close: s.c };
         });
 
+        // 2. COT отдает вторник (YYYY-MM-DD). Сдвигаем на понедельник строковой операцией
+        cotData = rawCot.map(row => {
+            const d = new Date(row.report_date_as_yyyy_mm_dd);
+            d.setUTCDate(d.getUTCDate() - 1); // Вторник -> Понедельник
+            const shiftedDate = d.toISOString().split('T')[0];
+            
+            const oi = Number(row.open_interest_all || 0);
+            const entry = { date: row.report_date_as_yyyy_mm_dd.split('T')[0], time: shiftedDate, oi: oi };
+            
+            Object.entries(CONFIG.GROUPS).forEach(([key, cfg]) => {
+                const l = getField(row, cfg.pfx, 'positions_long_all');
+                const s = getField(row, cfg.pfx, 'positions_short_all');
+                const cl = getField(row, cfg.pfx, 'long_all'); // change_in...
+                const cs = getField(row, cfg.pfx, 'short_all'); // change_in...
+                
+                entry[key] = {
+                    longs: l, shorts: s, net: l - s,
+                    chgLongs: cl, chgShorts: cs, chgNet: cl - cs,
+                    pctOI: oi > 0 ? (((l - s) / oi) * 100).toFixed(1) + '%' : '0%'
+                };
+            });
+            return entry;
+        }).sort((a, b) => new Date(a.time) - new Date(b.time));
+
         document.getElementById('loader').style.display = 'none';
-        document.getElementById('status').innerText = '● SYSTEM ONLINE';
+        document.getElementById('status').innerHTML = '<span style="color:#22c55e">● SYSTEM ONLINE</span>';
         
-        // Рендерим сразу оба компонента
         buildTable(); 
         renderCharts();
     } catch (e) {
-        document.getElementById('loader').innerHTML = `<span style="color:red">ERROR: ${e.message}</span>`;
+        document.getElementById('loader').innerHTML = `<span style="color:var(--down)">ERROR: ${e.message}</span>`;
     }
 }
 
 async function fetchCOT() {
     const r = await fetch(`https://publicreporting.cftc.gov/resource/gpe5-46if.json?market_and_exchange_names=E-MINI S%26P 500 - CHICAGO MERCANTILE EXCHANGE&$limit=200&$order=report_date_as_yyyy_mm_dd DESC`);
-    const data = await r.json();
-    return data.map(row => {
-        const dateStr = row.report_date_as_yyyy_mm_dd.split('T')[0];
-        const oi = Number(row.open_interest_all || 0);
-        const entry = { date: dateStr, time: dateStr, oi: oi };
-        
-        Object.entries(CONFIG.GROUPS).forEach(([key, cfg]) => {
-            const l = Number(row[`${cfg.pfx}_positions_long_all`] || 0);
-            const s = Number(row[`${cfg.pfx}_positions_short_all`] || 0);
-            const cl = Number(row[`change_in_${cfg.pfx}_long_all`] || 0);
-            const cs = Number(row[`change_in_${cfg.pfx}_short_all`] || 0);
-            entry[key] = {
-                longs: l, shorts: s, net: l - s,
-                chgLongs: cl, chgShorts: cs, chgNet: cl - cs,
-                pctOI: oi > 0 ? (( (l - s) / oi) * 100).toFixed(1) + '%' : '0%'
-            };
-        });
-        return entry;
-    }).sort((a, b) => new Date(a.date) - new Date(b.date)); // Сортировка от старых к новым для графиков
+    if(!r.ok) throw new Error("CFTC API ERROR");
+    return await r.json();
 }
 
 async function fetchSPY() {
     const r = await fetch(`https://api.polygon.io/v2/aggs/ticker/SPY/range/1/week/2022-01-01/${new Date().toISOString().split('T')[0]}?apiKey=${CONFIG.POLYGON_API}`);
+    if(!r.ok) throw new Error("POLYGON API ERROR (Check CORS or Limit)");
     const d = await r.json();
     return d.results || [];
 }
 
 function buildTable() {
     const wrap = document.getElementById('table-wrapper');
-    let html = `<table><thead><tr><th class="sticky-col">DATE</th><th>OPEN INT</th>`;
+    let html = `<table><thead><tr><th class="sticky-col">DATE (TUE)</th><th>OPEN INT</th>`;
     
-    // Шапка: Группы
     Object.values(CONFIG.GROUPS).forEach(g => {
-        html += `<th colspan="7" style="border-bottom: 2px solid ${g.col}; color: ${g.col}">${g.name}</th>`;
+        html += `<th colspan="7" style="border-bottom: 2px solid ${g.col}; color: ${g.col}; text-align:center;">${g.name}</th>`;
     });
     
-    // Шапка: Подкатегории
     html += `</tr><tr><th class="sticky-col"></th><th></th>`;
     Object.values(CONFIG.GROUPS).forEach(() => {
-        html += `<th>Net</th><th>Chg Net</th><th>Chg Longs</th><th>Chg Shorts</th><th>Longs</th><th>Shorts</th><th>% OI</th>`;
+        html += `<th>Net</th><th>Chg Net</th><th>Chg Longs</th><th>Chg Shorts</th><th>Longs</th><th>Shorts</th><th>% OI Net</th>`;
     });
     html += `</tr></thead><tbody>`;
 
-    // Функция для Heatmap
+    // Градиент только для колонок изменений (как просил Клод)
     const getBg = (v) => {
         if (!v || v === 0) return '';
-        const op = Math.min(Math.abs(v) / 100000, 0.4); // Чем ближе к 100k, тем ярче
+        const op = Math.min(Math.abs(v) / 150000, 0.3); 
         return `background-color: rgba(${v > 0 ? '34, 197, 94' : '244, 63, 94'}, ${op});`;
     };
 
-    const formatNum = (num, addPlus) => {
+    const formatNum = (num, isChg) => {
         if(num === 0) return '0';
-        const str = num.toLocaleString();
-        return (addPlus && num > 0) ? '+' + str : str;
+        return (isChg && num > 0 ? '+' : '') + num.toLocaleString('ru-RU');
     };
 
-    // Строки: переворачиваем массив, чтобы новые даты были сверху (как в Google Таблицах)
     [...cotData].reverse().forEach(row => {
-        html += `<tr><td class="sticky-col">${row.date}</td><td>${row.oi.toLocaleString()}</td>`;
+        html += `<tr><td class="sticky-col">${row.date}</td><td>${row.oi.toLocaleString('ru-RU')}</td>`;
         Object.keys(CONFIG.GROUPS).forEach(k => {
             const g = row[k];
-            html += `<td style="${getBg(g.net)}">${formatNum(g.net, false)}</td>`;
+            // Градиент применяем только к Chg Net, Chg Longs, Chg Shorts. (Net без градиента для чистоты, или можно добавить).
+            html += `<td>${formatNum(g.net, false)}</td>`;
             html += `<td style="${getBg(g.chgNet)}">${formatNum(g.chgNet, true)}</td>`;
             html += `<td style="${getBg(g.chgLongs)}">${formatNum(g.chgLongs, true)}</td>`;
             html += `<td style="${getBg(g.chgShorts)}">${formatNum(g.chgShorts, true)}</td>`;
-            html += `<td>${formatNum(g.longs, false)}</td><td>${formatNum(g.shorts, false)}</td><td>${g.pctOI}</td>`;
+            html += `<td>${formatNum(g.longs, false)}</td><td>${formatNum(g.shorts, false)}</td><td style="color:#94a3b8">${g.pctOI}</td>`;
         });
         html += `</tr>`;
     });
@@ -214,27 +236,30 @@ function buildTable() {
 
 function renderCharts() {
     const container = document.getElementById('page-chart');
-    // Если вкладка графиков не активна, не рендерим, чтобы избежать багов с размерами
-    if (!container.classList.contains('active')) return;
-    
     container.innerHTML = ''; 
     charts = [];
     
     const activeKeys = Object.keys(CONFIG.GROUPS).filter(k => CONFIG.GROUPS[k].active);
     const count = activeKeys.length + 1 + (showOI ? 1 : 0);
-    const h = container.clientHeight / count;
+    
+    // Динамический расчет высоты, чтобы панели делили экран поровну
+    const h = Math.max(container.clientHeight / count, 150);
 
-    // 1. SPY
-    createPanel('SPY / WEEKLY PRICE', h, 'price');
-    // 2. Open Interest
+    createPanel('SPY / MARKET PRICE', h, 'price');
     if(showOI) createPanel('Open Interest', h, 'oi');
-    // 3. COT Groups
-    activeKeys.forEach(k => createPanel(`${CONFIG.GROUPS[k].name} / ${document.getElementById('metric').value.toUpperCase()}`, h, 'cot', k));
+    
+    activeKeys.forEach(k => createPanel(`${CONFIG.GROUPS[k].name} / ${document.getElementById('metric').options[document.getElementById('metric').selectedIndex].text}`, h, 'cot', k));
 
-    // Синхронизация скролла
-    charts.forEach(c => c.timeScale().subscribeVisibleLogicalRangeChange(range => {
-        charts.forEach(other => { if(other !== c) other.timeScale().setVisibleLogicalRange(range); });
-    }));
+    // Синхронизация крестика и скролла между всеми графиками
+    charts.forEach(c => {
+        c.timeScale().subscribeVisibleLogicalRangeChange(range => {
+            charts.forEach(other => { if(other !== c) other.timeScale().setVisibleLogicalRange(range); });
+        });
+        c.subscribeCrosshairMove(param => {
+            if(!param.time) return;
+            charts.forEach(other => { if(other !== c) other.setCrosshairPosition(param.logical, param.time, undefined); });
+        });
+    });
 }
 
 function createPanel(title, h, type, key = null) {
@@ -244,26 +269,30 @@ function createPanel(title, h, type, key = null) {
     document.getElementById('page-chart').appendChild(div);
 
     const chart = LightweightCharts.createChart(div, {
-        layout: { background: { color: '#0b0d12' }, textColor: '#475569', fontSize: 10 },
+        layout: { background: { color: 'transparent' }, textColor: '#475569', fontSize: 10 },
         grid: { vertLines: { color: '#161b25' }, horzLines: { color: '#161b25' } },
         width: div.clientWidth, height: h,
-        timeScale: { borderColor: '#1e2535' }
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        timeScale: { borderColor: '#1e2535', rightOffset: 5 }
     });
 
     if(type === 'price') {
         const isCandle = document.getElementById('priceType').value === 'Candlestick';
         const s = isCandle 
-            ? chart.addCandlestickSeries({ upColor: '#22c55e', downColor: '#f43f5e', borderVisible: false }) 
+            ? chart.addCandlestickSeries({ upColor: '#22c55e', downColor: '#f43f5e', borderVisible: false, wickUpColor: '#22c55e', wickDownColor: '#f43f5e' }) 
             : chart.addLineSeries({ color: '#38bdf8', lineWidth: 2 });
         s.setData(isCandle ? spyData : spyData.map(d => ({ time: d.time, value: d.close })));
     } else if(type === 'oi') {
-        const s = chart.addAreaSeries({ lineColor: '#eab308', topColor: 'rgba(234, 179, 8, 0.2)', bottomColor: 'transparent' });
+        const s = chart.addAreaSeries({ lineColor: '#eab308', topColor: 'rgba(234, 179, 8, 0.2)', bottomColor: 'transparent', lineWidth: 2 });
         s.setData(cotData.map(d => ({ time: d.time, value: d.oi })));
     } else {
         const s = chart.addLineSeries({ color: CONFIG.GROUPS[key].col, lineWidth: 2 });
         const m = document.getElementById('metric').value;
         s.setData(cotData.map(d => ({ time: d.time, value: d[key][m] })));
     }
+    
+    // Подгоняем масштаб данных
+    chart.timeScale().fitContent();
     charts.push(chart);
 }
 
@@ -278,14 +307,12 @@ function setupUI() {
             document.getElementById(targetId).classList.add('active');
             document.getElementById('sidebar').classList.toggle('hidden', t.dataset.target === 'table');
             
-            // Рендерим график только если перешли на него (иначе Lightweight Charts ломает ширину 0px)
-            if(t.dataset.target === 'chart') {
-                setTimeout(renderCharts, 10); // Минимальная задержка для обновления DOM
-            }
+            // Если перешли на графики — форсируем ресайз/ререндер, чтобы они заняли правильную ширину
+            if(t.dataset.target === 'chart') setTimeout(renderCharts, 10);
         };
     });
 
-    // Тогглы в сайдбаре
+    // Генерация сайдбара
     const list = document.getElementById('cat-list');
     list.innerHTML = '<div class="s-lbl">Reportable Groups</div>';
     Object.entries(CONFIG.GROUPS).forEach(([key, cfg]) => {
@@ -304,7 +331,7 @@ function toggleOI() {
 }
 
 window.onload = start;
-window.onresize = renderCharts;
+window.onresize = () => { if(document.getElementById('page-chart').classList.contains('active')) renderCharts(); };
 </script>
 </body>
 </html>
