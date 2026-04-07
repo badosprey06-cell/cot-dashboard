@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>COT Dashboard</title>
+<title>COT Dashboard v6.2 - Fixed</title>
 <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;800&display=swap');
@@ -33,77 +33,56 @@ html, body { width:100%; height:100%; background:var(--bg); color:var(--text); f
 
 #tabs { flex:0 0 auto; display:flex; background:var(--bg2); border-bottom:1px solid var(--border); padding:0 18px; }
 .tab { padding:7px 16px; cursor:pointer; color:var(--muted); font-family:'Syne',sans-serif; font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; border-bottom:2px solid transparent; transition:all .15s; }
-.tab:hover { color:var(--text); }
 .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
 
 #main { flex:1 1 0; min-height:0; display:flex; overflow:hidden; }
-
 #sidebar { flex:0 0 190px; background:var(--bg2); border-right:1px solid var(--border); padding:12px 10px; overflow-y:auto; display:flex; flex-direction:column; gap:14px; }
 #sidebar.hidden { display:none; }
 .s-section { display:flex; flex-direction:column; gap:5px; }
 .s-lbl { font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase; color:var(--muted); padding-bottom:4px; border-bottom:1px solid var(--border); }
 .ctrl-sel { background:var(--bg3); border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:10px; padding:5px 7px; border-radius:3px; width:100%; cursor:pointer; outline:none; }
-.ctrl-sel:focus { border-color:var(--accent); }
-.tog-row { display:flex; align-items:center; justify-content:space-between; padding:4px 0; cursor:pointer; }
-.tog-lbl { display:flex; align-items:center; gap:6px; font-size:10px; color:var(--muted); transition:color .15s; }
-.tog-lbl.on { color:var(--text); }
-.cdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-.tog-sw { width:26px; height:13px; background:var(--border); border-radius:7px; position:relative; transition:background .2s; flex-shrink:0; }
-.tog-sw::after { content:''; position:absolute; left:2px; top:1.5px; width:10px; height:10px; border-radius:50%; background:var(--muted); transition:all .2s; }
-.tog-sw.on { background:rgba(56,189,248,.25); }
-.tog-sw.on::after { left:14px; background:var(--accent); }
 
 #viewport { flex:1 1 0; min-width:0; position:relative; display:flex; }
 .page { position:absolute; inset:0; display:none; flex-direction:column; }
 .page.active { display:flex; }
 
-#page-chart { overflow:hidden; }
-#panels-wrap { flex:1 1 0; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+#loading { position:absolute; inset:0; z-index:50; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
+.spinner { width:18px; height:18px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin{to{transform:rotate(360deg)}}
 
 .c-panel { position:relative; flex-shrink:0; overflow:hidden; }
 .c-lbl { position:absolute; top:6px; left:8px; z-index:5; font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; pointer-events:none; }
 .c-divider { flex:0 0 3px; background:var(--border); flex-shrink:0; }
 
-#loading { position:absolute; inset:0; z-index:50; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
-.spinner { width:18px; height:18px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
-@keyframes spin{to{transform:rotate(360deg)}}
-.load-txt { font-family:'Syne',sans-serif; font-size:11px; color:var(--muted); letter-spacing:.8px; }
-
-#page-table { overflow:hidden; }
+/* Table Styles */
 .tbl-scroll { flex:1 1 0; overflow:auto; padding:14px 18px; }
 table { border-collapse:collapse; width:max-content; font-size:10.5px; }
-thead tr:first-child th { position:sticky; top:0; z-index:6; }
-thead tr:last-child  th { position:sticky; top:31px; z-index:5; }
-.th-base { background:#0a0c11; color:var(--text); font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; padding:8px 11px; text-align:center; border:1px solid var(--border); }
-.th-date-sticky { position:sticky; left:0; z-index:9 !important; }
-.th-cat { font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; padding:8px 10px; text-align:center; border:1px solid rgba(255,255,255,.04); }
-.th-m { font-family:'Syne',sans-serif; font-size:7.5px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; padding:5px 8px; text-align:center; border:1px solid rgba(255,255,255,.04); color:rgba(255,255,255,.4); white-space:nowrap; }
-td { padding:5px 9px; text-align:right; border:1px solid var(--border); white-space:nowrap; font-variant-numeric:tabular-nums; color:var(--text); }
-.td-date { text-align:center; position:sticky; left:0; z-index:2; background:#0a0c11; color:var(--muted); font-size:10px; border-right:2px solid var(--border); }
-.td-dim { color:var(--muted); }
-tr:nth-child(even) td       { background:rgba(255,255,255,.013); }
-tr:nth-child(even) .td-date { background:#0a0c11; }
-tr:hover td                 { background:rgba(56,189,248,.04) !important; }
-tr:hover .td-date           { background:#0a0c11 !important; }
+.th-base { background:#0a0c11; color:var(--text); font-family:'Syne',sans-serif; font-size:8.5px; font-weight:700; padding:8px 11px; border:1px solid var(--border); position:sticky; top:0; z-index:6; }
+.td-date { text-align:center; position:sticky; left:0; z-index:2; background:#0a0c11; border-right:2px solid var(--border); }
+.tog-row { display:flex; align-items:center; justify-content:space-between; padding:4px 0; cursor:pointer; }
+.tog-sw { width:26px; height:13px; background:var(--border); border-radius:7px; position:relative; }
+.tog-sw.on { background:rgba(56,189,248,.25); }
+.tog-sw.on::after { left:14px; background:var(--accent); }
+.tog-sw::after { content:''; position:absolute; left:2px; top:1.5px; width:10px; height:10px; border-radius:50%; background:var(--muted); transition:0.2s; }
+.cdot { width:7px; height:7px; border-radius:50%; margin-right:5px; display:inline-block; }
 </style>
 </head>
 <body>
 <div id="app">
-
   <div id="header">
-    <div class="logo">COT <span>/</span></div>
-    <div id="hdr-status"><span class="dot"></span>Loading...</div>
+    <div class="logo">COT <span>/</span> DASHBOARD</div>
+    <div id="hdr-status"><span class="dot"></span>Initializing...</div>
   </div>
 
   <div id="tabs">
     <div class="tab active" data-page="chart">Chart</div>
-    <div class="tab"        data-page="table">Table</div>
+    <div class="tab" data-page="table">Table</div>
   </div>
 
   <div id="main">
     <div id="sidebar">
       <div class="s-section">
-        <div class="s-lbl">Price Chart</div>
+        <div class="s-lbl">Price Type</div>
         <select class="ctrl-sel" id="sel-type" onchange="renderCharts()">
           <option value="candle">Candlestick</option>
           <option value="line">Line</option>
@@ -112,20 +91,18 @@ tr:hover .td-date           { background:#0a0c11 !important; }
       <div class="s-section">
         <div class="s-lbl">COT Metric</div>
         <select class="ctrl-sel" id="sel-metric" onchange="renderCharts()">
-          <option value="net">Net (L − S)</option>
-          <option value="chgNet">Chg Net</option>
+          <option value="net">Net Position</option>
+          <option value="chgNet">Change Net</option>
           <option value="longs">Longs</option>
           <option value="shorts">Shorts</option>
         </select>
       </div>
-      <div class="s-section" id="cat-toggles">
-        <div class="s-lbl">Categories</div>
-      </div>
+      <div class="s-section" id="cat-toggles"></div>
       <div class="s-section">
         <div class="s-lbl">Extra</div>
         <div class="tog-row" onclick="toggleOI()">
-          <div class="tog-lbl" id="tl-oi"><div class="cdot" style="background:#fbbf24"></div>Open Interest</div>
-          <div class="tog-sw"  id="ts-oi"></div>
+          <div class="tog-lbl"><div class="cdot" style="background:#fbbf24"></div>Open Interest</div>
+          <div class="tog-sw" id="ts-oi"></div>
         </div>
       </div>
     </div>
@@ -133,396 +110,201 @@ tr:hover .td-date           { background:#0a0c11 !important; }
     <div id="viewport">
       <div id="loading">
         <div class="spinner"></div>
-        <div class="load-txt" id="load-txt">Loading...</div>
+        <div class="load-txt" id="load-txt">Loading Financial Data...</div>
       </div>
-      <div class="page active" id="page-chart">
-        <div id="panels-wrap"></div>
-      </div>
-      <div class="page" id="page-table">
-        <div class="tbl-scroll"><div id="tbl"></div></div>
-      </div>
+      <div class="page active" id="page-chart"><div id="panels-wrap" style="flex:1; display:flex; flex-direction:column;"></div></div>
+      <div class="page" id="page-table"><div class="tbl-scroll"><div id="tbl"></div></div></div>
     </div>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════
-// CONFIG
-// ══════════════════════════════════════════════
 const POLYGON_KEY = 'M42LpG3a9LFDCvSo_0BTdVzV_iZiduL8';
 const CFTC_URL    = 'https://publicreporting.cftc.gov/resource/gpe5-46if.json';
-const WEEKS       = 52;
+const WEEKS       = 60; // Берем чуть больше для запаса
 
 const CATS = {
-  dealer:   { label:'Dealer',     color:'#3b82f6', pfxL:'dealer_positions_long_all',  pfxS:'dealer_positions_short_all',  pfxCL:'change_in_dealer_long_all',   pfxCS:'change_in_dealer_short_all',   pfxPL:'pct_of_oi_dealer_long_all',   pfxPS:'pct_of_oi_dealer_short_all',  active:true  },
-  assetmgr: { label:'Asset Mgr',  color:'#22c55e', pfxL:'asset_mgr_positions_long',   pfxS:'asset_mgr_positions_short',   pfxCL:'change_in_asset_mgr_long',    pfxCS:'change_in_asset_mgr_short',    pfxPL:'pct_of_oi_asset_mgr_long',    pfxPS:'pct_of_oi_asset_mgr_short',   active:true  },
-  levfunds: { label:'Lev Funds',  color:'#a855f7', pfxL:'lev_money_positions_long',   pfxS:'lev_money_positions_short',   pfxCL:'change_in_lev_money_long',    pfxCS:'change_in_lev_money_short',    pfxPL:'pct_of_oi_lev_money_long',    pfxPS:'pct_of_oi_lev_money_short',   active:true  },
-  other:    { label:'Other Rept', color:'#f97316', pfxL:'other_rept_positions_long',  pfxS:'other_rept_positions_short',  pfxCL:'change_in_other_rept_long',   pfxCS:'change_in_other_rept_short',   pfxPL:'pct_of_oi_other_rept_long',   pfxPS:'pct_of_oi_other_rept_short',  active:false },
-  nonrept:  { label:'Non-Rept',   color:'#94a3b8', pfxL:'nonrept_positions_long_all', pfxS:'nonrept_positions_short_all', pfxCL:'change_in_nonrept_long_all',  pfxCS:'change_in_nonrept_short_all',  pfxPL:'pct_of_oi_nonrept_long_all',  pfxPS:'pct_of_oi_nonrept_short_all', active:false },
+  dealer:   { label:'Dealer',    color:'#3b82f6', pfxL:'dealer_positions_long_all',   pfxS:'dealer_positions_short_all',   active:true  },
+  assetmgr: { label:'Asset Mgr',  color:'#22c55e', pfxL:'asset_mgr_positions_long_all', pfxS:'asset_mgr_positions_short_all', active:true  },
+  levfunds: { label:'Lev Funds',  color:'#a855f7', pfxL:'lev_funds_positions_long_all', pfxS:'lev_funds_positions_short_all', active:true  },
+  other:    { label:'Other Rept', color:'#f97316', pfxL:'other_rept_positions_long_all',pfxS:'other_rept_positions_short_all',active:false },
+  nonrept:  { label:'Non-Rept',   color:'#94a3b8', pfxL:'nonrept_positions_long_all',  pfxS:'nonrept_positions_short_all',  active:false },
 };
-const CAT_THCOL = { dealer:'#1565C0', assetmgr:'#2E7D32', levfunds:'#6A1B9A', other:'#B71C1C', nonrept:'#37474F' };
-const CAT_LABEL = { dealer:'DEALER / INTERMEDIARY', assetmgr:'ASSET MANAGER / INSTITUTIONAL', levfunds:'LEVERAGED FUNDS', other:'OTHER REPORTABLE', nonrept:'NON-REPORTABLE' };
 
-// ══════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════
 let cotData = [], spyData = [];
-let showOI  = false;
+let showOI = false;
 let lwCharts = [];
-let tblBuilt = false;
 
-// ══════════════════════════════════════════════
-// DATE UTILS
-// ══════════════════════════════════════════════
-
-// Returns Monday of the week containing the given date string
-// Works regardless of what day of week the COT date falls on
-function getMondayOfWeek(dateStr) {
+// Привязка к понедельнику (для синхронизации с Polygon)
+function getMonday(dateStr) {
   const d = new Date(dateStr + 'T00:00:00Z');
-  const day = d.getUTCDay(); // 0=Sun,1=Mon,...,6=Sat
-  // days to subtract to reach Monday
-  const toMon = day === 0 ? 6 : day - 1;
-  d.setUTCDate(d.getUTCDate() - toMon);
-  return d.toISOString().slice(0, 10);
+  const day = d.getUTCDay();
+  const diff = d.getUTCDate() - (day === 0 ? 6 : day - 1);
+  return new Date(d.setUTCDate(diff)).toISOString().slice(0, 10);
 }
 
-// ms timestamp (Polygon) → YYYY-MM-DD string UTC
-function msToDate(ms) {
-  return new Date(ms).toISOString().slice(0, 10);
+async function fetchData() {
+  const ltxt = document.getElementById('load-txt');
+  
+  // 1. COT Fetch
+  ltxt.textContent = 'Downloading CFTC Data...';
+  const cftcUrl = `${CFTC_URL}?market_and_exchange_names=E-MINI%20S%26P%20500%20-%20CHICAGO%20MERCANTILE%20EXCHANGE&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${WEEKS}`;
+  const cRes = await fetch(cftcUrl);
+  const cJson = await cRes.json();
+  
+  cotData = cJson.map(r => {
+    const reportDate = r.report_date_as_yyyy_mm_dd.slice(0,10);
+    const chartTime = getMonday(reportDate);
+    const res = { date: reportDate, time: chartTime, oi: parseInt(r.open_interest_all) };
+    for (let k in CATS) {
+      const L = parseInt(r[CATS[k].pfxL]) || 0;
+      const S = parseInt(r[CATS[k].pfxS]) || 0;
+      res[k] = { longs: L, shorts: S, net: L - S };
+    }
+    return res;
+  }).sort((a,b) => a.time.localeCompare(b.time));
+
+  // 2. SPY Fetch
+  const startDate = cotData[0].time;
+  const endDate = new Date().toISOString().slice(0,10);
+  ltxt.textContent = 'Syncing Price Chart...';
+  
+  const polyUrl = `https://api.polygon.io/v2/aggs/ticker/SPY/range/1/week/${startDate}/${endDate}?adjusted=true&sort=asc&limit=500&apiKey=${POLYGON_KEY}&cb=${Date.now()}`;
+  const pRes = await fetch(polyUrl);
+  const pJson = await pRes.json();
+  
+  if (pJson.results) {
+    spyData = pJson.results.map(b => ({
+      time: new Date(b.t).toISOString().slice(0,10),
+      open: b.o, high: b.h, low: b.l, close: b.c
+    })).filter(b => b.time >= startDate); // ЖЕСТКАЯ ФИЛЬТРАЦИЯ СДВИГА
+  }
+
+  document.getElementById('loading').style.display = 'none';
+  renderCharts();
+  updateStatus();
 }
 
-// YYYY-MM-DD → subtract N days
-function subtractDays(dateStr, n) {
-  const d = new Date(dateStr + 'T00:00:00Z');
-  d.setUTCDate(d.getUTCDate() - n);
-  return d.toISOString().slice(0, 10);
-}
-
-// ══════════════════════════════════════════════
-// TABS
-// ══════════════════════════════════════════════
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.onclick = () => {
-    const pg = tab.dataset.page;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + pg).classList.add('active');
-    document.getElementById('sidebar').classList.toggle('hidden', pg === 'table');
-    if (pg === 'chart') setTimeout(renderCharts, 20);
-    if (pg === 'table' && !tblBuilt && cotData.length) { buildTable(); tblBuilt = true; }
-  };
-});
-
-// ══════════════════════════════════════════════
-// FETCH COT
-// ══════════════════════════════════════════════
-async function fetchCOT() {
-  const fields = [
-    'report_date_as_yyyy_mm_dd', 'open_interest_all',
-    ...Object.values(CATS).flatMap(c => [c.pfxL, c.pfxS, c.pfxCL, c.pfxCS, c.pfxPL, c.pfxPS])
-  ].join(',');
-  const url = `${CFTC_URL}?market_and_exchange_names=E-MINI%20S%26P%20500%20-%20CHICAGO%20MERCANTILE%20EXCHANGE&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${WEEKS}&$select=${fields}`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`CFTC HTTP ${r.status}`);
-  return r.json();
-}
-
-// ══════════════════════════════════════════════
-// FETCH SPY — period matches COT range
-// ══════════════════════════════════════════════
-async function fetchSPY(fromDate) {
-  // fromDate = Monday of oldest COT week, so SPY starts exactly there
-  const to  = new Date().toISOString().slice(0, 10);
-  // Go 2 extra weeks back so SPY covers full COT range
-  const from = subtractDays(fromDate, 14);
-  const url = `https://api.polygon.io/v2/aggs/ticker/SPY/range/1/week/${from}/${to}?adjusted=true&sort=asc&limit=200&apiKey=${POLYGON_KEY}`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`Polygon HTTP ${r.status}`);
-  const j = await r.json();
-  if (j.status === 'ERROR') throw new Error('Polygon: ' + j.error);
-  if (!j.results?.length)   throw new Error('Polygon: no data');
-  return j.results;
-}
-
-// ══════════════════════════════════════════════
-// PARSE COT
-// ══════════════════════════════════════════════
-const nf = v => parseFloat(v) || 0;
-
-function parseCOT(raw) {
-  return raw.map(r => {
-    const reportDate = r.report_date_as_yyyy_mm_dd.slice(0, 10);
-    // Map to Monday of same week — this matches Polygon's week bar timestamp
-    const chartDate = getMondayOfWeek(reportDate);
-    const oi = nf(r.open_interest_all);
-    const entry = { date: reportDate, time: chartDate, oi };
-    Object.entries(CATS).forEach(([key, cfg]) => {
-      const L  = nf(r[cfg.pfxL]);
-      const S  = nf(r[cfg.pfxS]);
-      const cL = nf(r[cfg.pfxCL]);
-      const cS = nf(r[cfg.pfxCS]);
-      const pL = nf(r[cfg.pfxPL]);
-      const pS = nf(r[cfg.pfxPS]);
-      entry[key] = {
-        longs: L, shorts: S,
-        net:    L - S,
-        chgNet: cL - cS,
-        chgL:   cL,
-        chgS:   cS,
-        pctL: pL, pctS: pS,
-        pctNet: (pL - pS).toFixed(1),
-      };
-    });
-    return entry;
-  }).sort((a, b) => a.time < b.time ? -1 : 1);
-}
-
-// ══════════════════════════════════════════════
-// PARSE SPY
-// ══════════════════════════════════════════════
-function parseSPY(raw) {
-  return raw.map(b => ({
-    time:  msToDate(b.t),      // Polygon week start = Monday, YYYY-MM-DD
-    open:  +b.o.toFixed(2),
-    high:  +b.h.toFixed(2),
-    low:   +b.l.toFixed(2),
-    close: +b.c.toFixed(2),
-  }));
-}
-
-// ══════════════════════════════════════════════
-// CHART
-// ══════════════════════════════════════════════
-const BASE_OPTS = {
-  layout:      { background:{color:'#0b0d12'}, textColor:'#475569' },
-  grid:        { vertLines:{color:'#161b25'}, horzLines:{color:'#161b25'} },
-  crosshair:   { mode:1 },
-  timeScale:   { borderColor:'#1e2535', timeVisible:false, rightOffset:4 },
-  rightPriceScale: { borderColor:'#1e2535', minimumWidth:70 },
-  handleScale:  { mouseWheel:true, pinch:true },
-  handleScroll: { mouseWheel:true, pressedMouseMove:true },
-};
-
-function getMetricLabel() {
-  return { net:'Net', chgNet:'Chg Net', longs:'Longs', shorts:'Shorts' }[document.getElementById('sel-metric').value] || 'Net';
-}
-
-function activeCatKeys() {
-  return Object.entries(CATS).filter(([, c]) => c.active).map(([k]) => k);
+function updateStatus() {
+  const lastCOT = cotData[cotData.length-1]?.date;
+  const lastSPY = spyData[spyData.length-1]?.time;
+  document.getElementById('hdr-status').innerHTML = `<span class="dot"></span> COT: ${lastCOT} | SPY Week: ${lastSPY}`;
 }
 
 function renderCharts() {
   const wrap = document.getElementById('panels-wrap');
-  lwCharts.forEach(c => { try { c.remove(); } catch(e){} });
+  lwCharts.forEach(c => c.remove());
   lwCharts = [];
   wrap.innerHTML = '';
 
-  const aW = wrap.clientWidth;
-  const aH = wrap.clientHeight;
-  if (!aW || !aH) { setTimeout(renderCharts, 100); return; }
+  const activeKeys = Object.keys(CATS).filter(k => CATS[k].active);
+  const totalPanels = 1 + (showOI ? 1 : 0) + activeKeys.length;
+  const height = wrap.clientHeight / totalPanels;
 
-  const active = activeCatKeys();
-  const subCount = (showOI ? 1 : 0) + active.length;
-  const spyH = Math.max(100, Math.floor(aH * (subCount ? 0.50 : 1)));
-  const subH = subCount ? Math.max(70, Math.floor((aH - spyH) / subCount)) : 0;
-
-  // ── SPY ──
-  addPanel(wrap, 'SPY — WEEKLY (E-mini S&P 500 proxy)', '#475569', spyH, el => {
-    const chart = LightweightCharts.createChart(el, {...BASE_OPTS, width:aW, height:spyH});
-    const type  = document.getElementById('sel-type').value;
-    if (type === 'candle') {
-      const s = chart.addCandlestickSeries({ upColor:'#22c55e', downColor:'#f43f5e', borderUpColor:'#22c55e', borderDownColor:'#f43f5e', wickUpColor:'#22c55e', wickDownColor:'#f43f5e' });
-      if (spyData.length) s.setData(spyData);
-    } else {
-      const s = chart.addLineSeries({color:'#38bdf8', lineWidth:2});
-      if (spyData.length) s.setData(spyData.map(d => ({time:d.time, value:d.close})));
-    }
-    return chart;
+  // 1. Price Panel
+  createPanel('SPY WEEKLY', '#cbd5e1', height, (chart) => {
+    const type = document.getElementById('sel-type').value;
+    const series = type === 'candle' ? chart.addCandlestickSeries() : chart.addLineSeries({color:'#38bdf8'});
+    series.setData(type === 'candle' ? spyData : spyData.map(d => ({time:d.time, value:d.close})));
   });
 
-  // ── OI ──
+  // 2. OI Panel
   if (showOI) {
-    addDivider(wrap);
-    addPanel(wrap, 'OPEN INTEREST', '#fbbf24', subH, el => {
-      const chart = LightweightCharts.createChart(el, {...BASE_OPTS, width:aW, height:subH});
-      const s = chart.addLineSeries({color:'#fbbf24', lineWidth:2, priceLineVisible:false, lastValueVisible:true});
+    createPanel('OPEN INTEREST', '#fbbf24', height, (chart) => {
+      const s = chart.addLineSeries({color:'#fbbf24'});
       s.setData(cotData.map(d => ({time:d.time, value:d.oi})));
-      return chart;
     });
   }
 
-  // ── COT panels ──
+  // 3. COT Panels
   const metric = document.getElementById('sel-metric').value;
-  const ml     = getMetricLabel();
-  active.forEach(key => {
-    const cfg = CATS[key];
-    addDivider(wrap);
-    addPanel(wrap, `${CAT_LABEL[key]} — ${ml}`, cfg.color, subH, el => {
-      const chart = LightweightCharts.createChart(el, {...BASE_OPTS, width:aW, height:subH});
-      // zero baseline
-      const z = chart.addLineSeries({color:'#1e2535', lineWidth:1, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false});
-      z.setData(cotData.map(d => ({time:d.time, value:0})));
-      // data
-      const s = chart.addLineSeries({color:cfg.color, lineWidth:2, priceLineVisible:false, lastValueVisible:true});
-      s.setData(cotData.map(d => ({time:d.time, value:d[key][metric]})));
-      return chart;
+  activeKeys.forEach(k => {
+    createPanel(`${CATS[k].label} (${metric})`, CATS[k].color, height, (chart) => {
+      chart.addLineSeries({color:'#1e2535', lineWidth:1}).setData(cotData.map(d => ({time:d.time, value:0})));
+      const s = chart.addLineSeries({color:CATS[k].color, lineWidth:2});
+      s.setData(cotData.map(d => ({time:d.time, value:d[k][metric]})));
     });
   });
 
-  // Sync timescales
-  lwCharts.forEach(src => {
-    src.timeScale().subscribeVisibleLogicalRangeChange(range => {
-      if (!range) return;
-      lwCharts.forEach(other => { if (other !== src) other.timeScale().setVisibleLogicalRange(range); });
+  // Sync
+  lwCharts.forEach(c => {
+    c.timeScale().subscribeVisibleLogicalRangeChange(range => {
+      lwCharts.forEach(other => { if(other !== c) other.timeScale().setVisibleLogicalRange(range); });
     });
   });
 }
 
-function addPanel(wrap, label, color, h, buildFn) {
-  const panel = document.createElement('div');
-  panel.className = 'c-panel';
-  panel.style.height = h + 'px';
-  panel.innerHTML = `<div class="c-lbl" style="color:${color}">${label}</div><div class="c-el" style="width:100%;height:100%"></div>`;
-  wrap.appendChild(panel);
-  lwCharts.push(buildFn(panel.querySelector('.c-el')));
+function createPanel(label, color, h, callback) {
+  const div = document.createElement('div');
+  div.className = 'c-panel';
+  div.style.height = h + 'px';
+  div.innerHTML = `<div class="c-lbl" style="color:${color}">${label}</div>`;
+  document.getElementById('panels-wrap').appendChild(div);
+  
+  const chart = LightweightCharts.createChart(div, {
+    layout: { background: { color: '#0b0d12' }, textColor: '#475569' },
+    grid: { vertLines: { color: '#161b25' }, horzLines: { color: '#161b25' } },
+    timeScale: { borderColor: '#1e2535' },
+    rightPriceScale: { borderColor: '#1e2535' },
+    width: document.getElementById('panels-wrap').clientWidth,
+    height: h
+  });
+  callback(chart);
+  lwCharts.push(chart);
 }
 
-function addDivider(wrap) {
-  const d = document.createElement('div');
-  d.className = 'c-divider';
-  wrap.appendChild(d);
-}
-
-// ══════════════════════════════════════════════
-// SIDEBAR
-// ══════════════════════════════════════════════
 function buildSidebar() {
-  const section = document.getElementById('cat-toggles');
-  section.innerHTML = '<div class="s-lbl">Categories</div>';
-  Object.entries(CATS).forEach(([key, cfg]) => {
+  const cont = document.getElementById('cat-toggles');
+  cont.innerHTML = '<div class="s-lbl">Categories</div>';
+  for (let k in CATS) {
     const row = document.createElement('div');
     row.className = 'tog-row';
-    row.innerHTML = `
-      <div class="tog-lbl ${cfg.active?'on':''}" id="tl-${key}">
-        <div class="cdot" style="background:${cfg.color}"></div>${cfg.label}
-      </div>
-      <div class="tog-sw ${cfg.active?'on':''}" id="ts-${key}"></div>`;
+    row.innerHTML = `<div class="tog-lbl"><div class="cdot" style="background:${CATS[k].color}"></div>${CATS[k].label}</div><div class="tog-sw ${CATS[k].active?'on':''}" id="ts-${k}"></div>`;
     row.onclick = () => {
-      cfg.active = !cfg.active;
-      document.getElementById('ts-'+key).classList.toggle('on', cfg.active);
-      document.getElementById('tl-'+key).classList.toggle('on', cfg.active);
+      CATS[k].active = !CATS[k].active;
+      document.getElementById('ts-'+k).classList.toggle('on');
       renderCharts();
     };
-    section.appendChild(row);
-  });
+    cont.appendChild(row);
+  }
 }
 
 function toggleOI() {
   showOI = !showOI;
-  document.getElementById('ts-oi').classList.toggle('on', showOI);
-  document.getElementById('tl-oi').classList.toggle('on', showOI);
+  document.getElementById('ts-oi').classList.toggle('on');
   renderCharts();
 }
 
-// ══════════════════════════════════════════════
-// TABLE
-// ══════════════════════════════════════════════
-const MDEF = [
-  {key:'net',    label:'Net'},
-  {key:'chgNet', label:'Chg Net'},
-  {key:'chgL',   label:'Chg Longs'},
-  {key:'chgS',   label:'Chg Shorts'},
-  {key:'longs',  label:'Longs'},
-  {key:'shorts', label:'Shorts'},
-];
-
-const fmt = v => (v == null || isNaN(v)) ? '—' : Math.round(v).toLocaleString('ru-RU');
-
-function gradStyle(v) {
-  if (!v || v === 0) return '';
-  const a = Math.min(0.08 + Math.abs(v) / 150000 * 0.55, 0.63).toFixed(2);
-  return v > 0
-    ? `background:rgba(56,189,248,${a});color:${Math.abs(v)>70000?'#bae6fd':'#7dd3fc'}`
-    : `background:rgba(244,63,94,${a});color:${Math.abs(v)>70000?'#fecdd3':'#fda4af'}`;
-}
-
+// Table logic simplified
 function buildTable() {
-  const catKeys = Object.keys(CATS);
-  let h = `<table><thead><tr>
-    <th class="th-base th-date-sticky" rowspan="2">Date</th>
-    <th class="th-base" rowspan="2">Open Interest</th>`;
-  catKeys.forEach(key => {
-    const col = CAT_THCOL[key];
-    h += `<th class="th-cat" colspan="${MDEF.length+1}" style="background:${col}22;color:${col};border-top:2px solid ${col}55">${CAT_LABEL[key]}</th>`;
-  });
-  h += `</tr><tr>`;
-  catKeys.forEach(key => {
-    const col = CAT_THCOL[key];
-    MDEF.forEach(m => { h += `<th class="th-m" style="background:${col}14">${m.label}</th>`; });
-    h += `<th class="th-m" style="background:${col}14">% OI Net</th>`;
-  });
-  h += `</tr></thead><tbody>`;
+  let h = '<table><thead><tr><th class="th-base">Date</th><th class="th-base">OI</th>';
+  for(let k in CATS) h += `<th class="th-base" style="color:${CATS[k].color}">${CATS[k].label} Net</th>`;
+  h += '</tr></thead><tbody>';
   [...cotData].reverse().forEach(d => {
-    h += `<tr><td class="td-date">${d.date}</td><td class="td-dim">${fmt(d.oi)}</td>`;
-    catKeys.forEach(key => {
-      const c = d[key];
-      MDEF.forEach(m => {
-        const isGrad = m.key === 'chgL' || m.key === 'chgS';
-        const st = isGrad ? gradStyle(c[m.key]) : '';
-        h += `<td class="${st?'':'td-dim'}" style="${st}">${fmt(c[m.key])}</td>`;
-      });
-      h += `<td class="td-dim">${c.pctNet > 0?'+':''}${c.pctNet}%</td>`;
-    });
-    h += `</tr>`;
+    h += `<tr><td class="td-date">${d.date}</td><td>${d.oi.toLocaleString()}</td>`;
+    for(let k in CATS) {
+      const val = d[k].net;
+      const color = val > 0 ? '#22c55e' : '#f43f5e';
+      h += `<style> .v-${k}-${d.date} { color: ${color} } </style>`;
+      h += `<td class="v-${k}-${d.date}">${val.toLocaleString()}</td>`;
+    }
+    h += '</tr>';
   });
-  h += `</tbody></table>`;
-  document.getElementById('tbl').innerHTML = h;
+  document.getElementById('tbl').innerHTML = h + '</tbody></table>';
 }
 
-// ══════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════
-window.onload = async () => {
-  buildSidebar();
-  const ltxt = document.getElementById('load-txt');
-  try {
-    ltxt.textContent = 'Fetching COT data...';
-    const rawCOT = await fetchCOT();
-    cotData = parseCOT(rawCOT);
-
-    // Oldest COT date (already mapped to Monday)
-    const oldestCOT = cotData[0]?.time;
-
-    ltxt.textContent = 'Fetching SPY (Polygon.io)...';
-    try {
-      const rawSPY = await fetchSPY(oldestCOT);
-      spyData = parseSPY(rawSPY);
-    } catch(e) {
-      console.warn('SPY fetch failed:', e.message);
-      spyData = [];
-    }
-
-    const lastCOT = cotData[cotData.length-1]?.date || '—';
-    const lastSPY = spyData.length ? spyData[spyData.length-1].time : 'N/A';
-    document.getElementById('hdr-status').innerHTML =
-      `<span class="dot"></span>COT: ${lastCOT} · SPY: ${lastSPY}`;
-
-    document.getElementById('loading').style.display = 'none';
-    renderCharts();
-
-  } catch(e) {
-    console.error(e);
-    document.getElementById('loading').innerHTML =
-      `<div style="color:var(--red);font-family:Syne,sans-serif;font-size:12px;text-align:center;padding:24px;max-width:400px">
-        <div style="font-size:15px;margin-bottom:8px">⚠ Error</div>${e.message}</div>`;
+document.querySelectorAll('.tab').forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll('.tab, .page').forEach(el => el.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('page-' + t.dataset.page).classList.add('active');
+    if(t.dataset.page === 'table') buildTable();
+    if(t.dataset.page === 'chart') setTimeout(renderCharts, 50);
   }
-};
+});
 
-window.onresize = () => {
-  const w = document.getElementById('panels-wrap').clientWidth;
-  lwCharts.forEach(c => c.applyOptions({width:w}));
-};
+window.onload = () => { buildSidebar(); fetchData(); };
+window.onresize = () => renderCharts();
 </script>
 </body>
 </html>
