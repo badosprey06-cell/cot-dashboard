@@ -3,44 +3,56 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>COT Dashboard</title>
+<title>COT Dashboard — ES</title>
 <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;800&display=swap');
 :root {
-  --bg:#0b0d12; --bg2:#0f121a; --bg3:#161b25;
-  --border:#1e2535; --text:#cbd5e1; --muted:#475569;
-  --accent:#38bdf8; --green:#22c55e; --red:#f43f5e;
+  --bg:#0b0d12; --bg2:#0f121a; --bg3:#161b25; --bg4:#1a1f2e;
+  --border:#1e2535; --border2:#252d40;
+  --text:#cbd5e1; --muted:#475569; --muted2:#334155;
+  --accent:#38bdf8; --green:#22c55e; --red:#f43f5e; --yellow:#fbbf24;
+  --font-mono:'JetBrains Mono',monospace;
+  --font-display:'Syne',sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;overflow:hidden;}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:12px;overflow:hidden;}
 #app{display:flex;flex-direction:column;width:100%;height:100%;}
 
-/* HEADER */
-#header{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:9px 18px;background:var(--bg2);border-bottom:1px solid var(--border);}
-.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;}
+/* ── HEADER ── */
+#header{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:var(--bg2);border-bottom:1px solid var(--border);gap:12px;}
+.logo{font-family:var(--font-display);font-weight:800;font-size:14px;white-space:nowrap;}
 .logo span{color:var(--accent);}
-#hdr-status{font-size:10px;color:var(--muted);}
+.hdr-center{display:flex;align-items:center;gap:8px;flex:1;justify-content:center;}
+.hdr-instrument{font-family:var(--font-display);font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.5px;}
+.hdr-instrument strong{color:var(--text);}
+#hdr-status{font-size:9px;color:var(--muted);white-space:nowrap;}
 .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--green);margin-right:5px;vertical-align:middle;animation:pulse 2s infinite;}
+.dot.red{background:var(--red);}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* TABS */
-#tabs{flex:0 0 auto;display:flex;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 18px;}
-.tab{padding:7px 16px;cursor:pointer;color:var(--muted);font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;border-bottom:2px solid transparent;transition:all .15s;}
+/* ── TABS ── */
+#tabs{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;}
+.tabs-left{display:flex;}
+.tab{padding:7px 14px;cursor:pointer;color:var(--muted);font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;border-bottom:2px solid transparent;transition:all .15s;}
 .tab:hover{color:var(--text);}
 .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.range-btns{display:flex;gap:4px;padding:5px 0;}
+.rbtn{padding:3px 9px;border:1px solid var(--border);border-radius:3px;background:transparent;color:var(--muted);font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:.7px;cursor:pointer;transition:all .15s;}
+.rbtn:hover{color:var(--text);border-color:var(--border2);}
+.rbtn.active{background:rgba(56,189,248,.12);border-color:var(--accent);color:var(--accent);}
 
-/* MAIN */
+/* ── MAIN ── */
 #main{flex:1 1 0;min-height:0;display:flex;overflow:hidden;}
 
-/* SIDEBAR */
-#sidebar{flex:0 0 190px;background:var(--bg2);border-right:1px solid var(--border);padding:12px 10px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+/* ── SIDEBAR ── */
+#sidebar{flex:0 0 180px;background:var(--bg2);border-right:1px solid var(--border);padding:10px 8px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
 #sidebar.hidden{display:none;}
 .s-section{display:flex;flex-direction:column;gap:5px;}
-.s-lbl{font-family:'Syne',sans-serif;font-size:8.5px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);padding-bottom:4px;border-bottom:1px solid var(--border);}
-.ctrl-sel{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;padding:5px 7px;border-radius:3px;width:100%;cursor:pointer;outline:none;}
+.s-lbl{font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);padding-bottom:4px;border-bottom:1px solid var(--border);}
+.ctrl-sel{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font-mono);font-size:10px;padding:5px 7px;border-radius:3px;width:100%;cursor:pointer;outline:none;}
 .ctrl-sel:focus{border-color:var(--accent);}
-.tog-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;cursor:pointer;}
+.tog-row{display:flex;align-items:center;justify-content:space-between;padding:3px 0;cursor:pointer;}
 .tog-lbl{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);transition:color .15s;}
 .tog-lbl.on{color:var(--text);}
 .cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
@@ -49,54 +61,90 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .tog-sw.on{background:rgba(56,189,248,.25);}
 .tog-sw.on::after{left:14px;background:var(--accent);}
 
-/* VIEWPORT */
-#viewport{flex:1 1 0;min-width:0;position:relative;display:flex;}
-.page{position:absolute;inset:0;display:none;flex-direction:column;}
+/* ── VIEWPORT ── */
+#viewport{flex:1 1 0;min-width:0;position:relative;display:flex;flex-direction:column;}
+.page{display:none;flex-direction:column;flex:1 1 0;min-height:0;}
 .page.active{display:flex;}
 
-/* CHART */
-#page-chart{overflow:hidden;}
-#panels-wrap{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
-.c-panel{position:relative;flex-shrink:0;overflow:hidden;}
-.c-lbl{position:absolute;top:6px;left:8px;z-index:5;font-family:'Syne',sans-serif;font-size:8.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;pointer-events:none;}
-.c-divider{flex:0 0 3px;background:var(--border);flex-shrink:0;}
+/* ── METRIC CARDS ── */
+#cards{flex:0 0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border);}
+.card{background:var(--bg2);padding:10px 14px;display:flex;flex-direction:column;gap:4px;}
+.card-title{font-family:var(--font-display);font-size:7.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);}
+.card-value{font-family:var(--font-display);font-size:20px;font-weight:800;line-height:1;letter-spacing:-.5px;}
+.card-value.green{color:var(--green);}
+.card-value.red{color:var(--red);}
+.card-value.neutral{color:var(--text);}
+.card-change{font-size:9px;color:var(--muted);display:flex;align-items:center;gap:4px;}
+.card-change .up{color:var(--green);}
+.card-change .dn{color:var(--red);}
 
-/* LOADING */
+/* ── CHART PAGE ── */
+#page-chart{overflow:hidden;}
+#split-container{flex:1 1 0;min-height:0;position:relative;display:flex;flex-direction:column;}
+#price-pane{position:relative;overflow:hidden;min-height:60px;}
+#price-pane .pane-lbl{position:absolute;top:6px;left:8px;z-index:5;font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);pointer-events:none;}
+#divider{flex:0 0 5px;background:var(--border);cursor:ns-resize;position:relative;z-index:10;transition:background .15s;}
+#divider:hover,#divider.dragging{background:var(--accent);}
+#divider::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:30px;height:2px;background:var(--muted2);border-radius:1px;}
+#cot-pane{position:relative;overflow:hidden;min-height:60px;display:flex;flex-direction:column;}
+#cot-panels{flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
+.c-panel{position:relative;flex:1 1 0;min-height:0;overflow:hidden;}
+.c-lbl{position:absolute;top:5px;left:8px;z-index:5;font-family:var(--font-display);font-size:7.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;pointer-events:none;}
+.c-sub-divider{flex:0 0 2px;background:var(--border);}
+
+/* ── LOADING ── */
 #loading{position:absolute;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;}
 .spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.load-txt{font-family:'Syne',sans-serif;font-size:11px;color:var(--muted);letter-spacing:.8px;}
+.load-txt{font-family:var(--font-display);font-size:11px;color:var(--muted);letter-spacing:.8px;}
 
-/* TABLE */
+/* ── TABLE ── */
 #page-table{overflow:hidden;}
-.tbl-scroll{flex:1 1 0;overflow:auto;padding:14px 18px;}
-table{border-collapse:collapse;width:max-content;font-size:10.5px;}
+.tbl-scroll{flex:1 1 0;overflow:auto;padding:12px 16px;}
+table{border-collapse:collapse;width:max-content;font-size:10px;}
 thead tr:first-child th{position:sticky;top:0;z-index:6;}
-thead tr:last-child  th{position:sticky;top:31px;z-index:5;}
-.th-base{background:#0a0c11;color:var(--text);font-family:'Syne',sans-serif;font-size:8.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;padding:8px 11px;text-align:center;border:1px solid var(--border);}
+thead tr:last-child th{position:sticky;top:30px;z-index:5;}
+.th-base{background:#080a10;color:var(--text);font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;padding:7px 10px;text-align:center;border:1px solid var(--border);}
 .th-sticky{position:sticky;left:0;z-index:9!important;}
-.th-cat{font-family:'Syne',sans-serif;font-size:8.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;padding:8px 10px;text-align:center;border:1px solid rgba(255,255,255,.04);}
-.th-m{font-family:'Syne',sans-serif;font-size:7.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:5px 8px;text-align:center;border:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.4);white-space:nowrap;}
-td{padding:5px 9px;text-align:right;border:1px solid var(--border);white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--text);}
-.td-date{text-align:center;position:sticky;left:0;z-index:2;background:#0a0c11;color:var(--muted);font-size:10px;border-right:2px solid var(--border);}
+.th-cat{font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;padding:7px 10px;text-align:center;border:1px solid rgba(255,255,255,.04);}
+.th-m{font-family:var(--font-display);font-size:7px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:4px 7px;text-align:center;border:1px solid rgba(255,255,255,.04);color:rgba(255,255,255,.35);white-space:nowrap;}
+td{padding:4px 8px;text-align:right;border:1px solid var(--border);white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--text);}
+.td-date{text-align:center;position:sticky;left:0;z-index:2;background:#080a10;color:var(--muted);font-size:9.5px;border-right:2px solid var(--border);}
 .td-dim{color:var(--muted);}
-tr:nth-child(even) td{background:rgba(255,255,255,.013);}
-tr:nth-child(even) .td-date{background:#0a0c11;}
+tr:nth-child(even) td{background:rgba(255,255,255,.012);}
+tr:nth-child(even) .td-date{background:#080a10;}
 tr:hover td{background:rgba(56,189,248,.04)!important;}
-tr:hover .td-date{background:#0a0c11!important;}
+tr:hover .td-date{background:#080a10!important;}
 </style>
 </head>
 <body>
 <div id="app">
+  <!-- HEADER -->
   <div id="header">
     <div class="logo">COT <span>/</span></div>
-    <div id="hdr-status"><span class="dot"></span>Loading...</div>
+    <div class="hdr-center">
+      <div class="hdr-instrument"><strong>ES</strong> — E-MINI S&P 500 · CME</div>
+    </div>
+    <div id="hdr-status"><span class="dot" id="status-dot"></span><span id="status-txt">Loading...</span></div>
   </div>
+
+  <!-- TABS + RANGE -->
   <div id="tabs">
-    <div class="tab active" data-page="chart">Chart</div>
-    <div class="tab" data-page="table">Table</div>
+    <div class="tabs-left">
+      <div class="tab active" data-page="chart">Chart</div>
+      <div class="tab" data-page="table">Table</div>
+    </div>
+    <div class="range-btns" id="range-btns">
+      <button class="rbtn" data-range="ytd">YTD</button>
+      <button class="rbtn" data-range="1">1Y</button>
+      <button class="rbtn" data-range="2">2Y</button>
+      <button class="rbtn active" data-range="3">3Y</button>
+    </div>
   </div>
+
+  <!-- MAIN -->
   <div id="main">
+    <!-- SIDEBAR -->
     <div id="sidebar">
       <div class="s-section">
         <div class="s-lbl">Price Chart</div>
@@ -107,7 +155,7 @@ tr:hover .td-date{background:#0a0c11!important;}
       </div>
       <div class="s-section">
         <div class="s-lbl">COT Metric</div>
-        <select class="ctrl-sel" id="sel-metric" onchange="renderCharts()">
+        <select class="ctrl-sel" id="sel-metric" onchange="onMetricChange()">
           <option value="net">Net (L − S)</option>
           <option value="chgNet">Chg Net</option>
           <option value="longs">Longs</option>
@@ -125,304 +173,460 @@ tr:hover .td-date{background:#0a0c11!important;}
         </div>
       </div>
     </div>
+
+    <!-- VIEWPORT -->
     <div id="viewport">
       <div id="loading">
         <div class="spinner"></div>
-        <div class="load-txt" id="load-txt">Loading...</div>
+        <div class="load-txt" id="load-txt">Initializing...</div>
       </div>
+
+      <!-- CHART PAGE -->
       <div class="page active" id="page-chart">
-        <div id="panels-wrap"></div>
+        <!-- METRIC CARDS -->
+        <div id="cards">
+          <div class="card" id="card-oi">
+            <div class="card-title">Open Interest</div>
+            <div class="card-value neutral" id="cv-oi">—</div>
+            <div class="card-change" id="cc-oi">—</div>
+          </div>
+          <div class="card" id="card-nl">
+            <div class="card-title">Net Long</div>
+            <div class="card-value green" id="cv-nl">—</div>
+            <div class="card-change" id="cc-nl">—</div>
+          </div>
+          <div class="card" id="card-ns">
+            <div class="card-title">Net Short</div>
+            <div class="card-value red" id="cv-ns">—</div>
+            <div class="card-change" id="cc-ns">—</div>
+          </div>
+          <div class="card" id="card-np">
+            <div class="card-title">Net Position</div>
+            <div class="card-value" id="cv-np">—</div>
+            <div class="card-change" id="cc-np">—</div>
+          </div>
+        </div>
+
+        <!-- SPLIT CONTAINER -->
+        <div id="split-container">
+          <div id="price-pane">
+            <div class="pane-lbl">ES — WEEKLY</div>
+          </div>
+          <div id="divider"></div>
+          <div id="cot-pane">
+            <div id="cot-panels"></div>
+          </div>
+        </div>
       </div>
+
+      <!-- TABLE PAGE -->
       <div class="page" id="page-table">
         <div class="tbl-scroll"><div id="tbl"></div></div>
       </div>
     </div>
   </div>
 </div>
+
 <script>
-// ════════════════════════════════════════
-// CONFIG — точные названия полей CFTC API
-// ════════════════════════════════════════
-const POLYGON_KEY = 'M42LpG3a9LFDCvSo_0BTdVzV_iZiduL8';
-const CFTC_URL    = 'https://publicreporting.cftc.gov/resource/gpe5-46if.json';
-const WEEKS       = 52;
+// ════════════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════════════
+const CFTC_URL = 'https://publicreporting.cftc.gov/resource/gpe5-46if.json';
+const YAHOO_PROXY = 'https://query1.finance.yahoo.com/v8/finance/chart/ES%3DF';
+const MAX_WEEKS = 156; // 3 years
 
 const CATS = {
-  dealer:   { label:'Dealer',     color:'#3b82f6',
+  dealer:   { label:'Dealer / Intermediary', short:'Dealer',    color:'#3b82f6',
     pfxL:'dealer_positions_long_all',   pfxS:'dealer_positions_short_all',
-    pfxCL:'change_in_dealer_long_all',  pfxCS:'change_in_dealer_short_all',
-    pfxPL:'pct_of_oi_dealer_long_all',  pfxPS:'pct_of_oi_dealer_short_all',  active:true },
-  assetmgr: { label:'Asset Mgr',  color:'#22c55e',
+    pfxCL:'change_in_dealer_long_all',  pfxCS:'change_in_dealer_short_all', active:true },
+  assetmgr: { label:'Asset Manager / Inst.', short:'Asset Mgr', color:'#22c55e',
     pfxL:'asset_mgr_positions_long',    pfxS:'asset_mgr_positions_short',
-    pfxCL:'change_in_asset_mgr_long',   pfxCS:'change_in_asset_mgr_short',
-    pfxPL:'pct_of_oi_asset_mgr_long',   pfxPS:'pct_of_oi_asset_mgr_short',   active:true },
-  levfunds: { label:'Lev Funds',  color:'#a855f7',
+    pfxCL:'change_in_asset_mgr_long',   pfxCS:'change_in_asset_mgr_short',  active:true },
+  levfunds: { label:'Leveraged Funds',       short:'Lev Funds', color:'#a855f7',
     pfxL:'lev_money_positions_long',    pfxS:'lev_money_positions_short',
-    pfxCL:'change_in_lev_money_long',   pfxCS:'change_in_lev_money_short',
-    pfxPL:'pct_of_oi_lev_money_long',   pfxPS:'pct_of_oi_lev_money_short',   active:true },
-  other:    { label:'Other Rept', color:'#f97316',
+    pfxCL:'change_in_lev_money_long',   pfxCS:'change_in_lev_money_short',  active:true },
+  other:    { label:'Other Reportable',      short:'Other Rept',color:'#f97316',
     pfxL:'other_rept_positions_long',   pfxS:'other_rept_positions_short',
-    pfxCL:'change_in_other_rept_long',  pfxCS:'change_in_other_rept_short',
-    pfxPL:'pct_of_oi_other_rept_long',  pfxPS:'pct_of_oi_other_rept_short',  active:false },
-  nonrept:  { label:'Non-Rept',   color:'#94a3b8',
+    pfxCL:'change_in_other_rept_long',  pfxCS:'change_in_other_rept_short', active:false },
+  nonrept:  { label:'Non-Reportable',        short:'Non-Rept',  color:'#94a3b8',
     pfxL:'nonrept_positions_long_all',  pfxS:'nonrept_positions_short_all',
-    pfxCL:'change_in_nonrept_long_all', pfxCS:'change_in_nonrept_short_all',
-    pfxPL:'pct_of_oi_nonrept_long_all', pfxPS:'pct_of_oi_nonrept_short_all', active:false },
+    pfxCL:'change_in_nonrept_long_all', pfxCS:'change_in_nonrept_short_all',active:false },
 };
 
-const CAT_THCOL = { dealer:'#1565C0', assetmgr:'#2E7D32', levfunds:'#6A1B9A', other:'#B71C1C', nonrept:'#37474F' };
-const CAT_LABEL = { dealer:'DEALER / INTERMEDIARY', assetmgr:'ASSET MANAGER / INSTITUTIONAL', levfunds:'LEVERAGED FUNDS', other:'OTHER REPORTABLE', nonrept:'NON-REPORTABLE' };
+const CAT_THCOL = { dealer:'#1565C0', assetmgr:'#2E7D32', levfunds:'#6A1B9A', other:'#B34700', nonrept:'#37474F' };
 
-// ════════════════════════════════════════
+// ════════════════════════════════════════════════════════
 // STATE
-// ════════════════════════════════════════
-let cotData = [], spyData = [];
-let showOI  = false;
-let lwCharts = [];
+// ════════════════════════════════════════════════════════
+let cotData = [], priceData = [];
+let showOI = false;
+let lwCharts = [], priceChart = null;
 let tblBuilt = false;
+let activeRange = '3';
+// Cards track which COT category is shown (first active)
+let cardCat = 'assetmgr';
 
-// ════════════════════════════════════════
-// KEY DATE FUNCTION
-// Polygon weekly bar = Monday 00:00 UTC
-// COT report date = Tuesday (CFTC)
-// → map BOTH to the Monday of that week
-// ════════════════════════════════════════
-function toMonday(dateStr) {
+// Split pane state
+let splitRatio = 0.45; // price pane takes 45% initially
+let isDragging = false;
+
+// ════════════════════════════════════════════════════════
+// DATE HELPERS
+// Friday of the week containing dateStr
+// ════════════════════════════════════════════════════════
+function toFriday(dateStr) {
   const d   = new Date(dateStr + 'T00:00:00Z');
-  const day = d.getUTCDay();                    // 0=Sun 1=Mon … 6=Sat
-  const sub = day === 0 ? 6 : day - 1;         // days to subtract to reach Mon
-  d.setUTCDate(d.getUTCDate() - sub);
+  const day = d.getUTCDay(); // 0=Sun…6=Sat
+  // days to add to reach Friday (5)
+  const add = day <= 5 ? 5 - day : 6; // if Sat→next Fri would be wrong; Sat+6=Fri
+  d.setUTCDate(d.getUTCDate() + add);
   return d.toISOString().slice(0, 10);
 }
 
-// ════════════════════════════════════════
-// FETCH
-// ════════════════════════════════════════
+function startOfYear() {
+  return new Date().getUTCFullYear() + '-01-01';
+}
+
+function rangeStart() {
+  if (activeRange === 'ytd') return startOfYear();
+  const d = new Date();
+  d.setUTCFullYear(d.getUTCFullYear() - parseInt(activeRange));
+  return d.toISOString().slice(0, 10);
+}
+
+// ════════════════════════════════════════════════════════
+// FETCH COT
+// ════════════════════════════════════════════════════════
 async function fetchCOT() {
-  const url = `${CFTC_URL}?market_and_exchange_names=E-MINI%20S%26P%20500%20-%20CHICAGO%20MERCANTILE%20EXCHANGE&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${WEEKS}`;
-  const r   = await fetch(url);
+  const url = `${CFTC_URL}?market_and_exchange_names=E-MINI%20S%26P%20500%20-%20CHICAGO%20MERCANTILE%20EXCHANGE&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${MAX_WEEKS}`;
+  const r = await fetch(url);
   if (!r.ok) throw new Error('CFTC HTTP ' + r.status);
   return r.json();
 }
 
-async function fetchSPY(from) {
-  const to  = new Date().toISOString().slice(0, 10);
-  const url = `https://api.polygon.io/v2/aggs/ticker/SPY/range/1/week/${from}/${to}?adjusted=true&sort=asc&limit=500&apiKey=${POLYGON_KEY}`;
-  const r   = await fetch(url);
-  if (!r.ok) throw new Error('Polygon HTTP ' + r.status);
-  const j   = await r.json();
-  if (j.status === 'ERROR') throw new Error('Polygon: ' + j.error);
-  if (!j.results?.length)   throw new Error('Polygon: no results');
-  return j.results;
+// ════════════════════════════════════════════════════════
+// FETCH PRICE (Yahoo Finance via allorigins proxy)
+// ES=F weekly candles
+// ════════════════════════════════════════════════════════
+async function fetchPrice() {
+  // Use allorigins.win as CORS proxy for Yahoo Finance
+  const ticker = 'ES%3DF';
+  const now    = Math.floor(Date.now() / 1000);
+  const from   = Math.floor((Date.now() - 3 * 365.25 * 24 * 3600 * 1000) / 1000);
+  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1wk&period1=${from}&period2=${now}&events=history`;
+  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`;
+  const r = await fetch(proxyUrl);
+  if (!r.ok) throw new Error('Price proxy HTTP ' + r.status);
+  const wrapper = await r.json();
+  const json    = JSON.parse(wrapper.contents);
+  const result  = json?.chart?.result?.[0];
+  if (!result) throw new Error('Yahoo: no data');
+  return result;
 }
 
-// ════════════════════════════════════════
+// ════════════════════════════════════════════════════════
 // PARSE
-// ════════════════════════════════════════
+// ════════════════════════════════════════════════════════
 const nf = v => parseFloat(v) || 0;
 
 function parseCOT(raw) {
   return raw.map(r => {
     const reportDate = r.report_date_as_yyyy_mm_dd.slice(0, 10);
-    const time       = toMonday(reportDate); // ← same function as SPY
+    const time       = toFriday(reportDate); // align to Friday close
     const oi         = nf(r.open_interest_all);
     const entry      = { date: reportDate, time, oi };
-
     Object.entries(CATS).forEach(([key, cfg]) => {
       const L  = nf(r[cfg.pfxL]);
       const S  = nf(r[cfg.pfxS]);
       const cL = nf(r[cfg.pfxCL]);
       const cS = nf(r[cfg.pfxCS]);
-      const pL = nf(r[cfg.pfxPL]);
-      const pS = nf(r[cfg.pfxPS]);
       entry[key] = {
         longs: L, shorts: S,
-        net:    L  - S,
+        net:    L - S,
         chgNet: cL - cS,
-        chgL:   cL, chgS: cS,
-        pctL: pL, pctS: pS,
-        pctNet: (pL - pS).toFixed(1),
+        chgL: cL, chgS: cS,
+        pctNet: ((L - S) / (oi || 1) * 100).toFixed(1),
       };
     });
     return entry;
   }).sort((a, b) => a.time < b.time ? -1 : 1);
 }
 
-function parseSPY(raw, fromDate) {
-  return raw
-    .map(b => ({
-      time:  new Date(b.t).toISOString().slice(0, 10), // Polygon already gives Mon
-      open:  +b.o.toFixed(2),
-      high:  +b.h.toFixed(2),
-      low:   +b.l.toFixed(2),
-      close: +b.c.toFixed(2),
-    }))
-    .filter(b => b.time >= fromDate); // trim to COT range
+function parsePrice(result) {
+  const ts     = result.timestamp;
+  const q      = result.indicators.quote[0];
+  return ts.map((t, i) => {
+    // Yahoo weekly bar timestamp = Monday 00:00 UTC → shift to Friday
+    const monday = new Date(t * 1000).toISOString().slice(0, 10);
+    const d = new Date(monday + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + 4); // Mon → Fri
+    return {
+      time:  d.toISOString().slice(0, 10),
+      open:  +(q.open[i]  || 0).toFixed(2),
+      high:  +(q.high[i]  || 0).toFixed(2),
+      low:   +(q.low[i]   || 0).toFixed(2),
+      close: +(q.close[i] || 0).toFixed(2),
+    };
+  }).filter(b => b.open && b.high && b.low && b.close);
 }
 
-// ════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════
-window.onload = async () => {
-  buildSidebar();
-  const ltxt = document.getElementById('load-txt');
-  try {
-    ltxt.textContent = 'Fetching COT data...';
-    cotData = parseCOT(await fetchCOT());
-
-    const startDate = cotData[0].time; // Monday of oldest COT week
-
-    ltxt.textContent = 'Fetching SPY (Polygon)...';
-    try {
-      spyData = parseSPY(await fetchSPY(startDate), startDate);
-    } catch(e) {
-      console.warn('SPY failed:', e.message);
-      spyData = [];
-    }
-
-    const lastCOT = cotData[cotData.length - 1]?.date || '—';
-    const lastSPY = spyData.length ? spyData[spyData.length - 1].time : 'N/A';
-    document.getElementById('hdr-status').innerHTML =
-      `<span class="dot"></span>COT: ${lastCOT} · SPY: ${lastSPY}`;
-
-    document.getElementById('loading').style.display = 'none';
-    renderCharts();
-
-  } catch(e) {
-    console.error(e);
-    document.getElementById('loading').innerHTML =
-      `<div style="color:var(--red);font-family:Syne,sans-serif;font-size:12px;text-align:center;padding:24px">
-        <div style="font-size:15px;margin-bottom:8px">⚠ Error</div>${e.message}</div>`;
-  }
-};
-
-// ════════════════════════════════════════
-// TABS
-// ════════════════════════════════════════
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.onclick = () => {
-    const pg = tab.dataset.page;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-' + pg).classList.add('active');
-    document.getElementById('sidebar').classList.toggle('hidden', pg === 'table');
-    if (pg === 'chart')  setTimeout(renderCharts, 30);
-    if (pg === 'table' && !tblBuilt && cotData.length) { buildTable(); tblBuilt = true; }
+// ════════════════════════════════════════════════════════
+// FILTER BY RANGE
+// ════════════════════════════════════════════════════════
+function filteredData() {
+  const start = rangeStart();
+  return {
+    cot:   cotData.filter(d => d.time >= start),
+    price: priceData.filter(d => d.time >= start),
   };
-});
+}
 
-// ════════════════════════════════════════
-// CHART
-// ════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+// UPDATE METRIC CARDS
+// Shows data for the first active category
+// ════════════════════════════════════════════════════════
+function fmtK(v) {
+  const abs = Math.abs(v);
+  if (abs >= 1e6) return (v/1e6).toFixed(2) + 'M';
+  if (abs >= 1e3) return (v/1e3).toFixed(1) + 'K';
+  return Math.round(v).toLocaleString();
+}
+
+function updateCards() {
+  const { cot } = filteredData();
+  if (!cot.length) return;
+
+  // Find first active cat for net long/short
+  const activeCats = Object.keys(CATS).filter(k => CATS[k].active);
+  const cat = activeCats[0] || 'assetmgr';
+  const last = cot[cot.length - 1];
+  const prev = cot[cot.length - 2] || last;
+
+  // Open Interest
+  const oiChg = last.oi - prev.oi;
+  document.getElementById('cv-oi').textContent = fmtK(last.oi);
+  document.getElementById('cc-oi').innerHTML =
+    `<span class="${oiChg>=0?'up':'dn'}">${oiChg>=0?'+':''}${fmtK(oiChg)}</span> vs prev week`;
+
+  // Net Long (total across active cats)
+  let totalL = 0, totalS = 0, prevL = 0, prevS = 0;
+  activeCats.forEach(k => {
+    totalL += last[k].longs;
+    totalS += last[k].shorts;
+    prevL  += prev[k].longs;
+    prevS  += prev[k].shorts;
+  });
+  const nlChg = totalL - prevL;
+  const nsChg = totalS - prevS;
+  const np    = totalL - totalS;
+  const npPrev= prevL  - prevS;
+  const npChg = np - npPrev;
+
+  document.getElementById('cv-nl').textContent = fmtK(totalL);
+  document.getElementById('cc-nl').innerHTML =
+    `<span class="${nlChg>=0?'up':'dn'}">${nlChg>=0?'+':''}${fmtK(nlChg)}</span> vs prev week`;
+
+  document.getElementById('cv-ns').textContent = fmtK(totalS);
+  document.getElementById('cc-ns').innerHTML =
+    `<span class="${nsChg>=0?'dn':'up'}">${nsChg>=0?'+':''}${fmtK(nsChg)}</span> vs prev week`;
+
+  const npEl = document.getElementById('cv-np');
+  npEl.textContent = (np >= 0 ? '+' : '') + fmtK(np);
+  npEl.className   = 'card-value ' + (np >= 0 ? 'green' : 'red');
+  document.getElementById('cc-np').innerHTML =
+    `<span class="${npChg>=0?'up':'dn'}">${npChg>=0?'+':''}${fmtK(npChg)}</span> vs prev week`;
+
+  // Card subtitle
+  document.getElementById('card-nl').querySelector('.card-title').textContent =
+    'Net Long · ' + activeCats.map(k => CATS[k].short).join(', ');
+  document.getElementById('card-ns').querySelector('.card-title').textContent =
+    'Net Short · ' + activeCats.map(k => CATS[k].short).join(', ');
+  document.getElementById('card-np').querySelector('.card-title').textContent =
+    'Net Position · ' + activeCats.map(k => CATS[k].short).join(', ');
+}
+
+// ════════════════════════════════════════════════════════
+// CHART BASE CONFIG
+// ════════════════════════════════════════════════════════
 const CHART_BASE = {
-  layout:      { background:{color:'#0b0d12'}, textColor:'#475569' },
+  layout:      { background:{color:'transparent'}, textColor:'#475569' },
   grid:        { vertLines:{color:'#161b25'}, horzLines:{color:'#161b25'} },
   crosshair:   { mode:1 },
   timeScale:   { borderColor:'#1e2535', timeVisible:false, rightOffset:4 },
-  rightPriceScale: { borderColor:'#1e2535', minimumWidth:70 },
+  rightPriceScale: { borderColor:'#1e2535', minimumWidth:72 },
   handleScale:  { mouseWheel:true, pinch:true },
   handleScroll: { mouseWheel:true, pressedMouseMove:true },
 };
 
-function activeCats() {
+// ════════════════════════════════════════════════════════
+// RENDER CHARTS
+// ════════════════════════════════════════════════════════
+function activeCatKeys() {
   return Object.entries(CATS).filter(([,c]) => c.active).map(([k]) => k);
 }
 
-function metricLabel() {
-  return {net:'Net',chgNet:'Chg Net',longs:'Longs',shorts:'Shorts'}
-    [document.getElementById('sel-metric').value] || 'Net';
-}
-
 function renderCharts() {
-  const wrap = document.getElementById('panels-wrap');
+  const splitEl = document.getElementById('split-container');
+  const priceEl = document.getElementById('price-pane');
+  const cotEl   = document.getElementById('cot-panels');
+  const totalH  = splitEl.clientHeight;
+  const W       = splitEl.clientWidth;
+  if (!W || !totalH) { setTimeout(renderCharts, 80); return; }
+
+  // Apply split ratio
+  const priceH = Math.max(80, Math.floor(totalH * splitRatio));
+  const cotH   = Math.max(80, totalH - priceH - 5);
+  priceEl.style.height = priceH + 'px';
+
+  // Destroy existing charts
   lwCharts.forEach(c => { try { c.remove(); } catch(e){} });
   lwCharts = [];
-  wrap.innerHTML = '';
+  priceChart = null;
+  cotEl.innerHTML = '';
 
-  const W = wrap.clientWidth;
-  const H = wrap.clientHeight;
-  if (!W || !H) { setTimeout(renderCharts, 80); return; }
+  const { cot, price } = filteredData();
 
-  const active   = activeCats();
-  const subCount = (showOI ? 1 : 0) + active.length;
-  const spyH     = Math.max(100, Math.floor(H * (subCount ? 0.50 : 1)));
-  const subH     = subCount ? Math.max(70, Math.floor((H - spyH) / subCount)) : 0;
+  // ── Price chart ──────────────────────────────────────
+  {
+    const el = document.createElement('div');
+    el.style.cssText = `width:100%;height:${priceH}px;`;
+    // replace old chart container
+    const old = priceEl.querySelector('.c-el');
+    if (old) old.remove();
+    el.className = 'c-el';
+    priceEl.appendChild(el);
 
-  // ── SPY ──────────────────────────────
-  mkPanel(wrap, 'SPY — WEEKLY (E-mini S&P 500 proxy)', '#475569', spyH, el => {
-    const chart = LightweightCharts.createChart(el, {...CHART_BASE, width:W, height:spyH});
-    const type  = document.getElementById('sel-type').value;
+    const chart = LightweightCharts.createChart(el, {...CHART_BASE, width:W, height:priceH});
+    priceChart = chart;
+    const type = document.getElementById('sel-type').value;
     if (type === 'candle') {
       const s = chart.addCandlestickSeries({
         upColor:'#22c55e', downColor:'#f43f5e',
         borderUpColor:'#22c55e', borderDownColor:'#f43f5e',
         wickUpColor:'#22c55e', wickDownColor:'#f43f5e',
       });
-      if (spyData.length) s.setData(spyData);
+      if (price.length) s.setData(price);
     } else {
       const s = chart.addLineSeries({color:'#38bdf8', lineWidth:2});
-      if (spyData.length) s.setData(spyData.map(d => ({time:d.time, value:d.close})));
+      if (price.length) s.setData(price.map(d => ({time:d.time, value:d.close})));
     }
-    return chart;
-  });
-
-  // ── Open Interest ─────────────────────
-  if (showOI) {
-    mkDivider(wrap);
-    mkPanel(wrap, 'OPEN INTEREST', '#fbbf24', subH, el => {
-      const chart = LightweightCharts.createChart(el, {...CHART_BASE, width:W, height:subH});
-      const s = chart.addLineSeries({color:'#fbbf24', lineWidth:2, priceLineVisible:false, lastValueVisible:true});
-      s.setData(cotData.map(d => ({time:d.time, value:d.oi})));
-      return chart;
-    });
+    lwCharts.push(chart);
   }
 
-  // ── COT panels ────────────────────────
-  const metric = document.getElementById('sel-metric').value;
-  const ml     = metricLabel();
-  active.forEach(key => {
-    const cfg = CATS[key];
-    mkDivider(wrap);
-    mkPanel(wrap, `${CAT_LABEL[key]} — ${ml}`, cfg.color, subH, el => {
-      const chart = LightweightCharts.createChart(el, {...CHART_BASE, width:W, height:subH});
-      // zero line
-      chart.addLineSeries({color:'#1e2535', lineWidth:1, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false})
-           .setData(cotData.map(d => ({time:d.time, value:0})));
-      // data line
+  // ── COT panels ───────────────────────────────────────
+  const active  = activeCatKeys();
+  const metric  = document.getElementById('sel-metric').value;
+  const extras  = showOI ? 1 : 0;
+  const panelCount = active.length + extras;
+  if (panelCount === 0) return;
+  const subH = Math.max(60, Math.floor(cotH / panelCount));
+
+  if (showOI) {
+    const panel = mkCotPanel(cotEl, 'Open Interest', '#fbbf24', subH, W);
+    const chart = LightweightCharts.createChart(panel.el, {...CHART_BASE, width:W, height:subH});
+    const s = chart.addLineSeries({color:'#fbbf24', lineWidth:2, priceLineVisible:false, lastValueVisible:true});
+    s.setData(cot.map(d => ({time:d.time, value:d.oi})));
+    lwCharts.push(chart);
+    if (active.length) cotEl.appendChild(mkSubDivider());
+  }
+
+  active.forEach((key, idx) => {
+    const cfg   = CATS[key];
+    const panel = mkCotPanel(cotEl, cfg.label, cfg.color, subH, W);
+    const chart = LightweightCharts.createChart(panel.el, {...CHART_BASE, width:W, height:subH});
+    // zero line
+    chart.addLineSeries({color:'#1e2535', lineWidth:1, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false})
+         .setData(cot.map(d => ({time:d.time, value:0})));
+    // histogram for chgNet, line for others
+    if (metric === 'chgNet') {
+      const hist = chart.addHistogramSeries({
+        color: cfg.color,
+        priceLineVisible: false,
+        lastValueVisible: true,
+        priceFormat: { type:'value', precision:0, minMove:1 },
+      });
+      hist.setData(cot.map(d => ({
+        time:  d.time,
+        value: d[key][metric],
+        color: d[key][metric] >= 0 ? cfg.color : '#f43f5e',
+      })));
+    } else {
       chart.addLineSeries({color:cfg.color, lineWidth:2, priceLineVisible:false, lastValueVisible:true})
-           .setData(cotData.map(d => ({time:d.time, value:d[key][metric]})));
-      return chart;
-    });
+           .setData(cot.map(d => ({time:d.time, value:d[key][metric]})));
+    }
+    lwCharts.push(chart);
+    if (idx < active.length - 1) cotEl.appendChild(mkSubDivider());
   });
 
-  // Sync timescales
+  // ── Sync all timescales ──────────────────────────────
   lwCharts.forEach(src => {
     src.timeScale().subscribeVisibleLogicalRangeChange(range => {
       if (!range) return;
       lwCharts.forEach(other => { if (other !== src) other.timeScale().setVisibleLogicalRange(range); });
     });
   });
+
+  updateCards();
 }
 
-function mkPanel(wrap, label, color, h, buildFn) {
+function mkCotPanel(parent, label, color, h, w) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `position:relative;height:${h}px;overflow:hidden;`;
+  const lbl = document.createElement('div');
+  lbl.className = 'c-lbl';
+  lbl.style.color = color;
+  lbl.textContent = label;
   const el = document.createElement('div');
-  el.className = 'c-panel';
-  el.style.height = h + 'px';
-  el.innerHTML = `<div class="c-lbl" style="color:${color}">${label}</div><div class="c-el" style="width:100%;height:100%"></div>`;
+  el.style.cssText = `width:100%;height:${h}px;`;
+  wrap.appendChild(lbl);
   wrap.appendChild(el);
-  lwCharts.push(buildFn(el.querySelector('.c-el')));
+  parent.appendChild(wrap);
+  return { wrap, el };
 }
 
-function mkDivider(wrap) {
+function mkSubDivider() {
   const d = document.createElement('div');
-  d.className = 'c-divider';
-  wrap.appendChild(d);
+  d.className = 'c-sub-divider';
+  return d;
 }
 
-// ════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+// SPLIT PANE DRAG
+// ════════════════════════════════════════════════════════
+(function initSplitDrag() {
+  const divider  = document.getElementById('divider');
+  const splitEl  = document.getElementById('split-container');
+  const priceEl  = document.getElementById('price-pane');
+
+  divider.addEventListener('mousedown', e => {
+    isDragging = true;
+    divider.classList.add('dragging');
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    const rect = splitEl.getBoundingClientRect();
+    const newRatio = (e.clientY - rect.top) / rect.height;
+    splitRatio = Math.min(0.85, Math.max(0.15, newRatio));
+    const totalH = splitEl.clientHeight;
+    priceEl.style.height = Math.floor(totalH * splitRatio) + 'px';
+    // live resize charts
+    const W = splitEl.clientWidth;
+    if (priceChart) priceChart.applyOptions({width:W, height:Math.floor(totalH*splitRatio)});
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    divider.classList.remove('dragging');
+    renderCharts(); // full re-render with new sizes
+  });
+})();
+
+// ════════════════════════════════════════════════════════
 // SIDEBAR
-// ════════════════════════════════════════
+// ════════════════════════════════════════════════════════
 function buildSidebar() {
   const sec = document.getElementById('cat-toggles');
   sec.innerHTML = '<div class="s-lbl">Categories</div>';
@@ -431,7 +635,7 @@ function buildSidebar() {
     row.className = 'tog-row';
     row.innerHTML = `
       <div class="tog-lbl ${cfg.active?'on':''}" id="tl-${key}">
-        <div class="cdot" style="background:${cfg.color}"></div>${cfg.label}
+        <div class="cdot" style="background:${cfg.color}"></div>${cfg.short}
       </div>
       <div class="tog-sw ${cfg.active?'on':''}" id="ts-${key}"></div>`;
     row.onclick = () => {
@@ -451,52 +655,88 @@ function toggleOI() {
   renderCharts();
 }
 
-// ════════════════════════════════════════
+function onMetricChange() { renderCharts(); }
+
+// ════════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════════
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    const pg = tab.dataset.page;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-'+pg).classList.add('active');
+    document.getElementById('sidebar').classList.toggle('hidden', pg === 'table');
+    document.getElementById('range-btns').style.display = pg === 'table' ? 'none' : '';
+    if (pg === 'chart') setTimeout(renderCharts, 30);
+    if (pg === 'table' && !tblBuilt && cotData.length) { buildTable(); tblBuilt = true; }
+  };
+});
+
+// ════════════════════════════════════════════════════════
+// RANGE BUTTONS
+// ════════════════════════════════════════════════════════
+document.querySelectorAll('.rbtn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.rbtn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeRange = btn.dataset.range;
+    tblBuilt = false;
+    renderCharts();
+  };
+});
+
+// ════════════════════════════════════════════════════════
 // TABLE
-// ════════════════════════════════════════
+// ════════════════════════════════════════════════════════
 const MDEF = [
   {key:'net',    label:'Net'},
   {key:'chgNet', label:'Chg Net'},
-  {key:'chgL',   label:'Chg Longs'},
-  {key:'chgS',   label:'Chg Shorts'},
+  {key:'chgL',   label:'Chg L'},
+  {key:'chgS',   label:'Chg S'},
   {key:'longs',  label:'Longs'},
   {key:'shorts', label:'Shorts'},
+  {key:'pctNet', label:'% Net'},
 ];
 const fmt = v => (v == null || isNaN(v)) ? '—' : Math.round(v).toLocaleString('ru-RU');
 function gradStyle(v) {
   if (!v || v === 0) return '';
-  const a = Math.min(0.08 + Math.abs(v)/150000*0.55, 0.63).toFixed(2);
+  const a = Math.min(0.08 + Math.abs(v)/150000*0.5, 0.6).toFixed(2);
   return v > 0
-    ? `background:rgba(56,189,248,${a});color:${Math.abs(v)>70000?'#bae6fd':'#7dd3fc'}`
-    : `background:rgba(244,63,94,${a});color:${Math.abs(v)>70000?'#fecdd3':'#fda4af'}`;
+    ? `background:rgba(56,189,248,${a});color:#7dd3fc`
+    : `background:rgba(244,63,94,${a});color:#fda4af`;
 }
 
 function buildTable() {
+  const { cot } = filteredData();
   const keys = Object.keys(CATS);
   let h = `<table><thead><tr>
     <th class="th-base th-sticky" rowspan="2">Date</th>
-    <th class="th-base" rowspan="2">Open Interest</th>`;
+    <th class="th-base" rowspan="2">Open<br>Interest</th>`;
   keys.forEach(k => {
     const col = CAT_THCOL[k];
-    h += `<th class="th-cat" colspan="${MDEF.length+1}" style="background:${col}22;color:${col};border-top:2px solid ${col}55">${CAT_LABEL[k]}</th>`;
+    h += `<th class="th-cat" colspan="${MDEF.length}" style="background:${col}22;color:${col};border-top:2px solid ${col}55">${CATS[k].short.toUpperCase()}</th>`;
   });
   h += '</tr><tr>';
   keys.forEach(k => {
     const col = CAT_THCOL[k];
     MDEF.forEach(m => { h += `<th class="th-m" style="background:${col}14">${m.label}</th>`; });
-    h += `<th class="th-m" style="background:${col}14">% OI Net</th>`;
   });
   h += '</tr></thead><tbody>';
-  [...cotData].reverse().forEach(d => {
+  [...cot].reverse().forEach(d => {
     h += `<tr><td class="td-date">${d.date}</td><td class="td-dim">${fmt(d.oi)}</td>`;
     keys.forEach(k => {
       const c = d[k];
       MDEF.forEach(m => {
-        const grad = m.key === 'chgL' || m.key === 'chgS';
-        const st   = grad ? gradStyle(c[m.key]) : '';
-        h += `<td class="${st?'':'td-dim'}" style="${st}">${fmt(c[m.key])}</td>`;
+        if (m.key === 'pctNet') {
+          h += `<td class="td-dim">${c.pctNet > 0?'+':''}${c.pctNet}%</td>`;
+        } else {
+          const grad = m.key === 'chgL' || m.key === 'chgS' || m.key === 'chgNet';
+          const st   = grad ? gradStyle(c[m.key]) : '';
+          h += `<td class="${st?'':'td-dim'}" style="${st}">${fmt(c[m.key])}</td>`;
+        }
       });
-      h += `<td class="td-dim">${c.pctNet > 0?'+':''}${c.pctNet}%</td>`;
     });
     h += '</tr>';
   });
@@ -504,9 +744,52 @@ function buildTable() {
   document.getElementById('tbl').innerHTML = h;
 }
 
+// ════════════════════════════════════════════════════════
+// RESIZE
+// ════════════════════════════════════════════════════════
 window.onresize = () => {
-  const w = document.getElementById('panels-wrap').clientWidth;
+  const w = document.getElementById('split-container').clientWidth;
   lwCharts.forEach(c => c.applyOptions({width:w}));
+};
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+window.onload = async () => {
+  buildSidebar();
+  const ltxt   = document.getElementById('load-txt');
+  const dot    = document.getElementById('status-dot');
+  const stxt   = document.getElementById('status-txt');
+
+  try {
+    ltxt.textContent = 'Fetching COT data (CFTC)...';
+    cotData = parseCOT(await fetchCOT());
+
+    ltxt.textContent = 'Fetching ES price (Yahoo Finance)...';
+    try {
+      priceData = parsePrice(await fetchPrice());
+    } catch(e) {
+      console.warn('Price fetch failed:', e.message);
+      priceData = [];
+      stxt.textContent = 'Price unavailable — COT only';
+      dot.classList.add('red');
+    }
+
+    if (priceData.length) {
+      const lastCOT   = cotData[cotData.length-1]?.date || '—';
+      const lastPrice = priceData[priceData.length-1]?.time || '—';
+      stxt.textContent = `COT: ${lastCOT}  ·  ES: ${lastPrice}`;
+    }
+
+    document.getElementById('loading').style.display = 'none';
+    renderCharts();
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('loading').innerHTML =
+      `<div style="color:var(--red);font-family:'Syne',sans-serif;font-size:12px;text-align:center;padding:24px">
+        <div style="font-size:15px;margin-bottom:8px">⚠ Error</div>${e.message}</div>`;
+  }
 };
 </script>
 </body>
