@@ -84,10 +84,16 @@ tr:hover td{background:rgba(59,130,246,.06)!important;}tr:hover .td-date{backgro
       <div class="tsep"></div>
       <select class="sel" id="sel-type" onchange="renderCharts()"><option value="candle">Candlestick</option><option value="line">Line</option></select>
       <div class="tsep"></div>
-      <select class="sel" id="sel-metric" onchange="renderCharts()">
+      <select class="sel" id="sel-metric" onchange="onMetricChange()">
         <option value="net">Net (L − S)</option>
         <option value="chgNet">Chg Net</option>
         <option value="ls">L &amp; S</option>
+      </select>
+      <!-- vis selector: only visible in L&S mode -->
+      <div class="tsep" id="vis-sep" style="display:none;"></div>
+      <select class="sel" id="sel-vis" style="display:none;" onchange="renderCharts()">
+        <option value="line">Line</option>
+        <option value="histogram">Histogram</option>
       </select>
     </div>
     <div class="range-group" id="range-btns">
@@ -141,6 +147,7 @@ tr:hover td{background:rgba(59,130,246,.06)!important;}tr:hover .td-date{backgro
 <script>
 const CFTC_URL='https://publicreporting.cftc.gov/resource/gpe5-46if.json';
 const MAX_WEEKS=156,AXIS_W=80,COL_LONG='#86efac',COL_SHORT='#fca5a5';
+const COL_NEUTRAL='#334155'; // neutral color for closing bars in histogram
 const CATS={
   dealer:{label:'Dealer / Intermediary',short:'Dealer',color:'#3b82f6',pfxL:'dealer_positions_long_all',pfxS:'dealer_positions_short_all',pfxCL:'change_in_dealer_long_all',pfxCS:'change_in_dealer_short_all',active:true},
   assetmgr:{label:'Asset Manager / Inst.',short:'Asset Mgr',color:'#22c55e',pfxL:'asset_mgr_positions_long',pfxS:'asset_mgr_positions_short',pfxCL:'change_in_asset_mgr_long',pfxCS:'change_in_asset_mgr_short',active:true},
@@ -212,6 +219,9 @@ const BASE={layout:{background:{color:'transparent'},textColor:'#64748b'},grid:{
 const BASE_NT={...BASE,timeScale:{...BASE.timeScale,visible:false}};
 const COT_FMT={type:'custom',formatter:axisFmt,minMove:1};
 
+// histogram scale margins give breathing room around zero line
+const HIST_SCALE={top:.1,bottom:.1};
+
 function applyPos(totalH,priceH,side='l'){
   const sfx=side==='r'?'-r':'';
   document.getElementById('price-pane'+sfx).style.height=priceH+'px';
@@ -242,7 +252,14 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   }
   chartSeries.set(pChart,pSeries);charts.push(pChart);
   if(panelCount===0)return charts;
-  const subH=Math.max(50,Math.floor(cotH/panelCount));let idx=0;
+
+  const subH=Math.max(50,Math.floor(cotH/panelCount));
+  let idx=0;
+
+  // vis mode — only relevant for L&S
+  const isLS=metric==='ls';
+  const visMode=isLS?document.getElementById('sel-vis').value:'line';
+
   if(showOI){
     const isLast=idx===panelCount-1;const w=mkWrap(cotEl,'Open Interest','#f59e0b',subH);
     const ch=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
@@ -250,26 +267,72 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
     s.setData(cot.map(d=>({time:d.time,value:d.oi})));chartSeries.set(ch,s);charts.push(ch);idx++;
     if(active.length)cotEl.appendChild(mkDiv());
   }
+
   active.forEach((key,i)=>{
     const cfg=CATS[key],isLast=idx===panelCount-1;
-    const sColor=metric==='ls'?(side==='l'?COL_LONG:COL_SHORT):cfg.color;
-    const sLabel=metric==='ls'?(side==='l'?cfg.short+' · Longs':cfg.short+' · Shorts'):cfg.label;
+    const sColor=isLS?(side==='l'?COL_LONG:COL_SHORT):cfg.color;
+    const sLabel=isLS
+      ?(visMode==='histogram'
+        ?(side==='l'?cfg.short+' · Longs Δ':cfg.short+' · Shorts Δ')
+        :(side==='l'?cfg.short+' · Longs':cfg.short+' · Shorts'))
+      :cfg.label;
+
     const w=mkWrap(cotEl,sLabel,sColor,subH);
     const ch=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
-    ch.addLineSeries({color:'#252d3d',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false}).setData(cot.map(d=>({time:d.time,value:0})));
-    const dataKey=metric==='ls'?(side==='l'?'longs':'shorts'):metric;
-    let mainS;
-    if(metric==='chgNet'){
-      mainS=ch.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT});
-      mainS.setData(cot.map(d=>({time:d.time,value:d[key][dataKey],color:d[key][dataKey]>=0?cfg.color:'#ef4444'})));
+
+    if(isLS && visMode==='histogram'){
+      // ── HISTOGRAM MODE ──────────────────────────────────────────────
+      // scale margins to give zero-line breathing room
+      ch.applyOptions({rightPriceScale:{...BASE.rightPriceScale,scaleMargins:HIST_SCALE}});
+
+      // zero baseline (invisible anchor so LW keeps 0 in view)
+      ch.addLineSeries({color:'transparent',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:COT_FMT})
+        .setData(cot.map(d=>({time:d.time,value:0})));
+
+      const chgKey=side==='l'?'chgL':'chgS';
+      const posColor=side==='l'?COL_LONG:COL_SHORT; // pastel green or pastel red
+
+      const histS=ch.addHistogramSeries({
+        priceLineVisible:false,
+        lastValueVisible:true,
+        priceFormat:COT_FMT,
+        base:0,
+      });
+      histS.setData(cot.map(d=>{
+        const v=d[key][chgKey];
+        // longs side: up=green, down=neutral | shorts side: up=red, down=neutral
+        const color=v>=0?posColor:COL_NEUTRAL;
+        return{time:d.time,value:v,color};
+      }));
+      chartSeries.set(ch,histS);
+
     } else {
-      mainS=ch.addLineSeries({color:sColor,lineWidth:2,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT});
-      mainS.setData(cot.map(d=>({time:d.time,value:d[key][dataKey]})));
+      // ── LINE MODE (original) ─────────────────────────────────────────
+      ch.addLineSeries({color:'#252d3d',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false}).setData(cot.map(d=>({time:d.time,value:0})));
+      const dataKey=metric==='ls'?(side==='l'?'longs':'shorts'):metric;
+      let mainS;
+      if(metric==='chgNet'){
+        mainS=ch.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT});
+        mainS.setData(cot.map(d=>({time:d.time,value:d[key][dataKey],color:d[key][dataKey]>=0?cfg.color:'#ef4444'})));
+      } else {
+        mainS=ch.addLineSeries({color:sColor,lineWidth:2,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT});
+        mainS.setData(cot.map(d=>({time:d.time,value:d[key][dataKey]})));
+      }
+      chartSeries.set(ch,mainS);
     }
-    chartSeries.set(ch,mainS);charts.push(ch);idx++;
+
+    charts.push(ch);idx++;
     if(i<active.length-1)cotEl.appendChild(mkDiv());
   });
   return charts;
+}
+
+function onMetricChange(){
+  const metric=document.getElementById('sel-metric').value;
+  const isLS=metric==='ls';
+  document.getElementById('sel-vis').style.display=isLS?'':'none';
+  document.getElementById('vis-sep').style.display=isLS?'':'none';
+  renderCharts();
 }
 
 function renderCharts(){
