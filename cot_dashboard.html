@@ -309,19 +309,33 @@ async function fetchCOT() {
 // ES=F weekly candles
 // ════════════════════════════════════════════════════════
 async function fetchPrice() {
-  // Use allorigins.win as CORS proxy for Yahoo Finance
-  const ticker = 'ES%3DF';
-  const now    = Math.floor(Date.now() / 1000);
-  const from   = Math.floor((Date.now() - 3 * 365.25 * 24 * 3600 * 1000) / 1000);
-  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1wk&period1=${from}&period2=${now}&events=history`;
-  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`;
-  const r = await fetch(proxyUrl);
-  if (!r.ok) throw new Error('Price proxy HTTP ' + r.status);
-  const wrapper = await r.json();
-  const json    = JSON.parse(wrapper.contents);
-  const result  = json?.chart?.result?.[0];
-  if (!result) throw new Error('Yahoo: no data');
-  return result;
+  const now  = Math.floor(Date.now() / 1000);
+  const from = Math.floor((Date.now() - 3 * 365.25 * 24 * 3600 * 1000) / 1000);
+  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/ES%3DF?interval=1wk&period1=${from}&period2=${now}&events=history`;
+
+  // Try multiple proxies in sequence
+  const proxies = [
+    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    url => `https://thingproxy.freeboard.io/fetch/${url}`,
+  ];
+
+  let lastErr = null;
+  for (const makeProxy of proxies) {
+    try {
+      const r = await fetch(makeProxy(yahooUrl), {signal: AbortSignal.timeout(8000)});
+      if (!r.ok) continue;
+      const text = await r.text();
+      // codetabs returns raw, others may wrap
+      let json;
+      try { json = JSON.parse(text); } catch { continue; }
+      // unwrap allorigins-style wrapper if present
+      if (json.contents) { try { json = JSON.parse(json.contents); } catch { continue; } }
+      const result = json?.chart?.result?.[0];
+      if (result) return result;
+    } catch(e) { lastErr = e; }
+  }
+  throw new Error('All price proxies failed: ' + (lastErr?.message || 'unknown'));
 }
 
 // ════════════════════════════════════════════════════════
