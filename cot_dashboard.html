@@ -350,7 +350,7 @@ const INSTRUMENTS={
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const CFTC_URL='https://publicreporting.cftc.gov/resource/gpe5-46if.json';
-const MAX_WEEKS=156,AXIS_W=72,COL_LONG='#86efac',COL_SHORT='#fca5a5',COL_NEUTRAL='#1e2535';
+const MAX_WEEKS=156,AXIS_W=72,COL_LONG='#86efac',COL_SHORT='#fca5a5',COL_NEUTRAL='#2e3f58';
 const CATS={
   dealer:{label:'Dealer / Intermediary',short:'Dealer',color:'#4f8eff',pfxL:'dealer_positions_long_all',pfxS:'dealer_positions_short_all',pfxCL:'change_in_dealer_long_all',pfxCS:'change_in_dealer_short_all',active:true},
   assetmgr:{label:'Asset Manager / Inst.',short:'Asset Mgr',color:'#3dd68c',pfxL:'asset_mgr_positions_long',pfxS:'asset_mgr_positions_short',pfxCL:'change_in_asset_mgr_long',pfxCS:'change_in_asset_mgr_short',active:true},
@@ -553,6 +553,14 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
       const histS=ch.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT,base:0});
       histS.setData(cot.map(d=>{const v=d[key][chgKey];return{time:d.time,value:v,color:v>=0?posColor:COL_NEUTRAL};}));
       chartSeries.set(ch,histS);
+    }else if(metric==='net'&&visMode==='histogram'){
+      // NET histogram: above zero = green, below = red
+      ch.applyOptions({rightPriceScale:{...BASE.rightPriceScale,scaleMargins:HIST_SCALE}});
+      ch.addLineSeries({color:'transparent',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:COT_FMT})
+        .setData(cot.map(d=>({time:d.time,value:0})));
+      const histS=ch.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT,base:0});
+      histS.setData(cot.map(d=>{const v=d[key].net;return{time:d.time,value:v,color:v>=0?COL_LONG:'#f16b6b'};}));
+      chartSeries.set(ch,histS);
     }else{
       ch.addLineSeries({color:'#181d27',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false})
         .setData(cot.map(d=>({time:d.time,value:0})));
@@ -575,9 +583,10 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
 
 // ─── METRIC CHANGE ────────────────────────────────────────────────────────────
 function onMetricChange(){
-  const isLS=document.getElementById('sel-metric').value==='ls';
-  document.getElementById('sel-vis').style.display=isLS?'':'none';
-  document.getElementById('vis-sep').style.display=isLS?'':'none';
+  const metric=document.getElementById('sel-metric').value;
+  const showVis=metric==='ls'||metric==='net';
+  document.getElementById('sel-vis').style.display=showVis?'':'none';
+  document.getElementById('vis-sep').style.display=showVis?'':'none';
   renderCharts();
 }
 
