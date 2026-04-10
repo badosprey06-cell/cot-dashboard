@@ -80,17 +80,17 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
 /* ── CHART PAGE ── */
 #page-chart{overflow:hidden;}
-#split-container{flex:1 1 0;min-height:0;position:relative;display:flex;flex-direction:column;}
-#price-pane{position:relative;overflow:hidden;min-height:60px;}
+#split-container{flex:1 1 0;min-height:0;position:relative;}
+#price-pane{position:absolute;top:0;left:0;right:0;overflow:hidden;}
 #price-pane .pane-lbl{position:absolute;top:6px;left:8px;z-index:5;font-family:var(--font-display);font-size:8px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);pointer-events:none;}
-#divider{flex:0 0 5px;background:var(--border);cursor:ns-resize;position:relative;z-index:10;transition:background .15s;}
+#divider{position:absolute;left:0;right:0;height:5px;background:var(--border);cursor:ns-resize;z-index:10;transition:background .15s;}
 #divider:hover,#divider.dragging{background:var(--accent);}
 #divider::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:30px;height:2px;background:var(--muted2);border-radius:1px;}
-#cot-pane{position:relative;overflow:hidden;min-height:60px;display:flex;flex-direction:column;}
+#cot-pane{position:absolute;left:0;right:0;bottom:0;overflow:hidden;display:flex;flex-direction:column;}
 #cot-panels{flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
 .c-panel{position:relative;flex:1 1 0;min-height:0;overflow:hidden;}
 .c-lbl{position:absolute;top:5px;left:8px;z-index:5;font-family:var(--font-display);font-size:7.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;pointer-events:none;}
-.c-sub-divider{flex:0 0 2px;background:var(--border);}
+.c-sub-divider{flex:0 0 2px;background:var(--border);flex-shrink:0;}
 
 /* ── LOADING ── */
 #loading{position:absolute;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;}
@@ -479,18 +479,27 @@ function activeCatKeys() {
   return Object.entries(CATS).filter(([,c]) => c.active).map(([k]) => k);
 }
 
+function applyPositions(totalH, priceH) {
+  const priceEl = document.getElementById('price-pane');
+  const divEl   = document.getElementById('divider');
+  const cotPane = document.getElementById('cot-pane');
+  const cotH    = Math.max(80, totalH - priceH - 5);
+  priceEl.style.height = priceH + 'px';
+  divEl.style.top      = priceH + 'px';
+  cotPane.style.top    = (priceH + 5) + 'px';
+  cotPane.style.height = cotH + 'px';
+  return cotH;
+}
+
 function renderCharts() {
   const splitEl = document.getElementById('split-container');
-  const priceEl = document.getElementById('price-pane');
   const cotEl   = document.getElementById('cot-panels');
   const totalH  = splitEl.clientHeight;
   const W       = splitEl.clientWidth;
   if (!W || !totalH) { setTimeout(renderCharts, 80); return; }
 
-  // Apply split ratio
   const priceH = Math.max(80, Math.floor(totalH * splitRatio));
-  const cotH   = Math.max(80, totalH - priceH - 5);
-  priceEl.style.height = priceH + 'px';
+  const cotH   = applyPositions(totalH, priceH);
 
   // Destroy existing charts
   lwCharts.forEach(c => { try { c.remove(); } catch(e){} });
@@ -608,9 +617,8 @@ function mkSubDivider() {
 // SPLIT PANE DRAG
 // ════════════════════════════════════════════════════════
 (function initSplitDrag() {
-  const divider  = document.getElementById('divider');
-  const splitEl  = document.getElementById('split-container');
-  const priceEl  = document.getElementById('price-pane');
+  const divider = document.getElementById('divider');
+  const splitEl = document.getElementById('split-container');
 
   divider.addEventListener('mousedown', e => {
     isDragging = true;
@@ -620,21 +628,20 @@ function mkSubDivider() {
 
   document.addEventListener('mousemove', e => {
     if (!isDragging) return;
-    const rect = splitEl.getBoundingClientRect();
-    const newRatio = (e.clientY - rect.top) / rect.height;
-    splitRatio = Math.min(0.85, Math.max(0.15, newRatio));
+    const rect   = splitEl.getBoundingClientRect();
     const totalH = splitEl.clientHeight;
-    priceEl.style.height = Math.floor(totalH * splitRatio) + 'px';
-    // live resize charts
-    const W = splitEl.clientWidth;
-    if (priceChart) priceChart.applyOptions({width:W, height:Math.floor(totalH*splitRatio)});
+    const W      = splitEl.clientWidth;
+    splitRatio   = Math.min(0.85, Math.max(0.15, (e.clientY - rect.top) / totalH));
+    const priceH = Math.max(80, Math.floor(totalH * splitRatio));
+    applyPositions(totalH, priceH);
+    if (priceChart) priceChart.applyOptions({width:W, height:priceH});
   });
 
   document.addEventListener('mouseup', () => {
     if (!isDragging) return;
     isDragging = false;
     divider.classList.remove('dragging');
-    renderCharts(); // full re-render with new sizes
+    renderCharts();
   });
 })();
 
