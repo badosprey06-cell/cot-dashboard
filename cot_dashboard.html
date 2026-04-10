@@ -466,10 +466,16 @@ const CHART_BASE = {
   layout:      { background:{color:'transparent'}, textColor:'#475569' },
   grid:        { vertLines:{color:'#161b25'}, horzLines:{color:'#161b25'} },
   crosshair:   { mode:1 },
-  timeScale:   { borderColor:'#1e2535', timeVisible:false, rightOffset:4 },
+  timeScale:   { borderColor:'#1e2535', timeVisible:false, rightOffset:4, visible:true },
   rightPriceScale: { borderColor:'#1e2535', minimumWidth:72 },
   handleScale:  { mouseWheel:true, pinch:true },
   handleScroll: { mouseWheel:true, pressedMouseMove:true },
+};
+
+// Вариант без оси дат — для всех панелей кроме последней
+const CHART_BASE_NOTIME = {
+  ...CHART_BASE,
+  timeScale: { ...CHART_BASE.timeScale, visible:false },
 };
 
 // ════════════════════════════════════════════════════════
@@ -519,7 +525,8 @@ function renderCharts() {
     el.className = 'c-el';
     priceEl.appendChild(el);
 
-    const chart = LightweightCharts.createChart(el, {...CHART_BASE, width:W, height:priceH});
+    // Цена — без оси дат (она будет только на последней COT панели)
+    const chart = LightweightCharts.createChart(el, {...CHART_BASE_NOTIME, width:W, height:priceH});
     priceChart = chart;
     const type = document.getElementById('sel-type').value;
     if (type === 'candle') {
@@ -544,19 +551,28 @@ function renderCharts() {
   if (panelCount === 0) return;
   const subH = Math.max(60, Math.floor(cotH / panelCount));
 
+  // Определяем общее количество панелей чтобы знать какая последняя
+  let panelIdx = 0;
+  const totalPanels = panelCount;
+
   if (showOI) {
-    const panel = mkCotPanel(cotEl, 'Open Interest', '#fbbf24', subH, W);
-    const chart = LightweightCharts.createChart(panel.el, {...CHART_BASE, width:W, height:subH});
+    const isLast = active.length === 0; // OI последняя если нет активных категорий
+    const cfg2   = isLast ? CHART_BASE : CHART_BASE_NOTIME;
+    const panel  = mkCotPanel(cotEl, 'Open Interest', '#fbbf24', subH, W);
+    const chart  = LightweightCharts.createChart(panel.el, {...cfg2, width:W, height:subH});
     const s = chart.addLineSeries({color:'#fbbf24', lineWidth:2, priceLineVisible:false, lastValueVisible:true});
     s.setData(cot.map(d => ({time:d.time, value:d.oi})));
     lwCharts.push(chart);
+    panelIdx++;
     if (active.length) cotEl.appendChild(mkSubDivider());
   }
 
   active.forEach((key, idx) => {
-    const cfg   = CATS[key];
-    const panel = mkCotPanel(cotEl, cfg.label, cfg.color, subH, W);
-    const chart = LightweightCharts.createChart(panel.el, {...CHART_BASE, width:W, height:subH});
+    const cfg    = CATS[key];
+    const isLast = (panelIdx === totalPanels - 1);
+    const baseCfg = isLast ? CHART_BASE : CHART_BASE_NOTIME;
+    const panel  = mkCotPanel(cotEl, cfg.label, cfg.color, subH, W);
+    const chart  = LightweightCharts.createChart(panel.el, {...baseCfg, width:W, height:subH});
     // zero line
     chart.addLineSeries({color:'#1e2535', lineWidth:1, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false})
          .setData(cot.map(d => ({time:d.time, value:0})));
@@ -578,6 +594,7 @@ function renderCharts() {
            .setData(cot.map(d => ({time:d.time, value:d[key][metric]})));
     }
     lwCharts.push(chart);
+    panelIdx++;
     if (idx < active.length - 1) cotEl.appendChild(mkSubDivider());
   });
 
