@@ -511,9 +511,9 @@ function renderCharts() {
 
   // ── Price chart ──────────────────────────────────────
   {
+    const priceEl = document.getElementById('price-pane');
     const el = document.createElement('div');
     el.style.cssText = `width:100%;height:${priceH}px;`;
-    // replace old chart container
     const old = priceEl.querySelector('.c-el');
     if (old) old.remove();
     el.className = 'c-el';
