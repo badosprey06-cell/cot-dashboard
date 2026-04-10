@@ -7,91 +7,41 @@
 <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:      #0d0f14;
-  --surface: #141720;
-  --card:    #1a1e2a;
-  --border:  #252d3d;
-  --border2: #2e3850;
-  --text:    #e2e8f0;
-  --muted:   #64748b;
-  --muted2:  #94a3b8;
-  --accent:  #3b82f6;
-  --green:   #22c55e;
-  --red:     #ef4444;
-  --yellow:  #f59e0b;
-  --r:       8px;
-  --font:    'Inter', sans-serif;
-  --mono:    'Roboto Mono', monospace;
-  --axis-w:  80px;
-}
+:root{--bg:#0d0f14;--surface:#141720;--card:#1a1e2a;--border:#252d3d;--border2:#2e3850;--text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;--accent:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--r:8px;--font:'Inter',sans-serif;--mono:'Roboto Mono',monospace;--axis-w:80px;}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;overflow:hidden;}
 #app{display:flex;flex-direction:column;width:100%;height:100%;}
-
-/* HEADER */
 #header{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:44px;background:var(--surface);border-bottom:1px solid var(--border);}
-.logo{font-weight:700;font-size:15px;letter-spacing:-.3px;}
-.logo em{color:var(--accent);font-style:normal;}
-.hdr-mid{font-size:12px;color:var(--muted2);font-weight:500;}
-.hdr-mid strong{color:var(--text);}
+.logo{font-weight:700;font-size:16px;letter-spacing:-.5px;}.logo em{color:var(--accent);font-style:normal;}
+.hdr-mid{font-size:12px;color:var(--muted2);font-weight:500;}.hdr-mid strong{color:var(--text);}
 #hdr-status{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0;}
-.dot.err{background:var(--red);animation:none;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0;}.dot.err{background:var(--red);animation:none;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-
-/* TOOLBAR */
 #toolbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:38px;background:var(--surface);border-bottom:1px solid var(--border);}
-.tabs{display:flex;gap:2px;}
-.tab{padding:5px 12px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s;}
-.tab:hover{color:var(--text);}
-.tab.active{background:var(--card);color:var(--text);}
-.range-group{display:flex;gap:4px;}
-.rbtn{padding:4px 10px;border-radius:5px;border:1px solid transparent;font-size:11px;font-weight:600;font-family:var(--mono);cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;}
-.rbtn:hover{color:var(--text);}
-.rbtn.active{background:var(--card);border-color:var(--border2);color:var(--text);}
+.tabs{display:flex;gap:2px;}.tab{padding:5px 12px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s;}.tab:hover{color:var(--text);}.tab.active{background:var(--card);color:var(--text);}
+.range-group{display:flex;gap:4px;}.rbtn{padding:4px 10px;border-radius:5px;border:1px solid transparent;font-size:11px;font-weight:600;font-family:var(--mono);cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;}.rbtn:hover{color:var(--text);}.rbtn.active{background:var(--card);border-color:var(--border2);color:var(--text);}
 .tsep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
 .sel{background:var(--card);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;font-weight:500;padding:4px 8px;border-radius:5px;cursor:pointer;outline:none;}
-
-/* MAIN */
 #main{flex:1 1 0;min-height:0;display:flex;overflow:hidden;}
-
-/* SIDEBAR */
-#sidebar{flex:0 0 164px;background:var(--surface);border-right:1px solid var(--border);padding:10px 8px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+#sidebar{flex:0 0 168px;background:var(--surface);border-right:1px solid var(--border);padding:12px 10px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
 #sidebar.hidden{display:none;}
-.s-group{display:flex;flex-direction:column;gap:4px;}
-.s-lbl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding-bottom:5px;border-bottom:1px solid var(--border);}
-.tog-row{display:flex;align-items:center;justify-content:space-between;padding:3px 2px;cursor:pointer;border-radius:4px;transition:background .1s;}
-.tog-row:hover{background:var(--card);}
-.tog-lbl{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);transition:color .15s;}
-.tog-lbl.on{color:var(--text);}
-.cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.sw{width:28px;height:14px;background:var(--border);border-radius:7px;position:relative;transition:background .2s;flex-shrink:0;}
-.sw::after{content:'';position:absolute;left:2px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--muted);transition:all .2s;}
-.sw.on{background:rgba(59,130,246,.3);}
-.sw.on::after{left:16px;background:var(--accent);}
-
-/* VIEWPORT */
+.s-group{display:flex;flex-direction:column;gap:6px;}
+.s-lbl{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding-bottom:6px;border-bottom:1px solid var(--border);}
+.tog-row{display:flex;align-items:center;justify-content:space-between;padding:4px 4px;cursor:pointer;border-radius:4px;transition:background .1s;}.tog-row:hover{background:var(--card);}
+.tog-lbl{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--muted);transition:color .15s;}.tog-lbl.on{color:var(--text);}
+.cdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.sw{width:28px;height:14px;background:var(--border);border-radius:7px;position:relative;transition:background .2s;flex-shrink:0;}.sw::after{content:'';position:absolute;left:2px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--muted);transition:all .2s;}.sw.on{background:rgba(59,130,246,.3);}.sw.on::after{left:16px;background:var(--accent);}
 #viewport{flex:1 1 0;min-width:0;overflow:hidden;display:flex;flex-direction:column;padding:10px;gap:8px;}
-.page{display:none;flex-direction:column;flex:1 1 0;min-height:0;gap:8px;}
-.page.active{display:flex;}
-
-/* CARDS */
+.page{display:none;flex-direction:column;flex:1 1 0;min-height:0;gap:8px;}.page.active{display:flex;}
 #cards{flex:0 0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:5px;}
 .card-lbl{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.3px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.card-val{font-size:22px;font-weight:700;line-height:1;letter-spacing:-.5px;font-family:var(--mono);}
-.card-val.green{color:var(--green);}
-.card-val.red{color:var(--red);}
-.card-val.white{color:var(--text);}
-.card-chg{font-size:11px;color:var(--muted);}
-.card-chg .up{color:var(--green);font-weight:600;}
-.card-chg .dn{color:var(--red);font-weight:600;}
-
-/* CHART CARD */
-#chart-card{flex:1 1 0;min-height:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:relative;}
-
-/* SPLIT */
+.card-val{font-size:22px;font-weight:700;line-height:1;letter-spacing:-.5px;font-family:var(--mono);}.card-val.green{color:var(--green);}.card-val.red{color:var(--red);}.card-val.white{color:var(--text);}
+.card-chg{font-size:11px;color:var(--muted);}.card-chg .up{color:var(--green);font-weight:600;}.card-chg .dn{color:var(--red);font-weight:600;}
+#chart-area{flex:1 1 0;min-height:0;display:flex;gap:8px;}
+#chart-card,#chart-card-r{flex:1 1 0;min-height:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:relative;}
+#chart-card-r{display:none;}
+#chart-area.ls-mode #chart-card-r{display:block;}
 #split-wrap,#split-wrap-r{position:absolute;inset:0;}
 #price-pane,#price-pane-r{position:absolute;top:0;left:0;right:0;overflow:hidden;}
 #price-lbl,#price-lbl-r{position:absolute;top:7px;left:10px;z-index:5;font-size:10px;font-weight:600;color:var(--muted2);letter-spacing:.3px;pointer-events:none;text-transform:uppercase;}
@@ -99,39 +49,23 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 #divider:hover,#divider.dragging,#divider-r:hover,#divider-r.dragging{background:var(--accent);}
 #cot-pane,#cot-pane-r{position:absolute;left:0;right:0;bottom:0;overflow:hidden;display:flex;flex-direction:column;}
 #cot-panels,#cot-panels-r{flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
-.c-sub-div{flex:0 0 1px;background:var(--border);flex-shrink:0;}
-.c-wrap{position:relative;overflow:hidden;}
+.c-sub-div{flex:0 0 1px;background:var(--border);flex-shrink:0;}.c-wrap{position:relative;overflow:hidden;}
 .c-lbl{position:absolute;top:6px;left:10px;z-index:5;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;pointer-events:none;}
-
-/* L&S side-by-side mode */
-#chart-area{flex:1 1 0;min-height:0;display:flex;gap:8px;}
-#chart-card{flex:1 1 0;min-height:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:relative;}
-#chart-card-r{flex:1 1 0;min-height:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:relative;display:none;}
-#chart-area.ls-mode #chart-card-r{display:block;}
-
-/* LOADING */
 #loading{position:absolute;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
 .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .load-msg{font-size:12px;color:var(--muted);font-weight:500;}
-
-/* TABLE */
-#page-table{overflow:hidden;}
-.tbl-card{flex:1 1 0;min-height:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:auto;padding:12px 14px;}
+#page-table{overflow:hidden;}.tbl-card{flex:1 1 0;min-height:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:auto;padding:12px 14px;}
 table{border-collapse:collapse;width:max-content;font-size:11px;}
-thead tr:first-child th{position:sticky;top:0;z-index:6;}
-thead tr:last-child th{position:sticky;top:29px;z-index:5;}
+thead tr:first-child th{position:sticky;top:0;z-index:6;}thead tr:last-child th{position:sticky;top:29px;z-index:5;}
 .th-base{background:var(--card);color:var(--text);font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:7px 10px;text-align:center;border:1px solid var(--border);}
 .th-sticky{position:sticky;left:0;z-index:9!important;}
 .th-cat{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:7px 10px;text-align:center;border:1px solid rgba(255,255,255,.04);}
 .th-m{font-size:8px;font-weight:600;letter-spacing:.3px;text-transform:uppercase;padding:4px 8px;text-align:center;border:1px solid rgba(255,255,255,.04);color:var(--muted);white-space:nowrap;}
 td{padding:4px 9px;text-align:right;border:1px solid var(--border);white-space:nowrap;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:11px;}
-.td-date{text-align:center;position:sticky;left:0;z-index:2;background:var(--card);color:var(--muted2);border-right:2px solid var(--border);}
-.td-dim{color:var(--muted);}
-tr:nth-child(even) td{background:rgba(255,255,255,.015);}
-tr:nth-child(even) .td-date{background:var(--card);}
-tr:hover td{background:rgba(59,130,246,.06)!important;}
-tr:hover .td-date{background:var(--card)!important;}
+.td-date{text-align:center;position:sticky;left:0;z-index:2;background:var(--card);color:var(--muted2);border-right:2px solid var(--border);}.td-dim{color:var(--muted);}
+tr:nth-child(even) td{background:rgba(255,255,255,.015);}tr:nth-child(even) .td-date{background:var(--card);}
+tr:hover td{background:rgba(59,130,246,.06)!important;}tr:hover .td-date{background:var(--card)!important;}
 </style>
 </head>
 <body>
@@ -148,10 +82,7 @@ tr:hover .td-date{background:var(--card)!important;}
         <div class="tab" data-page="table">Table</div>
       </div>
       <div class="tsep"></div>
-      <select class="sel" id="sel-type" onchange="renderCharts()">
-        <option value="candle">Candlestick</option>
-        <option value="line">Line</option>
-      </select>
+      <select class="sel" id="sel-type" onchange="renderCharts()"><option value="candle">Candlestick</option><option value="line">Line</option></select>
       <div class="tsep"></div>
       <select class="sel" id="sel-metric" onchange="renderCharts()">
         <option value="net">Net (L − S)</option>
@@ -168,10 +99,7 @@ tr:hover .td-date{background:var(--card)!important;}
   </div>
   <div id="main">
     <div id="sidebar">
-      <div class="s-group">
-        <div class="s-lbl">Categories</div>
-        <div id="cat-toggles"></div>
-      </div>
+      <div class="s-group"><div class="s-lbl">Categories</div><div id="cat-toggles"></div></div>
       <div class="s-group">
         <div class="s-lbl">Extra</div>
         <div class="tog-row" onclick="toggleOI()">
@@ -181,33 +109,13 @@ tr:hover .td-date{background:var(--card)!important;}
       </div>
     </div>
     <div id="viewport">
-      <div id="loading">
-        <div class="spinner"></div>
-        <div class="load-msg" id="load-txt">Initializing…</div>
-      </div>
-      <!-- CHART PAGE -->
+      <div id="loading"><div class="spinner"></div><div class="load-msg" id="load-txt">Initializing…</div></div>
       <div class="page active" id="page-chart">
         <div id="cards">
-          <div class="card">
-            <div class="card-lbl">Open Interest</div>
-            <div class="card-val white" id="cv-oi">—</div>
-            <div class="card-chg" id="cc-oi">—</div>
-          </div>
-          <div class="card">
-            <div class="card-lbl" id="lbl-nl">Net Long</div>
-            <div class="card-val green" id="cv-nl">—</div>
-            <div class="card-chg" id="cc-nl">—</div>
-          </div>
-          <div class="card">
-            <div class="card-lbl" id="lbl-ns">Net Short</div>
-            <div class="card-val red" id="cv-ns">—</div>
-            <div class="card-chg" id="cc-ns">—</div>
-          </div>
-          <div class="card">
-            <div class="card-lbl" id="lbl-np">Net Position</div>
-            <div class="card-val" id="cv-np">—</div>
-            <div class="card-chg" id="cc-np">—</div>
-          </div>
+          <div class="card"><div class="card-lbl">Open Interest</div><div class="card-val white" id="cv-oi">—</div><div class="card-chg" id="cc-oi">—</div></div>
+          <div class="card"><div class="card-lbl" id="lbl-nl">Net Long</div><div class="card-val green" id="cv-nl">—</div><div class="card-chg" id="cc-nl">—</div></div>
+          <div class="card"><div class="card-lbl" id="lbl-ns">Net Short</div><div class="card-val red" id="cv-ns">—</div><div class="card-chg" id="cc-ns">—</div></div>
+          <div class="card"><div class="card-lbl" id="lbl-np">Net Position</div><div class="card-val" id="cv-np">—</div><div class="card-chg" id="cc-np">—</div></div>
         </div>
         <div id="chart-area">
           <div id="chart-card">
@@ -226,169 +134,84 @@ tr:hover .td-date{background:var(--card)!important;}
           </div>
         </div>
       </div>
-      <!-- TABLE PAGE -->
-      <div class="page" id="page-table">
-        <div class="tbl-card"><div id="tbl"></div></div>
-      </div>
+      <div class="page" id="page-table"><div class="tbl-card"><div id="tbl"></div></div></div>
     </div>
   </div>
 </div>
 <script>
-// ═══════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════
-const CFTC_URL  = 'https://publicreporting.cftc.gov/resource/gpe5-46if.json';
-const MAX_WEEKS = 156;
-const AXIS_W    = 80; // одинаковая ширина оси для всех графиков → сетка совпадает
-
-const CATS = {
-  dealer:   { label:'Dealer / Intermediary', short:'Dealer',    color:'#3b82f6',
-    pfxL:'dealer_positions_long_all',   pfxS:'dealer_positions_short_all',
-    pfxCL:'change_in_dealer_long_all',  pfxCS:'change_in_dealer_short_all', active:true },
-  assetmgr: { label:'Asset Manager / Inst.', short:'Asset Mgr', color:'#22c55e',
-    pfxL:'asset_mgr_positions_long',    pfxS:'asset_mgr_positions_short',
-    pfxCL:'change_in_asset_mgr_long',   pfxCS:'change_in_asset_mgr_short',  active:true },
-  levfunds: { label:'Leveraged Funds',       short:'Lev Funds', color:'#a78bfa',
-    pfxL:'lev_money_positions_long',    pfxS:'lev_money_positions_short',
-    pfxCL:'change_in_lev_money_long',   pfxCS:'change_in_lev_money_short',  active:true },
-  other:    { label:'Other Reportable',      short:'Other Rept',color:'#fb923c',
-    pfxL:'other_rept_positions_long',   pfxS:'other_rept_positions_short',
-    pfxCL:'change_in_other_rept_long',  pfxCS:'change_in_other_rept_short', active:false },
-  nonrept:  { label:'Non-Reportable',        short:'Non-Rept',  color:'#94a3b8',
-    pfxL:'nonrept_positions_long_all',  pfxS:'nonrept_positions_short_all',
-    pfxCL:'change_in_nonrept_long_all', pfxCS:'change_in_nonrept_short_all',active:false },
+const CFTC_URL='https://publicreporting.cftc.gov/resource/gpe5-46if.json';
+const MAX_WEEKS=156,AXIS_W=80,COL_LONG='#86efac',COL_SHORT='#fca5a5';
+const CATS={
+  dealer:{label:'Dealer / Intermediary',short:'Dealer',color:'#3b82f6',pfxL:'dealer_positions_long_all',pfxS:'dealer_positions_short_all',pfxCL:'change_in_dealer_long_all',pfxCS:'change_in_dealer_short_all',active:true},
+  assetmgr:{label:'Asset Manager / Inst.',short:'Asset Mgr',color:'#22c55e',pfxL:'asset_mgr_positions_long',pfxS:'asset_mgr_positions_short',pfxCL:'change_in_asset_mgr_long',pfxCS:'change_in_asset_mgr_short',active:true},
+  levfunds:{label:'Leveraged Funds',short:'Lev Funds',color:'#a78bfa',pfxL:'lev_money_positions_long',pfxS:'lev_money_positions_short',pfxCL:'change_in_lev_money_long',pfxCS:'change_in_lev_money_short',active:true},
+  other:{label:'Other Reportable',short:'Other Rept',color:'#fb923c',pfxL:'other_rept_positions_long',pfxS:'other_rept_positions_short',pfxCL:'change_in_other_rept_long',pfxCS:'change_in_other_rept_short',active:false},
+  nonrept:{label:'Non-Reportable',short:'Non-Rept',color:'#94a3b8',pfxL:'nonrept_positions_long_all',pfxS:'nonrept_positions_short_all',pfxCL:'change_in_nonrept_long_all',pfxCS:'change_in_nonrept_short_all',active:false},
 };
-const CAT_THCOL = { dealer:'#1d4ed8', assetmgr:'#15803d', levfunds:'#7c3aed', other:'#c2410c', nonrept:'#475569' };
+const CAT_THCOL={dealer:'#1d4ed8',assetmgr:'#15803d',levfunds:'#7c3aed',other:'#c2410c',nonrept:'#475569'};
+let cotData=[],priceData=[],showOI=false,lwCharts=[],priceChart=null;
+let tblBuilt=false,activeRange='3',splitRatio=0.45,isDragging=false,rightDragInited=false;
+const chartSeries=new Map();
 
-// ═══════════════════════════════════
-// STATE
-// ═══════════════════════════════════
-let cotData=[], priceData=[];
-let showOI=false, lwCharts=[], priceChart=null;
-let tblBuilt=false, activeRange='3';
-let splitRatio=0.45, isDragging=false;
-
-// ═══════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════
-function toFriday(s) {
-  const d=new Date(s+'T00:00:00Z'), day=d.getUTCDay();
-  d.setUTCDate(d.getUTCDate()+(day<=5?5-day:6));
-  return d.toISOString().slice(0,10);
-}
-function rangeStart() {
-  if (activeRange==='ytd') return new Date().getUTCFullYear()+'-01-01';
-  const d=new Date(); d.setUTCFullYear(d.getUTCFullYear()-parseInt(activeRange));
-  return d.toISOString().slice(0,10);
-}
+function toFriday(s){const d=new Date(s+'T00:00:00Z'),day=d.getUTCDay();d.setUTCDate(d.getUTCDate()+(day<=5?5-day:6));return d.toISOString().slice(0,10);}
+function rangeStart(){if(activeRange==='ytd')return new Date().getUTCFullYear()+'-01-01';const d=new Date();d.setUTCFullYear(d.getUTCFullYear()-parseInt(activeRange));return d.toISOString().slice(0,10);}
 const today=()=>new Date().toISOString().slice(0,10);
 function fmtK(v){const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(2)+'M':a>=1e3?(v/1e3).toFixed(1)+'K':Math.round(v).toString();}
 function axisFmt(v){const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(1)+'M':a>=1e3?(v/1e3).toFixed(0)+'K':Math.round(v).toString();}
 const nf=v=>parseFloat(v)||0;
 
-// ═══════════════════════════════════
-// FETCH
-// ═══════════════════════════════════
-async function fetchCOT() {
-  const url=`${CFTC_URL}?market_and_exchange_names=E-MINI%20S%26P%20500%20-%20CHICAGO%20MERCANTILE%20EXCHANGE&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${MAX_WEEKS}`;
-  const r=await fetch(url); if(!r.ok) throw new Error('CFTC '+r.status); return r.json();
+async function fetchCOT(){
+  const r=await fetch(`${CFTC_URL}?market_and_exchange_names=E-MINI%20S%26P%20500%20-%20CHICAGO%20MERCANTILE%20EXCHANGE&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${MAX_WEEKS}`);
+  if(!r.ok)throw new Error('CFTC '+r.status);return r.json();
 }
-async function fetchPrice() {
-  const now=Math.floor(Date.now()/1000);
-  const from=Math.floor((Date.now()-3*365.25*24*3600*1000)/1000);
+async function fetchPrice(){
+  const now=Math.floor(Date.now()/1000),from=Math.floor((Date.now()-3*365.25*24*3600*1000)/1000);
   const yUrl=`https://query1.finance.yahoo.com/v8/finance/chart/ES%3DF?interval=1wk&period1=${from}&period2=${now}&events=history`;
-  const proxies=[
-    u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
-    u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-    u=>`https://thingproxy.freeboard.io/fetch/${u}`,
-  ];
+  const proxies=[u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,u=>`https://thingproxy.freeboard.io/fetch/${u}`];
   for(const mk of proxies){
-    try{
-      const r=await fetch(mk(yUrl),{signal:AbortSignal.timeout(8000)});
-      if(!r.ok) continue;
-      const txt=await r.text(); let j; try{j=JSON.parse(txt);}catch{continue;}
-      if(j.contents){try{j=JSON.parse(j.contents);}catch{continue;}}
-      const res=j?.chart?.result?.[0]; if(res) return res;
-    }catch(e){}
+    try{const r=await fetch(mk(yUrl),{signal:AbortSignal.timeout(8000)});if(!r.ok)continue;
+    const txt=await r.text();let j;try{j=JSON.parse(txt);}catch{continue;}
+    if(j.contents){try{j=JSON.parse(j.contents);}catch{continue;}}
+    const res=j?.chart?.result?.[0];if(res)return res;}catch(e){}
   }
   throw new Error('All price proxies failed');
 }
 
-// ═══════════════════════════════════
-// PARSE
-// ═══════════════════════════════════
-function parseCOT(raw){
-  return raw.map(r=>{
-    const date=r.report_date_as_yyyy_mm_dd.slice(0,10);
-    const time=toFriday(date), oi=nf(r.open_interest_all);
-    const e={date,time,oi};
-    Object.entries(CATS).forEach(([k,cfg])=>{
-      const L=nf(r[cfg.pfxL]),S=nf(r[cfg.pfxS]),cL=nf(r[cfg.pfxCL]),cS=nf(r[cfg.pfxCS]);
-      e[k]={longs:L,shorts:S,net:L-S,chgNet:cL-cS,chgL:cL,chgS:cS,pctNet:((L-S)/(oi||1)*100).toFixed(1)};
-    });
-    return e;
-  }).sort((a,b)=>a.time<b.time?-1:1);
-}
+const parseCOT=raw=>raw.map(r=>{
+  const date=r.report_date_as_yyyy_mm_dd.slice(0,10),time=toFriday(date),oi=nf(r.open_interest_all);
+  const e={date,time,oi};
+  Object.entries(CATS).forEach(([k,cfg])=>{const L=nf(r[cfg.pfxL]),S=nf(r[cfg.pfxS]),cL=nf(r[cfg.pfxCL]),cS=nf(r[cfg.pfxCS]);e[k]={longs:L,shorts:S,net:L-S,chgNet:cL-cS,chgL:cL,chgS:cS,pctNet:((L-S)/(oi||1)*100).toFixed(1)};});
+  return e;
+}).sort((a,b)=>a.time<b.time?-1:1);
+
 function parsePrice(res){
   const ts=res.timestamp,q=res.indicators.quote[0],td=today();
-  return ts.map((t,i)=>{
-    const mon=new Date(t*1000).toISOString().slice(0,10);
-    const d=new Date(mon+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+4);
-    return{time:d.toISOString().slice(0,10),open:+(q.open[i]||0).toFixed(2),high:+(q.high[i]||0).toFixed(2),low:+(q.low[i]||0).toFixed(2),close:+(q.close[i]||0).toFixed(2)};
-  }).filter(b=>b.open&&b.high&&b.low&&b.close&&b.time<=td);
+  return ts.map((t,i)=>{const mon=new Date(t*1000).toISOString().slice(0,10);const d=new Date(mon+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+4);return{time:d.toISOString().slice(0,10),open:+(q.open[i]||0).toFixed(2),high:+(q.high[i]||0).toFixed(2),low:+(q.low[i]||0).toFixed(2),close:+(q.close[i]||0).toFixed(2)};})
+  .filter(b=>b.open&&b.high&&b.low&&b.close&&b.time<=td);
 }
+
 function filteredData(){const s=rangeStart();return{cot:cotData.filter(d=>d.time>=s),price:priceData.filter(d=>d.time>=s)};}
 
-// ═══════════════════════════════════
-// CARDS
-// ═══════════════════════════════════
 function updateCards(){
-  const{cot}=filteredData(); if(!cot.length) return;
+  const{cot}=filteredData();if(!cot.length)return;
   const last=cot[cot.length-1],prev=cot[cot.length-2]||last;
   const active=Object.keys(CATS).filter(k=>CATS[k].active);
   const oiChg=last.oi-prev.oi;
   document.getElementById('cv-oi').textContent=fmtK(last.oi);
   document.getElementById('cc-oi').innerHTML=`<span class="${oiChg>=0?'up':'dn'}">${oiChg>=0?'+':''}${fmtK(oiChg)}</span> vs prev`;
-  let tL=0,tS=0,pL=0,pS=0;
-  active.forEach(k=>{tL+=last[k].longs;tS+=last[k].shorts;pL+=prev[k].longs;pS+=prev[k].shorts;});
+  let tL=0,tS=0,pL=0,pS=0;active.forEach(k=>{tL+=last[k].longs;tS+=last[k].shorts;pL+=prev[k].longs;pS+=prev[k].shorts;});
   const np=tL-tS,npChg=np-(pL-pS),sfx=active.length?' · '+active.map(k=>CATS[k].short).join(', '):'';
-  document.getElementById('lbl-nl').textContent='Net Long'+sfx;
-  document.getElementById('lbl-ns').textContent='Net Short'+sfx;
-  document.getElementById('lbl-np').textContent='Net Position'+sfx;
-  document.getElementById('cv-nl').textContent=fmtK(tL);
-  document.getElementById('cc-nl').innerHTML=`<span class="${tL-pL>=0?'up':'dn'}">${tL-pL>=0?'+':''}${fmtK(tL-pL)}</span> vs prev`;
-  document.getElementById('cv-ns').textContent=fmtK(tS);
-  document.getElementById('cc-ns').innerHTML=`<span class="${tS-pS>=0?'dn':'up'}">${tS-pS>=0?'+':''}${fmtK(tS-pS)}</span> vs prev`;
-  const npEl=document.getElementById('cv-np');
-  npEl.textContent=(np>=0?'+':'')+fmtK(np);
-  npEl.className='card-val '+(np>=0?'green':'red');
+  document.getElementById('lbl-nl').textContent='Net Long'+sfx;document.getElementById('lbl-ns').textContent='Net Short'+sfx;document.getElementById('lbl-np').textContent='Net Position'+sfx;
+  document.getElementById('cv-nl').textContent=fmtK(tL);document.getElementById('cc-nl').innerHTML=`<span class="${tL-pL>=0?'up':'dn'}">${tL-pL>=0?'+':''}${fmtK(tL-pL)}</span> vs prev`;
+  document.getElementById('cv-ns').textContent=fmtK(tS);document.getElementById('cc-ns').innerHTML=`<span class="${tS-pS>=0?'dn':'up'}">${tS-pS>=0?'+':''}${fmtK(tS-pS)}</span> vs prev`;
+  const npEl=document.getElementById('cv-np');npEl.textContent=(np>=0?'+':'')+fmtK(np);npEl.className='card-val '+(np>=0?'green':'red');
   document.getElementById('cc-np').innerHTML=`<span class="${npChg>=0?'up':'dn'}">${npChg>=0?'+':''}${fmtK(npChg)}</span> vs prev`;
 }
 
-// ═══════════════════════════════════
-// CHART BASE
-// ═══════════════════════════════════
-const BASE={
-  layout:{background:{color:'transparent'},textColor:'#64748b'},
-  grid:{vertLines:{color:'#1e2330'},horzLines:{color:'#1e2330'}},
-  crosshair:{mode:1},
-  timeScale:{borderColor:'#252d3d',timeVisible:false,rightOffset:3,visible:true},
-  rightPriceScale:{borderColor:'#252d3d',minimumWidth:AXIS_W,scaleMargins:{top:.08,bottom:.08}},
-  handleScale:{mouseWheel:true,pinch:true},
-  handleScroll:{mouseWheel:true,pressedMouseMove:true},
-};
+const BASE={layout:{background:{color:'transparent'},textColor:'#64748b'},grid:{vertLines:{color:'#1e2330'},horzLines:{color:'#1e2330'}},crosshair:{mode:1},timeScale:{borderColor:'#252d3d',timeVisible:false,rightOffset:3,visible:true},rightPriceScale:{borderColor:'#252d3d',minimumWidth:AXIS_W,scaleMargins:{top:.08,bottom:.08}},handleScale:{mouseWheel:true,pinch:true},handleScroll:{mouseWheel:true,pressedMouseMove:true}};
 const BASE_NT={...BASE,timeScale:{...BASE.timeScale,visible:false}};
 const COT_FMT={type:'custom',formatter:axisFmt,minMove:1};
 
-// ═══════════════════════════════════
-// COLORS
-// ═══════════════════════════════════
-const COL_LONG  = '#86efac'; // пастельный зелёный
-const COL_SHORT = '#fca5a5'; // пастельный красный
-
-// ═══════════════════════════════════
-// APPLY POSITIONS (left or right panel)
-// ═══════════════════════════════════
 function applyPos(totalH,priceH,side='l'){
   const sfx=side==='r'?'-r':'';
   document.getElementById('price-pane'+sfx).style.height=priceH+'px';
@@ -399,198 +222,128 @@ function applyPos(totalH,priceH,side='l'){
   return cotH;
 }
 
-// ═══════════════════════════════════
-// RENDER
-// ═══════════════════════════════════
 function activeCatKeys(){return Object.entries(CATS).filter(([,c])=>c.active).map(([k])=>k);}
 
-// Build one split panel (left or right)
-function buildPanel(swId,cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,active,label){
-  const cotEl=document.getElementById(cotPanelsId);
-  cotEl.innerHTML='';
-  const pricePaneEl=document.getElementById(pricePaneId);
-  const old=pricePaneEl.querySelector('.cel'); if(old) old.remove();
-
+function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,active){
+  const cotEl=document.getElementById(cotPanelsId);cotEl.innerHTML='';
+  const ppEl=document.getElementById(pricePaneId);const old=ppEl.querySelector('.cel');if(old)old.remove();
   const priceH=Math.max(80,Math.floor(totalH*splitRatio));
   const cotH=applyPos(totalH,priceH,side);
-  const panelCount=active.length+(showOI?1:0);
-  const charts=[];
-
-  // Price
-  const el=document.createElement('div');
-  el.className='cel'; el.style.cssText=`width:100%;height:${priceH}px;`;
-  pricePaneEl.appendChild(el);
-  const priceCfg=panelCount>0?BASE_NT:BASE;
-  const pChart=LightweightCharts.createChart(el,{...priceCfg,width:W,height:priceH});
-  // Price line — grey in LS mode, normal otherwise
-  const priceColor = metric==='ls' ? '#94a3b8' : '#3b82f6';
+  const panelCount=active.length+(showOI?1:0);const charts=[];
+  const el=document.createElement('div');el.className='cel';el.style.cssText=`width:100%;height:${priceH}px;`;ppEl.appendChild(el);
+  const pChart=LightweightCharts.createChart(el,{...(panelCount>0?BASE_NT:BASE),width:W,height:priceH});
+  let pSeries;
   if(document.getElementById('sel-type').value==='candle'){
-    pChart.addCandlestickSeries({upColor:'#22c55e',downColor:'#ef4444',borderUpColor:'#22c55e',borderDownColor:'#ef4444',wickUpColor:'#22c55e',wickDownColor:'#ef4444'})
-          .setData(price.length?price:[]);
+    pSeries=pChart.addCandlestickSeries({upColor:'#22c55e',downColor:'#ef4444',borderUpColor:'#22c55e',borderDownColor:'#ef4444',wickUpColor:'#22c55e',wickDownColor:'#ef4444'});
+    pSeries.setData(price.length?price:[]);
   } else {
-    pChart.addLineSeries({color:priceColor,lineWidth:2}).setData(price.length?price.map(d=>({time:d.time,value:d.close})):[]);
+    pSeries=pChart.addLineSeries({color:metric==='ls'?'#94a3b8':'#3b82f6',lineWidth:2});
+    pSeries.setData(price.length?price.map(d=>({time:d.time,value:d.close})):[]);
   }
-  charts.push(pChart);
-
-  if(panelCount===0) return charts;
-  const subH=Math.max(50,Math.floor(cotH/panelCount));
-  let idx=0;
-
+  chartSeries.set(pChart,pSeries);charts.push(pChart);
+  if(panelCount===0)return charts;
+  const subH=Math.max(50,Math.floor(cotH/panelCount));let idx=0;
   if(showOI){
-    const isLast=idx===panelCount-1;
-    const w=mkWrap(cotEl,'Open Interest','#f59e0b',subH);
+    const isLast=idx===panelCount-1;const w=mkWrap(cotEl,'Open Interest','#f59e0b',subH);
     const ch=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
-    ch.addLineSeries({color:'#f59e0b',lineWidth:2,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT})
-      .setData(cot.map(d=>({time:d.time,value:d.oi})));
-    charts.push(ch); idx++;
-    if(active.length) cotEl.appendChild(mkDiv());
+    const s=ch.addLineSeries({color:'#f59e0b',lineWidth:2,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT});
+    s.setData(cot.map(d=>({time:d.time,value:d.oi})));chartSeries.set(ch,s);charts.push(ch);idx++;
+    if(active.length)cotEl.appendChild(mkDiv());
   }
-
   active.forEach((key,i)=>{
-    const cfg=CATS[key], isLast=idx===panelCount-1;
-    // In LS mode: left panel=longs(green), right panel=shorts(red)
-    const seriesColor = metric==='ls'
-      ? (side==='l' ? COL_LONG : COL_SHORT)
-      : cfg.color;
-    const seriesLabel = metric==='ls'
-      ? (side==='l' ? cfg.short+' · Longs' : cfg.short+' · Shorts')
-      : cfg.label;
-    const w=mkWrap(cotEl,seriesLabel,seriesColor,subH);
+    const cfg=CATS[key],isLast=idx===panelCount-1;
+    const sColor=metric==='ls'?(side==='l'?COL_LONG:COL_SHORT):cfg.color;
+    const sLabel=metric==='ls'?(side==='l'?cfg.short+' · Longs':cfg.short+' · Shorts'):cfg.label;
+    const w=mkWrap(cotEl,sLabel,sColor,subH);
     const ch=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
-    ch.addLineSeries({color:'#252d3d',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false})
-      .setData(cot.map(d=>({time:d.time,value:0})));
-    const dataKey = metric==='ls' ? (side==='l'?'longs':'shorts') : metric;
+    ch.addLineSeries({color:'#252d3d',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false}).setData(cot.map(d=>({time:d.time,value:0})));
+    const dataKey=metric==='ls'?(side==='l'?'longs':'shorts'):metric;
+    let mainS;
     if(metric==='chgNet'){
-      ch.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT})
-        .setData(cot.map(d=>({time:d.time,value:d[key][dataKey],color:d[key][dataKey]>=0?cfg.color:'#ef4444'})));
+      mainS=ch.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT});
+      mainS.setData(cot.map(d=>({time:d.time,value:d[key][dataKey],color:d[key][dataKey]>=0?cfg.color:'#ef4444'})));
     } else {
-      ch.addLineSeries({color:seriesColor,lineWidth:2,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT})
-        .setData(cot.map(d=>({time:d.time,value:d[key][dataKey]})));
+      mainS=ch.addLineSeries({color:sColor,lineWidth:2,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT});
+      mainS.setData(cot.map(d=>({time:d.time,value:d[key][dataKey]})));
     }
-    charts.push(ch); idx++;
-    if(i<active.length-1) cotEl.appendChild(mkDiv());
+    chartSeries.set(ch,mainS);charts.push(ch);idx++;
+    if(i<active.length-1)cotEl.appendChild(mkDiv());
   });
   return charts;
 }
 
 function renderCharts(){
   const sw=document.getElementById('split-wrap');
-  const totalH=sw.clientHeight, W=sw.clientWidth;
-  if(!W||!totalH){setTimeout(renderCharts,80);return;}
-
-  // Cleanup
+  const totalH=sw.clientHeight;
+  if(!totalH){setTimeout(renderCharts,80);return;}
   lwCharts.forEach(c=>{try{c.remove();}catch(e){}});
-  lwCharts=[];priceChart=null;
-
+  lwCharts=[];priceChart=null;chartSeries.clear();rightDragInited=false;
   const{cot,price}=filteredData();
   const active=activeCatKeys();
   const metric=document.getElementById('sel-metric').value;
   const isLS=metric==='ls';
-
-  // LS mode: show right panel
-  const area=document.getElementById('chart-area');
-  area.classList.toggle('ls-mode',isLS);
-
-  // LEFT panel (always)
-  const leftCharts=buildPanel('split-wrap','cot-panels','price-pane','l',isLS?W/2-4:W,totalH,cot,price,metric,active);
-  priceChart=leftCharts[0];
-  lwCharts.push(...leftCharts);
-
-  // RIGHT panel (LS mode only)
-  if(isLS){
-    const swR=document.getElementById('split-wrap-r');
-    const WR=swR.clientWidth||W/2-4;
-    const rightCharts=buildPanel('split-wrap-r','cot-panels-r','price-pane-r','r',WR,totalH,cot,price,metric,active);
-    lwCharts.push(...rightCharts);
-
-    // Sync right divider drag
-    initRightDrag();
-  }
-
-  // ── CROSSHAIR SYNC ──────────────────────────────────
-  lwCharts.forEach(src=>{
-    // Timescale sync
-    src.timeScale().subscribeVisibleLogicalRangeChange(range=>{
-      if(!range) return;
-      lwCharts.forEach(o=>{if(o!==src) o.timeScale().setVisibleLogicalRange(range);});
-    });
-    // Crosshair sync
-    src.subscribeCrosshairMove(param=>{
-      if(!param.point) return;
-      lwCharts.forEach(o=>{
-        if(o===src) return;
-        if(param.time){
-          o.setCrosshairPosition(param.point.y, param.time, o.series?.[0] || o);
-        } else {
-          o.clearCrosshairPosition();
-        }
+  document.getElementById('chart-area').classList.toggle('ls-mode',isLS);
+  requestAnimationFrame(()=>{
+    const WL=document.getElementById('split-wrap').clientWidth;
+    const leftCharts=buildPanel('cot-panels','price-pane','l',WL,totalH,cot,price,metric,active);
+    priceChart=leftCharts[0];lwCharts.push(...leftCharts);
+    if(isLS){
+      const swR=document.getElementById('split-wrap-r');
+      const WR=swR.clientWidth||WL;
+      const rightCharts=buildPanel('cot-panels-r','price-pane-r','r',WR,totalH,cot,price,metric,active);
+      lwCharts.push(...rightCharts);initRightDrag();
+    }
+    lwCharts.forEach(src=>{
+      src.timeScale().subscribeVisibleLogicalRangeChange(range=>{if(!range)return;lwCharts.forEach(o=>{if(o!==src)o.timeScale().setVisibleLogicalRange(range);});});
+      src.subscribeCrosshairMove(param=>{
+        lwCharts.forEach(o=>{
+          if(o===src)return;
+          if(param.time&&param.point){const s=chartSeries.get(o);if(s)o.setCrosshairPosition(param.point.y,param.time,s);}
+          else{o.clearCrosshairPosition();}
+        });
       });
     });
+    updateCards();
   });
-
-  updateCards();
 }
 
-let rightDragInited=false;
+(function(){
+  const div=document.getElementById('divider'),sw=document.getElementById('split-wrap');
+  div.addEventListener('mousedown',e=>{isDragging=true;div.classList.add('dragging');e.preventDefault();});
+  document.addEventListener('mousemove',e=>{
+    if(!isDragging||!div.classList.contains('dragging'))return;
+    const rect=sw.getBoundingClientRect(),totalH=sw.clientHeight,W=sw.clientWidth;
+    splitRatio=Math.min(.85,Math.max(.15,(e.clientY-rect.top)/totalH));
+    const pH=Math.max(80,Math.floor(totalH*splitRatio));applyPos(totalH,pH,'l');
+    if(priceChart)priceChart.applyOptions({width:W,height:pH});
+  });
+  document.addEventListener('mouseup',()=>{if(!isDragging)return;isDragging=false;document.getElementById('divider').classList.remove('dragging');document.getElementById('divider-r').classList.remove('dragging');rightDragInited=false;renderCharts();});
+})();
+
 function initRightDrag(){
-  if(rightDragInited) return;
-  rightDragInited=true;
-  const divR=document.getElementById('divider-r');
-  const swR=document.getElementById('split-wrap-r');
+  if(rightDragInited)return;rightDragInited=true;
+  const divR=document.getElementById('divider-r'),swR=document.getElementById('split-wrap-r');
   divR.addEventListener('mousedown',e=>{isDragging=true;divR.classList.add('dragging');e.preventDefault();});
   document.addEventListener('mousemove',e=>{
-    if(!isDragging||!divR.classList.contains('dragging')) return;
+    if(!isDragging||!divR.classList.contains('dragging'))return;
     const rect=swR.getBoundingClientRect(),totalH=swR.clientHeight;
     splitRatio=Math.min(.85,Math.max(.15,(e.clientY-rect.top)/totalH));
-    const pH=Math.max(80,Math.floor(totalH*splitRatio));
-    applyPos(totalH,pH,'r');
+    applyPos(totalH,Math.max(80,Math.floor(totalH*splitRatio)),'r');
   });
 }
 
 function mkWrap(parent,label,color,h){
-  const wrap=document.createElement('div');
-  wrap.className='c-wrap'; wrap.style.height=h+'px';
-  const lbl=document.createElement('div');
-  lbl.className='c-lbl'; lbl.style.color=color; lbl.textContent=label;
-  const el=document.createElement('div'); el.style.cssText=`width:100%;height:${h}px;`;
-  wrap.appendChild(lbl); wrap.appendChild(el); parent.appendChild(wrap);
-  return{wrap,el};
+  const wrap=document.createElement('div');wrap.className='c-wrap';wrap.style.height=h+'px';
+  const lbl=document.createElement('div');lbl.className='c-lbl';lbl.style.color=color;lbl.textContent=label;
+  const el=document.createElement('div');el.style.cssText=`width:100%;height:${h}px;`;
+  wrap.appendChild(lbl);wrap.appendChild(el);parent.appendChild(wrap);return{wrap,el};
 }
 function mkDiv(){const d=document.createElement('div');d.className='c-sub-div';return d;}
 
-// ═══════════════════════════════════
-// SPLIT DRAG (left panel)
-// ═══════════════════════════════════
-(function(){
-  const div=document.getElementById('divider');
-  const sw=document.getElementById('split-wrap');
-  div.addEventListener('mousedown',e=>{isDragging=true;div.classList.add('dragging');e.preventDefault();});
-  document.addEventListener('mousemove',e=>{
-    if(!isDragging||!div.classList.contains('dragging')) return;
-    const rect=sw.getBoundingClientRect(),totalH=sw.clientHeight,W=sw.clientWidth;
-    splitRatio=Math.min(.85,Math.max(.15,(e.clientY-rect.top)/totalH));
-    const pH=Math.max(80,Math.floor(totalH*splitRatio));
-    applyPos(totalH,pH,'l');
-    if(priceChart) priceChart.applyOptions({width:W,height:pH});
-  });
-  document.addEventListener('mouseup',()=>{
-    if(!isDragging) return;
-    isDragging=false;
-    document.getElementById('divider').classList.remove('dragging');
-    const dr=document.getElementById('divider-r');
-    if(dr) dr.classList.remove('dragging');
-    rightDragInited=false;
-    renderCharts();
-  });
-})();
-
-// ═══════════════════════════════════
-// SIDEBAR / TABS / RANGE
-// ═══════════════════════════════════
 function buildSidebar(){
-  const sec=document.getElementById('cat-toggles'); sec.innerHTML='';
+  const sec=document.getElementById('cat-toggles');sec.innerHTML='';
   Object.entries(CATS).forEach(([key,cfg])=>{
-    const row=document.createElement('div'); row.className='tog-row';
+    const row=document.createElement('div');row.className='tog-row';
     row.innerHTML=`<div class="tog-lbl ${cfg.active?'on':''}" id="tl-${key}"><div class="cdot" style="background:${cfg.color}"></div>${cfg.short}</div><div class="sw ${cfg.active?'on':''}" id="ts-${key}"></div>`;
     row.onclick=()=>{cfg.active=!cfg.active;document.getElementById('ts-'+key).classList.toggle('on',cfg.active);document.getElementById('tl-'+key).classList.toggle('on',cfg.active);renderCharts();};
     sec.appendChild(row);
@@ -598,84 +351,43 @@ function buildSidebar(){
 }
 function toggleOI(){showOI=!showOI;document.getElementById('ts-oi').classList.toggle('on',showOI);document.getElementById('tl-oi').classList.toggle('on',showOI);renderCharts();}
 
-document.querySelectorAll('.tab').forEach(tab=>{
-  tab.onclick=()=>{
-    const pg=tab.dataset.page;
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    tab.classList.add('active');
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.getElementById('page-'+pg).classList.add('active');
-    document.getElementById('sidebar').classList.toggle('hidden',pg==='table');
-    document.getElementById('range-btns').style.display=pg==='table'?'none':'';
-    if(pg==='chart') setTimeout(renderCharts,30);
-    if(pg==='table'&&!tblBuilt&&cotData.length){buildTable();tblBuilt=true;}
-  };
-});
+document.querySelectorAll('.tab').forEach(tab=>{tab.onclick=()=>{const pg=tab.dataset.page;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+pg).classList.add('active');document.getElementById('sidebar').classList.toggle('hidden',pg==='table');document.getElementById('range-btns').style.display=pg==='table'?'none':'';if(pg==='chart')setTimeout(renderCharts,30);if(pg==='table'&&!tblBuilt&&cotData.length){buildTable();tblBuilt=true;}};});
+document.querySelectorAll('.rbtn').forEach(btn=>{btn.onclick=()=>{document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');activeRange=btn.dataset.range;tblBuilt=false;renderCharts();};});
 
-document.querySelectorAll('.rbtn').forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active'); activeRange=btn.dataset.range; tblBuilt=false; renderCharts();
-  };
-});
-
-// ═══════════════════════════════════
-// TABLE
-// ═══════════════════════════════════
 const MDEF=[{key:'net',label:'Net'},{key:'chgNet',label:'Chg Net'},{key:'chgL',label:'Chg L'},{key:'chgS',label:'Chg S'},{key:'longs',label:'Longs'},{key:'shorts',label:'Shorts'},{key:'pctNet',label:'% Net'}];
 const fmt=v=>v==null||isNaN(v)?'—':Math.round(v).toLocaleString('ru-RU');
 function gradStyle(v){if(!v||v===0)return'';const a=Math.min(0.08+Math.abs(v)/150000*.5,.6).toFixed(2);return v>0?`background:rgba(59,130,246,${a});color:#93c5fd`:`background:rgba(239,68,68,${a});color:#fca5a5`;}
 function buildTable(){
-  const{cot}=filteredData(); const keys=Object.keys(CATS);
+  const{cot}=filteredData();const keys=Object.keys(CATS);
   let h=`<table><thead><tr><th class="th-base th-sticky" rowspan="2">Date</th><th class="th-base" rowspan="2">Open Int.</th>`;
   keys.forEach(k=>{const col=CAT_THCOL[k];h+=`<th class="th-cat" colspan="${MDEF.length}" style="background:${col}22;color:${col};border-top:2px solid ${col}55">${CATS[k].short.toUpperCase()}</th>`;});
-  h+='</tr><tr>';
-  keys.forEach(k=>{const col=CAT_THCOL[k];MDEF.forEach(m=>{h+=`<th class="th-m" style="background:${col}14">${m.label}</th>`;});});
-  h+='</tr></thead><tbody>';
+  h+='</tr><tr>';keys.forEach(k=>{const col=CAT_THCOL[k];MDEF.forEach(m=>{h+=`<th class="th-m" style="background:${col}14">${m.label}</th>`;});});h+='</tr></thead><tbody>';
   [...cot].reverse().forEach(d=>{
     h+=`<tr><td class="td-date">${d.date}</td><td class="td-dim">${fmtK(d.oi)}</td>`;
-    keys.forEach(k=>{
-      const c=d[k];
-      MDEF.forEach(m=>{
-        if(m.key==='pctNet'){h+=`<td class="td-dim">${c.pctNet>0?'+':''}${c.pctNet}%</td>`;}
-        else{const grad=['chgL','chgS','chgNet'].includes(m.key);const st=grad?gradStyle(c[m.key]):'';h+=`<td class="${st?'':'td-dim'}" style="${st}">${fmt(c[m.key])}</td>`;}
-      });
-    });
+    keys.forEach(k=>{const c=d[k];MDEF.forEach(m=>{if(m.key==='pctNet'){h+=`<td class="td-dim">${c.pctNet>0?'+':''}${c.pctNet}%</td>`;}else{const grad=['chgL','chgS','chgNet'].includes(m.key);const st=grad?gradStyle(c[m.key]):'';h+=`<td class="${st?'':'td-dim'}" style="${st}">${fmt(c[m.key])}</td>`;}});});
     h+='</tr>';
   });
-  h+='</tbody></table>';
-  document.getElementById('tbl').innerHTML=h;
+  h+='</tbody></table>';document.getElementById('tbl').innerHTML=h;
 }
 
 window.onresize=()=>{
   const isLS=document.getElementById('sel-metric').value==='ls';
-  const w=document.getElementById('split-wrap').clientWidth;
-  const wR=document.getElementById('split-wrap-r').clientWidth;
-  lwCharts.forEach((c,i)=>{
-    const w2=isLS&&i>=lwCharts.length/2?wR:w;
-    c.applyOptions({width:w2});
-  });
+  const wL=document.getElementById('split-wrap').clientWidth;
+  const wR=isLS?document.getElementById('split-wrap-r').clientWidth:0;
+  const half=Math.ceil(lwCharts.length/2);
+  lwCharts.forEach((c,i)=>{c.applyOptions({width:isLS&&i>=half?wR:wL});});
 };
-// ═══════════════════════════════════
-// INIT
-// ═══════════════════════════════════
+
 window.onload=async()=>{
-  buildSidebar();
-  const ltxt=document.getElementById('load-txt');
+  buildSidebar();const ltxt=document.getElementById('load-txt');
   try{
-    ltxt.textContent='Fetching COT data (CFTC)…';
-    cotData=parseCOT(await fetchCOT());
+    ltxt.textContent='Fetching COT data (CFTC)…';cotData=parseCOT(await fetchCOT());
     ltxt.textContent='Fetching ES price (Yahoo Finance)…';
-    try{priceData=parsePrice(await fetchPrice());}
-    catch(e){console.warn('Price:',e.message);priceData=[];document.getElementById('sdot').classList.add('err');}
-    const lc=cotData[cotData.length-1]?.date||'—', lp=priceData.length?priceData[priceData.length-1].time:'N/A';
+    try{priceData=parsePrice(await fetchPrice());}catch(e){console.warn('Price:',e.message);priceData=[];document.getElementById('sdot').classList.add('err');}
+    const lc=cotData[cotData.length-1]?.date||'—',lp=priceData.length?priceData[priceData.length-1].time:'N/A';
     document.getElementById('stxt').textContent=`COT: ${lc}  ·  ES: ${lp}`;
-    document.getElementById('loading').style.display='none';
-    renderCharts();
-  }catch(e){
-    console.error(e);
-    document.getElementById('loading').innerHTML=`<div style="color:#ef4444;font-size:13px;text-align:center;padding:24px"><div style="font-size:16px;margin-bottom:8px">⚠ Error</div>${e.message}</div>`;
-  }
+    document.getElementById('loading').style.display='none';renderCharts();
+  }catch(e){console.error(e);document.getElementById('loading').innerHTML=`<div style="color:#ef4444;font-size:13px;text-align:center;padding:24px"><div style="font-size:16px;margin-bottom:8px">⚠ Error</div>${e.message}</div>`;}
 };
 </script>
 </body>
