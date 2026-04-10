@@ -92,16 +92,22 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 #chart-card{flex:1 1 0;min-height:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:relative;}
 
 /* SPLIT */
-#split-wrap{position:absolute;inset:0;}
-#price-pane{position:absolute;top:0;left:0;right:0;overflow:hidden;}
-#price-lbl{position:absolute;top:7px;left:10px;z-index:5;font-size:10px;font-weight:600;color:var(--muted2);letter-spacing:.3px;pointer-events:none;text-transform:uppercase;}
-#divider{position:absolute;left:0;right:0;height:4px;background:var(--border);cursor:ns-resize;z-index:10;transition:background .15s;}
-#divider:hover,#divider.dragging{background:var(--accent);}
-#cot-pane{position:absolute;left:0;right:0;bottom:0;overflow:hidden;display:flex;flex-direction:column;}
-#cot-panels{flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
+#split-wrap,#split-wrap-r{position:absolute;inset:0;}
+#price-pane,#price-pane-r{position:absolute;top:0;left:0;right:0;overflow:hidden;}
+#price-lbl,#price-lbl-r{position:absolute;top:7px;left:10px;z-index:5;font-size:10px;font-weight:600;color:var(--muted2);letter-spacing:.3px;pointer-events:none;text-transform:uppercase;}
+#divider,#divider-r{position:absolute;left:0;right:0;height:4px;background:var(--border);cursor:ns-resize;z-index:10;transition:background .15s;}
+#divider:hover,#divider.dragging,#divider-r:hover,#divider-r.dragging{background:var(--accent);}
+#cot-pane,#cot-pane-r{position:absolute;left:0;right:0;bottom:0;overflow:hidden;display:flex;flex-direction:column;}
+#cot-panels,#cot-panels-r{flex:1 1 0;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
 .c-sub-div{flex:0 0 1px;background:var(--border);flex-shrink:0;}
 .c-wrap{position:relative;overflow:hidden;}
 .c-lbl{position:absolute;top:6px;left:10px;z-index:5;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;pointer-events:none;}
+
+/* L&S side-by-side mode */
+#chart-area{flex:1 1 0;min-height:0;display:flex;gap:8px;}
+#chart-card{flex:1 1 0;min-height:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:relative;}
+#chart-card-r{flex:1 1 0;min-height:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;position:relative;display:none;}
+#chart-area.ls-mode #chart-card-r{display:block;}
 
 /* LOADING */
 #loading{position:absolute;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
@@ -150,8 +156,7 @@ tr:hover .td-date{background:var(--card)!important;}
       <select class="sel" id="sel-metric" onchange="renderCharts()">
         <option value="net">Net (L − S)</option>
         <option value="chgNet">Chg Net</option>
-        <option value="longs">Longs</option>
-        <option value="shorts">Shorts</option>
+        <option value="ls">L &amp; S</option>
       </select>
     </div>
     <div class="range-group" id="range-btns">
@@ -204,11 +209,20 @@ tr:hover .td-date{background:var(--card)!important;}
             <div class="card-chg" id="cc-np">—</div>
           </div>
         </div>
-        <div id="chart-card">
-          <div id="split-wrap">
-            <div id="price-pane"><div id="price-lbl">ES · Weekly</div></div>
-            <div id="divider"></div>
-            <div id="cot-pane"><div id="cot-panels"></div></div>
+        <div id="chart-area">
+          <div id="chart-card">
+            <div id="split-wrap">
+              <div id="price-pane"><div id="price-lbl">ES · Weekly</div></div>
+              <div id="divider"></div>
+              <div id="cot-pane"><div id="cot-panels"></div></div>
+            </div>
+          </div>
+          <div id="chart-card-r">
+            <div id="split-wrap-r">
+              <div id="price-pane-r"><div id="price-lbl-r">ES · Weekly</div></div>
+              <div id="divider-r"></div>
+              <div id="cot-pane-r"><div id="cot-panels-r"></div></div>
+            </div>
           </div>
         </div>
       </div>
@@ -367,14 +381,21 @@ const BASE_NT={...BASE,timeScale:{...BASE.timeScale,visible:false}};
 const COT_FMT={type:'custom',formatter:axisFmt,minMove:1};
 
 // ═══════════════════════════════════
-// POSITIONS
+// COLORS
 // ═══════════════════════════════════
-function applyPos(totalH,priceH){
-  document.getElementById('price-pane').style.height=priceH+'px';
-  document.getElementById('divider').style.top=priceH+'px';
+const COL_LONG  = '#86efac'; // пастельный зелёный
+const COL_SHORT = '#fca5a5'; // пастельный красный
+
+// ═══════════════════════════════════
+// APPLY POSITIONS (left or right panel)
+// ═══════════════════════════════════
+function applyPos(totalH,priceH,side='l'){
+  const sfx=side==='r'?'-r':'';
+  document.getElementById('price-pane'+sfx).style.height=priceH+'px';
+  document.getElementById('divider'+sfx).style.top=priceH+'px';
   const cotH=Math.max(60,totalH-priceH-4);
-  document.getElementById('cot-pane').style.top=(priceH+4)+'px';
-  document.getElementById('cot-pane').style.height=cotH+'px';
+  document.getElementById('cot-pane'+sfx).style.top=(priceH+4)+'px';
+  document.getElementById('cot-pane'+sfx).style.height=cotH+'px';
   return cotH;
 }
 
@@ -383,81 +404,147 @@ function applyPos(totalH,priceH){
 // ═══════════════════════════════════
 function activeCatKeys(){return Object.entries(CATS).filter(([,c])=>c.active).map(([k])=>k);}
 
-function renderCharts(){
-  const sw=document.getElementById('split-wrap');
-  const cotEl=document.getElementById('cot-panels');
-  const totalH=sw.clientHeight, W=sw.clientWidth;
-  if(!W||!totalH){setTimeout(renderCharts,80);return;}
+// Build one split panel (left or right)
+function buildPanel(swId,cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,active,label){
+  const cotEl=document.getElementById(cotPanelsId);
+  cotEl.innerHTML='';
+  const pricePaneEl=document.getElementById(pricePaneId);
+  const old=pricePaneEl.querySelector('.cel'); if(old) old.remove();
 
   const priceH=Math.max(80,Math.floor(totalH*splitRatio));
-  const cotH=applyPos(totalH,priceH);
-
-  lwCharts.forEach(c=>{try{c.remove();}catch(e){}});
-  lwCharts=[];priceChart=null;cotEl.innerHTML='';
-
-  const{cot,price}=filteredData();
-  const active=activeCatKeys(), metric=document.getElementById('sel-metric').value;
+  const cotH=applyPos(totalH,priceH,side);
   const panelCount=active.length+(showOI?1:0);
+  const charts=[];
 
   // Price
-  {
-    const pp=document.getElementById('price-pane');
-    const old=pp.querySelector('.cel'); if(old) old.remove();
-    const el=document.createElement('div');
-    el.className='cel'; el.style.cssText=`width:100%;height:${priceH}px;`;
-    pp.appendChild(el);
-    const cfg=panelCount>0?BASE_NT:BASE;
-    const chart=LightweightCharts.createChart(el,{...cfg,width:W,height:priceH});
-    priceChart=chart;
-    if(document.getElementById('sel-type').value==='candle'){
-      chart.addCandlestickSeries({upColor:'#22c55e',downColor:'#ef4444',borderUpColor:'#22c55e',borderDownColor:'#ef4444',wickUpColor:'#22c55e',wickDownColor:'#ef4444'})
-           .setData(price.length?price:[]);
-    } else {
-      chart.addLineSeries({color:'#3b82f6',lineWidth:2}).setData(price.length?price.map(d=>({time:d.time,value:d.close})):[]);
-    }
-    lwCharts.push(chart);
+  const el=document.createElement('div');
+  el.className='cel'; el.style.cssText=`width:100%;height:${priceH}px;`;
+  pricePaneEl.appendChild(el);
+  const priceCfg=panelCount>0?BASE_NT:BASE;
+  const pChart=LightweightCharts.createChart(el,{...priceCfg,width:W,height:priceH});
+  // Price line — grey in LS mode, normal otherwise
+  const priceColor = metric==='ls' ? '#94a3b8' : '#3b82f6';
+  if(document.getElementById('sel-type').value==='candle'){
+    pChart.addCandlestickSeries({upColor:'#22c55e',downColor:'#ef4444',borderUpColor:'#22c55e',borderDownColor:'#ef4444',wickUpColor:'#22c55e',wickDownColor:'#ef4444'})
+          .setData(price.length?price:[]);
+  } else {
+    pChart.addLineSeries({color:priceColor,lineWidth:2}).setData(price.length?price.map(d=>({time:d.time,value:d.close})):[]);
   }
+  charts.push(pChart);
 
-  if(panelCount===0){updateCards();return;}
+  if(panelCount===0) return charts;
   const subH=Math.max(50,Math.floor(cotH/panelCount));
   let idx=0;
 
   if(showOI){
     const isLast=idx===panelCount-1;
     const w=mkWrap(cotEl,'Open Interest','#f59e0b',subH);
-    const chart=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
-    chart.addLineSeries({color:'#f59e0b',lineWidth:2,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT})
-         .setData(cot.map(d=>({time:d.time,value:d.oi})));
-    lwCharts.push(chart); idx++;
+    const ch=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
+    ch.addLineSeries({color:'#f59e0b',lineWidth:2,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT})
+      .setData(cot.map(d=>({time:d.time,value:d.oi})));
+    charts.push(ch); idx++;
     if(active.length) cotEl.appendChild(mkDiv());
   }
 
   active.forEach((key,i)=>{
     const cfg=CATS[key], isLast=idx===panelCount-1;
-    const w=mkWrap(cotEl,cfg.label,cfg.color,subH);
-    const chart=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
-    // zero
-    chart.addLineSeries({color:'#252d3d',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false})
-         .setData(cot.map(d=>({time:d.time,value:0})));
+    // In LS mode: left panel=longs(green), right panel=shorts(red)
+    const seriesColor = metric==='ls'
+      ? (side==='l' ? COL_LONG : COL_SHORT)
+      : cfg.color;
+    const seriesLabel = metric==='ls'
+      ? (side==='l' ? cfg.short+' · Longs' : cfg.short+' · Shorts')
+      : cfg.label;
+    const w=mkWrap(cotEl,seriesLabel,seriesColor,subH);
+    const ch=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
+    ch.addLineSeries({color:'#252d3d',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false})
+      .setData(cot.map(d=>({time:d.time,value:0})));
+    const dataKey = metric==='ls' ? (side==='l'?'longs':'shorts') : metric;
     if(metric==='chgNet'){
-      chart.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT})
-           .setData(cot.map(d=>({time:d.time,value:d[key][metric],color:d[key][metric]>=0?cfg.color:'#ef4444'})));
+      ch.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT})
+        .setData(cot.map(d=>({time:d.time,value:d[key][dataKey],color:d[key][dataKey]>=0?cfg.color:'#ef4444'})));
     } else {
-      chart.addLineSeries({color:cfg.color,lineWidth:2,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT})
-           .setData(cot.map(d=>({time:d.time,value:d[key][metric]})));
+      ch.addLineSeries({color:seriesColor,lineWidth:2,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT})
+        .setData(cot.map(d=>({time:d.time,value:d[key][dataKey]})));
     }
-    lwCharts.push(chart); idx++;
+    charts.push(ch); idx++;
     if(i<active.length-1) cotEl.appendChild(mkDiv());
   });
+  return charts;
+}
 
-  // Sync
+function renderCharts(){
+  const sw=document.getElementById('split-wrap');
+  const totalH=sw.clientHeight, W=sw.clientWidth;
+  if(!W||!totalH){setTimeout(renderCharts,80);return;}
+
+  // Cleanup
+  lwCharts.forEach(c=>{try{c.remove();}catch(e){}});
+  lwCharts=[];priceChart=null;
+
+  const{cot,price}=filteredData();
+  const active=activeCatKeys();
+  const metric=document.getElementById('sel-metric').value;
+  const isLS=metric==='ls';
+
+  // LS mode: show right panel
+  const area=document.getElementById('chart-area');
+  area.classList.toggle('ls-mode',isLS);
+
+  // LEFT panel (always)
+  const leftCharts=buildPanel('split-wrap','cot-panels','price-pane','l',isLS?W/2-4:W,totalH,cot,price,metric,active);
+  priceChart=leftCharts[0];
+  lwCharts.push(...leftCharts);
+
+  // RIGHT panel (LS mode only)
+  if(isLS){
+    const swR=document.getElementById('split-wrap-r');
+    const WR=swR.clientWidth||W/2-4;
+    const rightCharts=buildPanel('split-wrap-r','cot-panels-r','price-pane-r','r',WR,totalH,cot,price,metric,active);
+    lwCharts.push(...rightCharts);
+
+    // Sync right divider drag
+    initRightDrag();
+  }
+
+  // ── CROSSHAIR SYNC ──────────────────────────────────
   lwCharts.forEach(src=>{
+    // Timescale sync
     src.timeScale().subscribeVisibleLogicalRangeChange(range=>{
       if(!range) return;
       lwCharts.forEach(o=>{if(o!==src) o.timeScale().setVisibleLogicalRange(range);});
     });
+    // Crosshair sync
+    src.subscribeCrosshairMove(param=>{
+      if(!param.point) return;
+      lwCharts.forEach(o=>{
+        if(o===src) return;
+        if(param.time){
+          o.setCrosshairPosition(param.point.y, param.time, o.series?.[0] || o);
+        } else {
+          o.clearCrosshairPosition();
+        }
+      });
+    });
   });
+
   updateCards();
+}
+
+let rightDragInited=false;
+function initRightDrag(){
+  if(rightDragInited) return;
+  rightDragInited=true;
+  const divR=document.getElementById('divider-r');
+  const swR=document.getElementById('split-wrap-r');
+  divR.addEventListener('mousedown',e=>{isDragging=true;divR.classList.add('dragging');e.preventDefault();});
+  document.addEventListener('mousemove',e=>{
+    if(!isDragging||!divR.classList.contains('dragging')) return;
+    const rect=swR.getBoundingClientRect(),totalH=swR.clientHeight;
+    splitRatio=Math.min(.85,Math.max(.15,(e.clientY-rect.top)/totalH));
+    const pH=Math.max(80,Math.floor(totalH*splitRatio));
+    applyPos(totalH,pH,'r');
+  });
 }
 
 function mkWrap(parent,label,color,h){
@@ -472,21 +559,29 @@ function mkWrap(parent,label,color,h){
 function mkDiv(){const d=document.createElement('div');d.className='c-sub-div';return d;}
 
 // ═══════════════════════════════════
-// SPLIT DRAG
+// SPLIT DRAG (left panel)
 // ═══════════════════════════════════
 (function(){
   const div=document.getElementById('divider');
   const sw=document.getElementById('split-wrap');
   div.addEventListener('mousedown',e=>{isDragging=true;div.classList.add('dragging');e.preventDefault();});
   document.addEventListener('mousemove',e=>{
-    if(!isDragging) return;
+    if(!isDragging||!div.classList.contains('dragging')) return;
     const rect=sw.getBoundingClientRect(),totalH=sw.clientHeight,W=sw.clientWidth;
     splitRatio=Math.min(.85,Math.max(.15,(e.clientY-rect.top)/totalH));
     const pH=Math.max(80,Math.floor(totalH*splitRatio));
-    applyPos(totalH,pH);
+    applyPos(totalH,pH,'l');
     if(priceChart) priceChart.applyOptions({width:W,height:pH});
   });
-  document.addEventListener('mouseup',()=>{if(!isDragging)return;isDragging=false;document.getElementById('divider').classList.remove('dragging');renderCharts();});
+  document.addEventListener('mouseup',()=>{
+    if(!isDragging) return;
+    isDragging=false;
+    document.getElementById('divider').classList.remove('dragging');
+    const dr=document.getElementById('divider-r');
+    if(dr) dr.classList.remove('dragging');
+    rightDragInited=false;
+    renderCharts();
+  });
 })();
 
 // ═══════════════════════════════════
@@ -552,8 +647,15 @@ function buildTable(){
   document.getElementById('tbl').innerHTML=h;
 }
 
-window.onresize=()=>{const w=document.getElementById('split-wrap').clientWidth;lwCharts.forEach(c=>c.applyOptions({width:w}));};
-
+window.onresize=()=>{
+  const isLS=document.getElementById('sel-metric').value==='ls';
+  const w=document.getElementById('split-wrap').clientWidth;
+  const wR=document.getElementById('split-wrap-r').clientWidth;
+  lwCharts.forEach((c,i)=>{
+    const w2=isLS&&i>=lwCharts.length/2?wR:w;
+    c.applyOptions({width:w2});
+  });
+};
 // ═══════════════════════════════════
 // INIT
 // ═══════════════════════════════════
