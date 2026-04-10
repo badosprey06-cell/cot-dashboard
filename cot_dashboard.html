@@ -405,7 +405,7 @@ const nf=v=>parseFloat(v)||0;
 // ─── FETCH ────────────────────────────────────────────────────────────────────
 async function fetchCOT(inst){
   const name=encodeURIComponent(INSTRUMENTS[inst].cftcName);
-  const r=await fetch(`${CFTC_URL}?market_and_exchange_names=${name}&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${MAX_WEEKS}`);
+  const r=await fetch(`${CFTC_URL}?market_and_exchange_names=${name}&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${MAX_WEEKS}&_=${Date.now()}`);
   if(!r.ok)throw new Error('CFTC '+r.status);
   const data=await r.json();
   if(!data.length)throw new Error(`No CFTC data for ${inst}. Check instrument name.`);
