@@ -520,7 +520,7 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   const subH=Math.max(50,Math.floor(cotH/panelCount));
   let idx=0;
   const isLS=metric==='ls';
-  const visMode=isLS?document.getElementById('sel-vis').value:'line';
+  const visMode=(isLS||metric==='net')?document.getElementById('sel-vis').value:'line';
 
   if(showOI){
     const isLast=idx===panelCount-1;
