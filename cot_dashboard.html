@@ -584,7 +584,6 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
         ?(side==='l'?cfg.short+' · Longs Z':cfg.short+' · Shorts Z')
         :cfg.label;
 
-    const isZScore=metric==='zscore';
     const w=mkWrap(cotEl,sLabel,sColor,subH);
     const ch=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
 
