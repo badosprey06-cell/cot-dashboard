@@ -551,7 +551,7 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
     pSeries=pChart.addCandlestickSeries({upColor:'#3dd68c',downColor:'#f16b6b',borderUpColor:'#3dd68c',borderDownColor:'#f16b6b',wickUpColor:'#3dd68c',wickDownColor:'#f16b6b'});
     pSeries.setData(price.length?price:[]);
   }else{
-    pSeries=pChart.addLineSeries({color:metric==='ls'?'#5a6a80':'#4f8eff',lineWidth:1.5});
+    pSeries=pChart.addLineSeries({color:(metric==='ls'||metric==='zscore')?'#5a6a80':'#4f8eff',lineWidth:1.5});
     pSeries.setData(price.length?price.map(d=>({time:d.time,value:d.close})):[]);
   }
   chartSeries.set(pChart,pSeries);charts.push(pChart);
@@ -574,17 +574,39 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
 
   active.forEach((key,i)=>{
     const cfg=CATS[key],isLast=idx===panelCount-1;
-    const sColor=isLS?(side==='l'?COL_LONG:COL_SHORT):cfg.color;
+    const isZScore=metric==='zscore';
+    const sColor=isLS||isZScore?(side==='l'?COL_LONG:COL_SHORT):cfg.color;
     const sLabel=isLS
       ?(visMode==='histogram'
         ?(side==='l'?cfg.short+' · Longs Δ':cfg.short+' · Shorts Δ')
         :(side==='l'?cfg.short+' · Longs':cfg.short+' · Shorts'))
-      :cfg.label;
+      :isZScore
+        ?(side==='l'?cfg.short+' · Longs Z':cfg.short+' · Shorts Z')
+        :cfg.label;
 
+    const isZScore=metric==='zscore';
     const w=mkWrap(cotEl,sLabel,sColor,subH);
     const ch=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
 
-    if(isLS&&visMode==='histogram'){
+    if(isZScore){
+      // z-score panel: zero line + ±1 ±2 levels + colored line
+      ch.applyOptions({rightPriceScale:{...BASE.rightPriceScale,scaleMargins:{top:.15,bottom:.15}}});
+      const zData=calcZScore(key, side==='l'?'longs':'shorts');
+      // match exactly to filtered cot dates
+      const cotTimes=new Set(cot.map(d=>d.time));
+      const zFiltered=zData.filter(d=>cotTimes.has(d.time));
+      // level lines: ±2, ±1, 0
+      const levelCfg={priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,lineWidth:1,lineStyle:2,priceFormat:ZSCORE_FMT};
+      [2,1,0,-1,-2].forEach(lvl=>{
+        const lc=lvl===0?'#2e3f58':Math.abs(lvl)===2?'#4a2020':'#1e3a2a';
+        ch.addLineSeries({...levelCfg,color:lc}).setData(zFiltered.map(d=>({time:d.time,value:lvl})));
+      });
+      // main z-score line
+      const zLineColor=side==='l'?COL_LONG:COL_SHORT;
+      const zSeries=ch.addLineSeries({color:zLineColor,lineWidth:2,priceLineVisible:false,lastValueVisible:true,priceFormat:ZSCORE_FMT});
+      zSeries.setData(zFiltered);
+      chartSeries.set(ch,zSeries);
+    } else if(isLS&&visMode==='histogram'){
       ch.applyOptions({rightPriceScale:{...BASE.rightPriceScale,scaleMargins:HIST_SCALE}});
       ch.addLineSeries({color:'transparent',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:COT_FMT})
         .setData(cot.map(d=>({time:d.time,value:0})));
@@ -641,7 +663,8 @@ function renderCharts(){
   const active=activeCatKeys();
   const metric=document.getElementById('sel-metric').value;
   const isLS=metric==='ls';
-  document.getElementById('chart-area').classList.toggle('ls-mode',isLS);
+  const isZScore=metric==='zscore';
+  document.getElementById('chart-area').classList.toggle('ls-mode',isLS||isZScore);
   const inst=INSTRUMENTS[activeInstrument];
   document.getElementById('price-lbl').textContent=inst.priceLabel;
   document.getElementById('price-lbl-r').textContent=inst.priceLabel;
@@ -649,7 +672,7 @@ function renderCharts(){
     const WL=document.getElementById('split-wrap').clientWidth;
     const leftCharts=buildPanel('cot-panels','price-pane','l',WL,totalH,cot,price,metric,active);
     priceChart=leftCharts[0];lwCharts.push(...leftCharts);
-    if(isLS){
+    if(isLS||isZScore){
       const swR=document.getElementById('split-wrap-r');
       const WR=swR.clientWidth||WL;
       const rightCharts=buildPanel('cot-panels-r','price-pane-r','r',WR,totalH,cot,price,metric,active);
