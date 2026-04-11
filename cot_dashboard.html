@@ -310,6 +310,7 @@ tbody tr:hover .td-date{background:var(--surface)!important;}
         <option value="net">Net (L − S)</option>
         <option value="chgNet">Chg Net</option>
         <option value="ls">L &amp; S</option>
+        <option value="zscore">Z-Score</option>
       </select>
       <div class="tsep" id="vis-sep" style="display:none;"></div>
       <select class="sel" id="sel-vis" style="display:none;" onchange="renderCharts()">
@@ -512,6 +513,17 @@ const BASE={
 const BASE_NT={...BASE,timeScale:{...BASE.timeScale,visible:false}};
 const COT_FMT={type:'custom',formatter:axisFmt,minMove:1};
 const HIST_SCALE={top:.1,bottom:.1};
+const ZSCORE_FMT={type:'custom',formatter:v=>v.toFixed(2),minMove:0.01};
+
+// Z-score calculated over ALL loaded data (cotData, 156w) — not filtered period
+function calcZScore(key,field){
+  const vals=cotData.map(d=>d[key][field]);
+  const n=vals.length;if(n<2)return cotData.map(d=>({time:d.time,value:0}));
+  const mean=vals.reduce((a,b)=>a+b,0)/n;
+  const std=Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/n);
+  if(std===0)return cotData.map(d=>({time:d.time,value:0}));
+  return cotData.map(d=>({time:d.time,value:+((d[key][field]-mean)/std).toFixed(3)}));
+}
 
 function applyPos(totalH,priceH,side='l'){
   const sfx=side==='r'?'-r':'';
