@@ -317,6 +317,12 @@ tbody tr:hover .td-date{background:var(--surface)!important;}
         <option value="line">Line</option>
         <option value="histogram">Histogram</option>
       </select>
+      <div class="tsep" id="zwin-sep" style="display:none;"></div>
+      <select class="sel" id="sel-zwin" style="display:none;" onchange="renderCharts()">
+        <option value="156">156w</option>
+        <option value="104">104w</option>
+        <option value="52">52w</option>
+      </select>
     </div>
     <div class="range-group" id="range-btns">
       <button class="rbtn" data-range="ytd">YTD</button>
@@ -515,13 +521,17 @@ const COT_FMT={type:'custom',formatter:axisFmt,minMove:1};
 const HIST_SCALE={top:.1,bottom:.1};
 const ZSCORE_FMT={type:'custom',formatter:v=>v.toFixed(2),minMove:0.01};
 
-// Z-score calculated over ALL loaded data (cotData, 156w) — not filtered period
+// Z-score calculated over selected window (default 156w)
 function calcZScore(key,field){
-  const vals=cotData.map(d=>d[key][field]);
+  const win=parseInt(document.getElementById('sel-zwin').value)||156;
+  // use last N weeks of ALL loaded data as the window
+  const all=cotData.slice(-win);
+  const vals=all.map(d=>d[key][field]);
   const n=vals.length;if(n<2)return cotData.map(d=>({time:d.time,value:0}));
   const mean=vals.reduce((a,b)=>a+b,0)/n;
   const std=Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/n);
   if(std===0)return cotData.map(d=>({time:d.time,value:0}));
+  // apply z-score formula to ALL cotData using window stats
   return cotData.map(d=>({time:d.time,value:+((d[key][field]-mean)/std).toFixed(3)}));
 }
 
@@ -595,10 +605,10 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
       const cotTimes=new Set(cot.map(d=>d.time));
       const zFiltered=zData.filter(d=>cotTimes.has(d.time));
       // level lines: ±2, ±1, 0
-      const levelCfg={priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,lineWidth:1,lineStyle:2,priceFormat:ZSCORE_FMT};
+      const levelCfg={priceLineVisible:false,lastValueVisible:true,crosshairMarkerVisible:false,lineWidth:1,lineStyle:2,priceFormat:ZSCORE_FMT};
       [2,1,0,-1,-2].forEach(lvl=>{
-        const lc=lvl===0?'#2e3f58':Math.abs(lvl)===2?'#4a2020':'#1e3a2a';
-        ch.addLineSeries({...levelCfg,color:lc}).setData(zFiltered.map(d=>({time:d.time,value:lvl})));
+        const lc=lvl===0?'#3a4f6a':Math.abs(lvl)===2?'#8b3535':'#2d6b45';
+        ch.addLineSeries({...levelCfg,color:lc,lastValueVisible:false}).setData(zFiltered.map(d=>({time:d.time,value:lvl})));
       });
       // main z-score line
       const zLineColor=side==='l'?COL_LONG:COL_SHORT;
@@ -646,8 +656,11 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
 function onMetricChange(){
   const metric=document.getElementById('sel-metric').value;
   const showVis=metric==='ls'||metric==='net';
+  const showZWin=metric==='zscore';
   document.getElementById('sel-vis').style.display=showVis?'':'none';
   document.getElementById('vis-sep').style.display=showVis?'':'none';
+  document.getElementById('sel-zwin').style.display=showZWin?'':'none';
+  document.getElementById('zwin-sep').style.display=showZWin?'':'none';
   renderCharts();
 }
 
