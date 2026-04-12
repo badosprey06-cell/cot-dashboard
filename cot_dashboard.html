@@ -212,24 +212,68 @@ tbody tr:hover .td-date{background:var(--surface)!important;}
 </div>
 <script>
 // ─── INSTRUMENTS ──────────────────────────────────────────────────────────────
+// dataset: 'tff' → TFF Futures Only (gpe5-46if), 'disagg' → Disaggregated Futures Only (72hh-3qpy)
 const INSTRUMENTS={
-  ES:{id:'ES',label:'ES',fullName:'E-MINI S&P 500',exchange:'Chicago Mercantile Exchange',cftcName:'E-MINI S&P 500 - CHICAGO MERCANTILE EXCHANGE',yahooTicker:'ES=F',priceLabel:'ES · Weekly'},
-  NQ:{id:'NQ',label:'NQ',fullName:'E-MINI NASDAQ-100',exchange:'Chicago Mercantile Exchange',cftcName:'NASDAQ-100 Consolidated - CHICAGO MERCANTILE EXCHANGE',yahooTicker:'NQ=F',priceLabel:'NQ · Weekly'},
-  '6E':{id:'6E',label:'6E',fullName:'EURO FX',exchange:'Chicago Mercantile Exchange',cftcName:'EURO FX - CHICAGO MERCANTILE EXCHANGE',yahooTicker:'6E=F',priceLabel:'6E · Weekly'},
+  ES:{id:'ES',label:'ES',fullName:'E-MINI S&P 500',exchange:'Chicago Mercantile Exchange',
+      cftcName:'E-MINI S&P 500 - CHICAGO MERCANTILE EXCHANGE',yahooTicker:'ES=F',
+      priceLabel:'ES · Weekly',dataset:'tff'},
+  NQ:{id:'NQ',label:'NQ',fullName:'E-MINI NASDAQ-100',exchange:'Chicago Mercantile Exchange',
+      cftcName:'NASDAQ-100 Consolidated - CHICAGO MERCANTILE EXCHANGE',yahooTicker:'NQ=F',
+      priceLabel:'NQ · Weekly',dataset:'tff'},
+  '6E':{id:'6E',label:'6E',fullName:'EURO FX',exchange:'Chicago Mercantile Exchange',
+        cftcName:'EURO FX - CHICAGO MERCANTILE EXCHANGE',yahooTicker:'6E=F',
+        priceLabel:'6E · Weekly',dataset:'tff'},
+  GC:{id:'GC',label:'GC',fullName:'GOLD',exchange:'Commodity Exchange Inc.',
+      cftcName:'GOLD - COMMODITY EXCHANGE INC.',yahooTicker:'GC=F',
+      priceLabel:'GC · Weekly',dataset:'disagg'},
+  CL:{id:'CL',label:'CL',fullName:'CRUDE OIL, LIGHT SWEET',exchange:'New York Mercantile Exchange',
+      cftcName:'CRUDE OIL, LIGHT SWEET - NEW YORK MERCANTILE EXCHANGE',yahooTicker:'CL=F',
+      priceLabel:'CL · Weekly',dataset:'disagg'},
 };
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
-const CFTC_URL='https://publicreporting.cftc.gov/resource/gpe5-46if.json';
-const MAX_WEEKS=156,AXIS_W=80,COL_LONG='#86efac',COL_SHORT='#fca5a5',COL_NEUTRAL='#2e3f58';
+const CFTC_TFF_URL    = 'https://publicreporting.cftc.gov/resource/gpe5-46if.json';
+const CFTC_DISAGG_URL = 'https://publicreporting.cftc.gov/resource/72hh-3qpy.json';
+const MAX_WEEKS=156, AXIS_W=80;
+const COL_LONG='#86efac', COL_SHORT='#fca5a5', COL_NEUTRAL='#2e3f58';
 
-const CATS={
-  dealer:{label:'Dealer / Intermediary',short:'Dealer',color:'#4f8eff',pfxL:'dealer_positions_long_all',pfxS:'dealer_positions_short_all',pfxCL:'change_in_dealer_long_all',pfxCS:'change_in_dealer_short_all',active:true},
-  assetmgr:{label:'Asset Manager / Inst.',short:'Asset Mgr',color:'#3dd68c',pfxL:'asset_mgr_positions_long',pfxS:'asset_mgr_positions_short',pfxCL:'change_in_asset_mgr_long',pfxCS:'change_in_asset_mgr_short',active:true},
-  levfunds:{label:'Leveraged Funds',short:'Lev Funds',color:'#a78bfa',pfxL:'lev_money_positions_long',pfxS:'lev_money_positions_short',pfxCL:'change_in_lev_money_long',pfxCS:'change_in_lev_money_short',active:true},
-  other:{label:'Other Reportable',short:'Other Rept',color:'#fb923c',pfxL:'other_rept_positions_long',pfxS:'other_rept_positions_short',pfxCL:'change_in_other_rept_long',pfxCS:'change_in_other_rept_short',active:false},
-  nonrept:{label:'Non-Reportable',short:'Non-Rept',color:'#64748b',pfxL:'nonrept_positions_long_all',pfxS:'nonrept_positions_short_all',pfxCL:'change_in_nonrept_long_all',pfxCS:'change_in_nonrept_short_all',active:false},
+// TFF categories (ES, NQ, 6E)
+const CATS_TFF={
+  dealer:  {label:'Dealer / Intermediary',short:'Dealer',  color:'#4f8eff',
+            pfxL:'dealer_positions_long_all',   pfxS:'dealer_positions_short_all',
+            pfxCL:'change_in_dealer_long_all',  pfxCS:'change_in_dealer_short_all',active:true},
+  assetmgr:{label:'Asset Manager / Inst.',short:'Asset Mgr',color:'#3dd68c',
+            pfxL:'asset_mgr_positions_long',    pfxS:'asset_mgr_positions_short',
+            pfxCL:'change_in_asset_mgr_long',   pfxCS:'change_in_asset_mgr_short',active:true},
+  levfunds:{label:'Leveraged Funds',     short:'Lev Funds',color:'#a78bfa',
+            pfxL:'lev_money_positions_long',    pfxS:'lev_money_positions_short',
+            pfxCL:'change_in_lev_money_long',   pfxCS:'change_in_lev_money_short',active:true},
+  other:   {label:'Other Reportable',   short:'Other Rept',color:'#fb923c',
+            pfxL:'other_rept_positions_long',   pfxS:'other_rept_positions_short',
+            pfxCL:'change_in_other_rept_long',  pfxCS:'change_in_other_rept_short',active:false},
+  nonrept: {label:'Non-Reportable',     short:'Non-Rept', color:'#64748b',
+            pfxL:'nonrept_positions_long_all',  pfxS:'nonrept_positions_short_all',
+            pfxCL:'change_in_nonrept_long_all', pfxCS:'change_in_nonrept_short_all',active:false},
 };
-const CAT_THCOL={dealer:'#1d4ed8',assetmgr:'#15803d',levfunds:'#7c3aed',other:'#c2410c',nonrept:'#334155'};
+
+// Disaggregated categories (GC, CL)
+const CATS_DISAGG={
+  producer:{label:'Producer / Merchant',short:'Producer', color:'#4f8eff',
+            pfxL:'prod_merc_positions_long_all',   pfxS:'prod_merc_positions_short_all',
+            pfxCL:'change_in_prod_merc_long_all',  pfxCS:'change_in_prod_merc_short_all',active:true},
+  swap:    {label:'Swap Dealer',        short:'Swap Dlr', color:'#3dd68c',
+            pfxL:'swap_positions_long_all',         pfxS:'swap_positions_short_all',
+            pfxCL:'change_in_swap_long_all',        pfxCS:'change_in_swap_short_all',active:true},
+  money:   {label:'Managed Money',      short:'Mgd Money',color:'#a78bfa',
+            pfxL:'m_money_positions_long_all',      pfxS:'m_money_positions_short_all',
+            pfxCL:'change_in_m_money_long_all',     pfxCS:'change_in_m_money_short_all',active:true},
+  other:   {label:'Other Reportable',  short:'Other Rept',color:'#fb923c',
+            pfxL:'other_rept_positions_long_all',   pfxS:'other_rept_positions_short_all',
+            pfxCL:'change_in_oth_rept_long_all',    pfxCS:'change_in_oth_rept_short_all',active:false},
+  nonrept: {label:'Non-Reportable',    short:'Non-Rept',  color:'#64748b',
+            pfxL:'nonrept_positions_long_all',      pfxS:'nonrept_positions_short_all',
+            pfxCL:'change_in_nonrept_long_all',     pfxCS:'change_in_nonrept_short_all',active:false},
+};
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let activeInstrument='ES';
@@ -237,33 +281,51 @@ let cotData=[],priceData=[],showOI=false,lwCharts=[],priceChart=null;
 let tblBuilt=false,activeRange='3',splitRatio=0.45,isDragging=false,rightDragInited=false;
 const chartSeries=new Map();
 
+// Returns category config for current instrument
+function getCats(){
+  return INSTRUMENTS[activeInstrument].dataset==='disagg' ? CATS_DISAGG : CATS_TFF;
+}
+
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 function toFriday(s){const d=new Date(s+'T00:00:00Z'),day=d.getUTCDay();d.setUTCDate(d.getUTCDate()+(day<=5?5-day:6));return d.toISOString().slice(0,10);}
 function rangeStart(){if(activeRange==='ytd')return new Date().getUTCFullYear()+'-01-01';const d=new Date();d.setUTCFullYear(d.getUTCFullYear()-parseInt(activeRange));return d.toISOString().slice(0,10);}
 const today=()=>new Date().toISOString().slice(0,10);
 function fmtK(v){const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(2)+'M':a>=1e3?(v/1e3).toFixed(1)+'K':Math.round(v).toString();}
 
-// Fixed-width axis formatter — always produces same-length string
-// so all panels have identical axis width
+// ─── AXIS FORMATTER ───────────────────────────────────────────────────────────
+// Goal: all panels produce strings of identical visual width so axes stay at AXIS_W.
+// Rules:
+//   |v| >= 1 000 000  → X.XM   (e.g. 1 234 567 → 1.2M, -808 612 → -808.6K… wait no)
+//   |v| >= 100 000    → XXXk    (e.g. 808 612 → 809K)
+//   |v| >= 10 000     → XX.Xk  (e.g. 85 400 → 85.4K)
+//   |v| >= 1 000      → X.XXk  (e.g. 1 234 → 1.23K)   — rare on COT data
+//   else              → integer
+// This keeps max string length ~6-7 chars across all COT magnitudes.
 function axisFmt(v){
   const a=Math.abs(v);
-  let s;
-  if(a>=1e6) s=(v/1e6).toFixed(1)+'M';
-  else if(a>=1e3) s=Math.round(v/1e3)+'K';
-  else s=Math.round(v).toString();
-  return s;
+  if(a===0) return '0';
+  if(a>=1e6)  return (v/1e6).toFixed(1)+'M';   // e.g. 1.2M
+  if(a>=1e5)  return Math.round(v/1e3)+'K';     // e.g. -809K, 350K
+  if(a>=1e4)  return (v/1e3).toFixed(1)+'K';   // e.g. 85.4K
+  if(a>=1e3)  return (v/1e3).toFixed(2)+'K';   // e.g. 1.23K
+  return Math.round(v).toString();
 }
+
 const nf=v=>parseFloat(v)||0;
 
 // ─── FETCH ────────────────────────────────────────────────────────────────────
 async function fetchCOT(inst){
-  const name=encodeURIComponent(INSTRUMENTS[inst].cftcName);
-  const r=await fetch(`${CFTC_URL}?market_and_exchange_names=${name}&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${MAX_WEEKS}&_=${Date.now()}`);
-  if(!r.ok)throw new Error('CFTC '+r.status);
+  const cfg=INSTRUMENTS[inst];
+  const url=cfg.dataset==='disagg' ? CFTC_DISAGG_URL : CFTC_TFF_URL;
+  // Disaggregated uses "market_and_exchange_names", TFF uses "market_and_exchange_names" too
+  const name=encodeURIComponent(cfg.cftcName);
+  const r=await fetch(`${url}?market_and_exchange_names=${name}&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${MAX_WEEKS}&_=${Date.now()}`);
+  if(!r.ok) throw new Error('CFTC '+r.status);
   const data=await r.json();
-  if(!data.length)throw new Error(`No CFTC data for ${inst}`);
+  if(!data.length) throw new Error(`No CFTC data for ${inst}`);
   return data;
 }
+
 async function fetchPrice(inst){
   const ticker=encodeURIComponent(INSTRUMENTS[inst].yahooTicker);
   const now=Math.floor(Date.now()/1000),from=Math.floor((Date.now()-3*365.25*24*3600*1000)/1000);
@@ -281,15 +343,18 @@ async function fetchPrice(inst){
 }
 
 // ─── PARSE ────────────────────────────────────────────────────────────────────
-const parseCOT=raw=>raw.map(r=>{
-  const date=r.report_date_as_yyyy_mm_dd.slice(0,10),time=toFriday(date),oi=nf(r.open_interest_all);
-  const e={date,time,oi};
-  Object.entries(CATS).forEach(([k,cfg])=>{
-    const L=nf(r[cfg.pfxL]),S=nf(r[cfg.pfxS]),cL=nf(r[cfg.pfxCL]),cS=nf(r[cfg.pfxCS]);
-    e[k]={longs:L,shorts:S,net:L-S,chgNet:cL-cS,chgL:cL,chgS:cS,pctNet:((L-S)/(oi||1)*100).toFixed(1)};
-  });
-  return e;
-}).sort((a,b)=>a.time<b.time?-1:1);
+function parseCOT(raw){
+  const cats=getCats();
+  return raw.map(r=>{
+    const date=r.report_date_as_yyyy_mm_dd.slice(0,10),time=toFriday(date),oi=nf(r.open_interest_all);
+    const e={date,time,oi};
+    Object.entries(cats).forEach(([k,cfg])=>{
+      const L=nf(r[cfg.pfxL]),S=nf(r[cfg.pfxS]),cL=nf(r[cfg.pfxCL]),cS=nf(r[cfg.pfxCS]);
+      e[k]={longs:L,shorts:S,net:L-S,chgNet:cL-cS,chgL:cL,chgS:cS,pctNet:((L-S)/(oi||1)*100).toFixed(1)};
+    });
+    return e;
+  }).sort((a,b)=>a.time<b.time?-1:1);
+}
 
 function parsePrice(res){
   const ts=res.timestamp,q=res.indicators.quote[0],td=today();
@@ -315,7 +380,7 @@ function buildInstTabs(){
 }
 async function switchInstrument(id){
   if(id===activeInstrument)return;
-  activeInstrument=id;buildInstTabs();updateHeaderName();tblBuilt=false;await loadData();
+  activeInstrument=id;buildInstTabs();updateHeaderName();buildSidebar();tblBuilt=false;await loadData();
 }
 function updateHeaderName(){
   const inst=INSTRUMENTS[activeInstrument];
@@ -325,14 +390,15 @@ function updateHeaderName(){
 // ─── CARDS ────────────────────────────────────────────────────────────────────
 function updateCards(){
   const{cot}=filteredData();if(!cot.length)return;
+  const cats=getCats();
   const last=cot[cot.length-1],prev=cot[cot.length-2]||last;
-  const active=Object.keys(CATS).filter(k=>CATS[k].active);
+  const active=Object.keys(cats).filter(k=>cats[k].active);
   const oiChg=last.oi-prev.oi;
   document.getElementById('cv-oi').textContent=fmtK(last.oi);
   document.getElementById('cc-oi').innerHTML=`<span class="${oiChg>=0?'up':'dn'}">${oiChg>=0?'+':''}${fmtK(oiChg)}</span> vs prev`;
   let tL=0,tS=0,pL=0,pS=0;
   active.forEach(k=>{tL+=last[k].longs;tS+=last[k].shorts;pL+=prev[k].longs;pS+=prev[k].shorts;});
-  const np=tL-tS,npChg=np-(pL-pS),sfx=active.length?' · '+active.map(k=>CATS[k].short).join(', '):'';
+  const np=tL-tS,npChg=np-(pL-pS),sfx=active.length?' · '+active.map(k=>cats[k].short).join(', '):'';
   document.getElementById('lbl-nl').textContent='Net Long'+sfx;
   document.getElementById('lbl-ns').textContent='Net Short'+sfx;
   document.getElementById('lbl-np').textContent='Net Position'+sfx;
@@ -348,8 +414,13 @@ function updateCards(){
 const COT_FMT={type:'custom',formatter:axisFmt,minMove:1};
 const HIST_SCALE={top:.1,bottom:.1};
 
-// Shared price scale options — fixed width axis
-const PRICE_SCALE_OPTS={borderColor:'#181d27',minimumWidth:AXIS_W,scaleMargins:{top:.08,bottom:.08}};
+// Fixed-width price scale — both min and max width locked to AXIS_W
+const PRICE_SCALE_OPTS={
+  borderColor:'#181d27',
+  minimumWidth:AXIS_W,
+  maximumWidth:AXIS_W,
+  scaleMargins:{top:.08,bottom:.08}
+};
 
 const BASE={
   layout:{background:{color:'transparent'},textColor:'#3d4a5c'},
@@ -375,10 +446,14 @@ function applyPos(totalH,priceH,side='l'){
   document.getElementById('cot-pane'+sfx).style.height=cotH+'px';
   return cotH;
 }
-function activeCatKeys(){return Object.entries(CATS).filter(([,c])=>c.active).map(([k])=>k);}
+function activeCatKeys(){
+  const cats=getCats();
+  return Object.entries(cats).filter(([,c])=>c.active).map(([k])=>k);
+}
 
 // ─── PANEL BUILDER ────────────────────────────────────────────────────────────
 function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,active){
+  const cats=getCats();
   const cotEl=document.getElementById(cotPanelsId);cotEl.innerHTML='';
   const ppEl=document.getElementById(pricePaneId);const old=ppEl.querySelector('.cel');if(old)old.remove();
   const priceH=Math.max(80,Math.floor(totalH*splitRatio));
@@ -416,7 +491,8 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   }
 
   active.forEach((key,i)=>{
-    const cfg=CATS[key],isLast=idx===panelCount-1;
+    const cfg=cats[key];
+    const isLast=idx===panelCount-1;
     const sColor=isLS?(side==='l'?COL_LONG:COL_SHORT):cfg.color;
     const sLabel=isLS
       ?(visMode==='histogram'
@@ -473,15 +549,12 @@ function onMetricChange(){
 }
 
 // ─── CROSSHAIR SYNC ───────────────────────────────────────────────────────────
-// Sync by logical index, not by pixel Y — this keeps vertical line perfectly straight
 function setupSync(){
   lwCharts.forEach(src=>{
-    // time scale sync
     src.timeScale().subscribeVisibleLogicalRangeChange(range=>{
       if(!range)return;
       lwCharts.forEach(o=>{if(o!==src)o.timeScale().setVisibleLogicalRange(range);});
     });
-    // crosshair sync — use logical X to find time, then setCrosshairPosition per chart
     src.subscribeCrosshairMove(param=>{
       if(!param.time){
         lwCharts.forEach(o=>{if(o!==src)o.clearCrosshairPosition();});
@@ -489,15 +562,10 @@ function setupSync(){
       }
       lwCharts.forEach(o=>{
         if(o===src)return;
-        const s=chartSeries.get(o);
-        if(!s)return;
-        // find the data point in the target chart that matches the time
+        const s=chartSeries.get(o);if(!s)return;
         try{
-          const data=s.data();
-          if(!data||!data.length)return;
-          // find matching point
+          const data=s.data();if(!data||!data.length)return;
           const pt=data.find(d=>d.time===param.time)||(()=>{
-            // fallback: find closest
             let best=data[0];
             for(const d of data){if(Math.abs(new Date(d.time)-new Date(param.time))<Math.abs(new Date(best.time)-new Date(param.time)))best=d;}
             return best;
@@ -581,8 +649,9 @@ function mkDiv(){const d=document.createElement('div');d.className='c-sub-div';r
 
 // ─── SIDEBAR ──────────────────────────────────────────────────────────────────
 function buildSidebar(){
+  const cats=getCats();
   const sec=document.getElementById('cat-toggles');sec.innerHTML='';
-  Object.entries(CATS).forEach(([key,cfg])=>{
+  Object.entries(cats).forEach(([key,cfg])=>{
     const row=document.createElement('div');row.className='tog-row';
     row.innerHTML=`<div class="tog-lbl ${cfg.active?'on':''}" id="tl-${key}"><div class="cdot" style="background:${cfg.color}"></div>${cfg.short}</div><div class="sw ${cfg.active?'on':''}" id="ts-${key}"></div>`;
     row.onclick=()=>{cfg.active=!cfg.active;document.getElementById('ts-'+key).classList.toggle('on',cfg.active);document.getElementById('tl-'+key).classList.toggle('on',cfg.active);renderCharts();};
@@ -610,17 +679,18 @@ document.querySelectorAll('.rbtn').forEach(btn=>{btn.onclick=()=>{
 const MDEF=[{key:'net',label:'Net'},{key:'chgNet',label:'Chg Net'},{key:'chgL',label:'Chg L'},{key:'chgS',label:'Chg S'},{key:'longs',label:'Longs'},{key:'shorts',label:'Shorts'},{key:'pctNet',label:'% Net'}];
 const fmt=v=>v==null||isNaN(v)?'—':Math.round(v).toLocaleString('ru-RU');
 function buildTable(){
-  const{cot}=filteredData();const keys=Object.keys(CATS);
+  const cats=getCats();
+  const{cot}=filteredData();const keys=Object.keys(cats);
   let h=`<table><thead><tr>`;
   h+=`<th class="th-base th-sticky" rowspan="2" style="min-width:96px">Date</th>`;
   h+=`<th class="th-base" rowspan="2" style="min-width:80px">OI</th>`;
   keys.forEach(k=>{
-    const cfg=CATS[k];
+    const cfg=cats[k];
     h+=`<th class="th-cat" colspan="${MDEF.length}" style="border-left:2px solid ${cfg.color}40;color:${cfg.color}">${cfg.short}</th>`;
   });
   h+=`</tr><tr>`;
   keys.forEach(k=>{
-    const cfg=CATS[k];
+    const cfg=cats[k];
     MDEF.forEach((m,mi)=>{
       const bl=mi===0?`border-left:2px solid ${cfg.color}40`:`border-left:1px solid var(--border)`;
       h+=`<th class="th-m" style="${bl}">${m.label}</th>`;
@@ -630,7 +700,7 @@ function buildTable(){
   [...cot].reverse().forEach(d=>{
     h+=`<tr><td class="td-date">${d.date}</td><td class="td-oi">${fmtK(d.oi)}</td>`;
     keys.forEach(k=>{
-      const c=d[k];const cfg=CATS[k];
+      const c=d[k];const cfg=cats[k];
       MDEF.forEach((m,mi)=>{
         const bl=mi===0?`border-left:2px solid ${cfg.color}30`:``;
         if(m.key==='pctNet'){
@@ -673,7 +743,8 @@ async function loadData(){
   lwCharts=[];priceChart=null;chartSeries.clear();
   try{
     ltxt.textContent=`cot/${activeInstrument.toLowerCase()} …`;
-    cotData=parseCOT(await fetchCOT(activeInstrument));
+    const raw=await fetchCOT(activeInstrument);
+    cotData=parseCOT(raw);
     ltxt.textContent=`price/${INSTRUMENTS[activeInstrument].yahooTicker.toLowerCase()} …`;
     try{
       priceData=parsePrice(await fetchPrice(activeInstrument));sdot.className='dot';
