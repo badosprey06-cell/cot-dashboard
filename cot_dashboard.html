@@ -280,7 +280,7 @@ const CATS_DISAGG={
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let activeInstrument='ES';
 let cotData=[],priceData=[],showOI=false,lwCharts=[],priceChart=null;
-let tblBuilt=false,activeRange='3',splitRatio=0.45,isDragging=false,rightDragInited=false;
+let activeRange='3',splitRatio=0.45,isDragging=false,rightDragInited=false;
 const chartSeries=new Map();
 
 // Returns category config for current instrument
@@ -382,7 +382,7 @@ function buildInstTabs(){
 }
 async function switchInstrument(id){
   if(id===activeInstrument)return;
-  activeInstrument=id;buildInstTabs();updateHeaderName();buildSidebar();tblBuilt=false;await loadData();
+  activeInstrument=id;buildInstTabs();updateHeaderName();buildSidebar();await loadData();
 }
 function updateHeaderName(){
   const inst=INSTRUMENTS[activeInstrument];
@@ -666,18 +666,22 @@ function buildSidebar(){
 function toggleOI(){showOI=!showOI;document.getElementById('ts-oi').classList.toggle('on',showOI);document.getElementById('tl-oi').classList.toggle('on',showOI);renderCharts();}
 
 // ─── TABS & RANGE ─────────────────────────────────────────────────────────────
-document.querySelectorAll('.tab').forEach(tab=>{tab.onclick=()=>{
-  const pg=tab.dataset.page;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-'+pg).classList.add('active');
+let activePage='chart';
+function switchPage(pg){
+  activePage=pg;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.page===pg));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+pg));
   document.getElementById('sidebar').classList.toggle('hidden',pg==='table');
   document.getElementById('range-btns').style.display=pg==='table'?'none':'';
-  if(pg==='chart')setTimeout(renderCharts,30);
-  if(pg==='table'&&!tblBuilt&&cotData.length){buildTable();tblBuilt=true;}
-};});
+  if(pg==='chart'){requestAnimationFrame(()=>renderCharts());}
+  if(pg==='table'&&cotData.length){buildTable();}
+}
+document.querySelectorAll('.tab').forEach(tab=>{tab.onclick=()=>switchPage(tab.dataset.page);});
 document.querySelectorAll('.rbtn').forEach(btn=>{btn.onclick=()=>{
   document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-  activeRange=btn.dataset.range;tblBuilt=false;renderCharts();
+  activeRange=btn.dataset.range;
+  if(activePage==='chart') renderCharts();
+  else buildTable();
 };});
 
 // ─── TABLE ────────────────────────────────────────────────────────────────────
@@ -758,7 +762,9 @@ async function loadData(){
     const lp=priceData.length?priceData[priceData.length-1].time:'N/A';
     stxt.textContent=`${lc} · ${activeInstrument} ${lp}`;
     loadEl.style.display='none';
-    renderCharts();
+    // Render whichever page is currently active
+    if(activePage==='chart') renderCharts();
+    else buildTable();
   }catch(e){
     console.error(e);
     loadEl.innerHTML=`<div style="color:#f16b6b;font-size:11px;text-align:center;padding:24px;font-family:var(--mono)"><div style="font-size:13px;margin-bottom:6px">error</div>${e.message}</div>`;
