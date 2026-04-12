@@ -414,11 +414,12 @@ function updateCards(){
 const COT_FMT={type:'custom',formatter:axisFmt,minMove:1};
 const HIST_SCALE={top:.1,bottom:.1};
 
-// Fixed-width price scale — both min and max width locked to AXIS_W
+// Fixed-width price scale.
+// maximumWidth is NOT supported in LightweightCharts v4.1.1 — omitted.
+// Width is controlled by axisFmt producing same-length strings across all panels.
 const PRICE_SCALE_OPTS={
   borderColor:'#181d27',
   minimumWidth:AXIS_W,
-  maximumWidth:AXIS_W,
   scaleMargins:{top:.08,bottom:.08}
 };
 
@@ -464,12 +465,14 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   // price chart
   const el=document.createElement('div');el.className='cel';el.style.cssText=`width:100%;height:${priceH}px;`;ppEl.appendChild(el);
   const pChart=LightweightCharts.createChart(el,{...(panelCount>0?BASE_NT:BASE),width:W,height:priceH});
+  // Apply compact price formatter so price axis stays same width as COT axes
+  pChart.applyOptions({rightPriceScale:{...PRICE_SCALE_OPTS,scaleMargins:{top:.08,bottom:.08}}});
   let pSeries;
   if(document.getElementById('sel-type').value==='candle'){
-    pSeries=pChart.addCandlestickSeries({upColor:'#3dd68c',downColor:'#f16b6b',borderUpColor:'#3dd68c',borderDownColor:'#f16b6b',wickUpColor:'#3dd68c',wickDownColor:'#f16b6b'});
+    pSeries=pChart.addCandlestickSeries({upColor:'#3dd68c',downColor:'#f16b6b',borderUpColor:'#3dd68c',borderDownColor:'#f16b6b',wickUpColor:'#3dd68c',wickDownColor:'#f16b6b',priceFormat:COT_FMT});
     pSeries.setData(price.length?price:[]);
   }else{
-    pSeries=pChart.addLineSeries({color:metric==='ls'?'#5a6a80':'#4f8eff',lineWidth:1.5});
+    pSeries=pChart.addLineSeries({color:metric==='ls'?'#5a6a80':'#4f8eff',lineWidth:1.5,priceFormat:COT_FMT});
     pSeries.setData(price.length?price.map(d=>({time:d.time,value:d.close})):[]);
   }
   chartSeries.set(pChart,pSeries);charts.push(pChart);
@@ -520,7 +523,7 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
       histS.setData(cot.map(d=>{const v=d[key].net;return{time:d.time,value:v,color:v>=0?COL_LONG:'#f16b6b'};}));
       chartSeries.set(ch,histS);
     }else{
-      ch.addLineSeries({color:'#181d27',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false})
+      ch.addLineSeries({color:'transparent',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:COT_FMT})
         .setData(cot.map(d=>({time:d.time,value:0})));
       const dataKey=isLS?(side==='l'?'longs':'shorts'):metric;
       let mainS;
@@ -549,6 +552,7 @@ function onMetricChange(){
 }
 
 // ─── CROSSHAIR SYNC ───────────────────────────────────────────────────────────
+// Sync by logical bar index — immune to time mismatches between price and COT series
 function setupSync(){
   lwCharts.forEach(src=>{
     src.timeScale().subscribeVisibleLogicalRangeChange(range=>{
@@ -556,21 +560,20 @@ function setupSync(){
       lwCharts.forEach(o=>{if(o!==src)o.timeScale().setVisibleLogicalRange(range);});
     });
     src.subscribeCrosshairMove(param=>{
-      if(!param.time){
+      if(param.logical==null||!param.time){
         lwCharts.forEach(o=>{if(o!==src)o.clearCrosshairPosition();});
         return;
       }
+      const logicalIdx=param.logical;
       lwCharts.forEach(o=>{
         if(o===src)return;
         const s=chartSeries.get(o);if(!s)return;
         try{
           const data=s.data();if(!data||!data.length)return;
-          const pt=data.find(d=>d.time===param.time)||(()=>{
-            let best=data[0];
-            for(const d of data){if(Math.abs(new Date(d.time)-new Date(param.time))<Math.abs(new Date(best.time)-new Date(param.time)))best=d;}
-            return best;
-          })();
-          if(pt)o.setCrosshairPosition(pt.value??pt.close??0,pt.time,s);
+          // clamp to valid range
+          const idx=Math.max(0,Math.min(Math.round(logicalIdx),data.length-1));
+          const pt=data[idx];if(!pt)return;
+          o.setCrosshairPosition(pt.value??pt.close??0,pt.time,s);
         }catch(e){}
       });
     });
