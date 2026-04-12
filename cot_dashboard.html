@@ -98,22 +98,14 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 #chart-area.ls-mode #chart-card-r{display:block;}
 #split-wrap,#split-wrap-r{position:absolute;inset:0;}
 #price-pane,#price-pane-r{position:absolute;top:0;left:0;right:0;overflow:hidden;}
-/* Price pane header — same style as sig-card-hdr */
-.price-hdr{position:absolute;top:0;left:0;right:0;z-index:5;padding:9px 12px 7px;pointer-events:none;border-bottom:1px solid var(--border);background:rgba(15,18,24,0.6);backdrop-filter:blur(2px);}
-.price-hdr-title{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono);color:var(--text);}
-.price-hdr-sub{font-size:10px;color:var(--muted2);font-family:var(--mono);margin-top:2px;}
+#price-lbl,#price-lbl-r{position:absolute;top:8px;left:12px;z-index:5;font-size:10px;font-weight:600;color:var(--muted2);letter-spacing:.08em;pointer-events:none;text-transform:uppercase;font-family:var(--mono);}
 #divider,#divider-r{position:absolute;left:0;right:0;height:3px;background:var(--border);cursor:ns-resize;z-index:10;transition:background .15s;}
 #divider:hover,#divider.dragging,#divider-r:hover,#divider-r.dragging{background:var(--accent);}
 #cot-pane,#cot-pane-r{position:absolute;left:0;right:0;bottom:0;overflow:hidden;}
 #cot-panels,#cot-panels-r{width:100%;height:100%;display:flex;flex-direction:column;}
 .c-sub-div{flex:0 0 1px;background:var(--border);}
 .c-wrap{position:relative;overflow:hidden;}
-/* COT panel header — compact version of sig-card-hdr */
-.c-hdr{position:absolute;top:0;left:0;right:0;z-index:5;padding:6px 12px 5px;pointer-events:none;border-bottom:1px solid var(--border);background:rgba(15,18,24,0.6);backdrop-filter:blur(2px);display:flex;flex-direction:column;gap:1px;}
-.c-hdr-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono);color:var(--text);}
-.c-hdr-sub{font-size:9px;color:var(--muted2);font-family:var(--mono);}
-/* keep old c-lbl for OI panel which uses mkWrap */
-.c-lbl{position:absolute;top:6px;left:12px;z-index:5;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;pointer-events:none;font-family:var(--mono);opacity:.7;}
+.c-lbl{position:absolute;top:7px;left:12px;z-index:5;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;pointer-events:none;font-family:var(--mono);}
 
 /* SIGNALS PAGE */
 #page-signals{overflow:hidden;}
@@ -230,24 +222,14 @@ tbody tr:hover .td-date{background:var(--surface)!important;}
         <div id="chart-area">
           <div id="chart-card">
             <div id="split-wrap">
-              <div id="price-pane">
-                <div class="price-hdr">
-                  <div class="price-hdr-title" id="price-lbl">ES · Weekly</div>
-                  <div class="price-hdr-sub" id="price-sub">E-Mini S&amp;P 500 · Price</div>
-                </div>
-              </div>
+              <div id="price-pane"><div id="price-lbl">ES · Weekly</div></div>
               <div id="divider"></div>
               <div id="cot-pane"><div id="cot-panels"></div></div>
             </div>
           </div>
           <div id="chart-card-r">
             <div id="split-wrap-r">
-              <div id="price-pane-r">
-                <div class="price-hdr">
-                  <div class="price-hdr-title" id="price-lbl-r">ES · Weekly</div>
-                  <div class="price-hdr-sub" id="price-sub-r">E-Mini S&amp;P 500 · Price</div>
-                </div>
-              </div>
+              <div id="price-pane-r"><div id="price-lbl-r">ES · Weekly</div></div>
               <div id="divider-r"></div>
               <div id="cot-pane-r"><div id="cot-panels-r"></div></div>
             </div>
@@ -467,9 +449,6 @@ async function switchInstrument(id){
 function updateHeaderName(){
   const i=INSTRUMENTS[activeInstrument];
   document.getElementById('hdr-name').innerHTML=`<strong>${i.fullName}</strong> · ${i.exchange}`;
-  // Update price pane headers in Charts
-  const sub=`${i.fullName} · Price`;
-  ['price-sub','price-sub-r'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=sub;});
 }
 
 // ─── CARDS ────────────────────────────────────────────────────────────────────
@@ -556,7 +535,7 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
 
   if(showOI){
     const isLast=idx===panelCount-1;
-    const w=mkWrap(cotEl,'Open Interest','#e8a44a',subH,'Total open contracts');
+    const w=mkWrap(cotEl,'Open Interest','#e8a44a',subH);
     const ch=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
     const s=ch.addLineSeries({color:'#e8a44a',lineWidth:1.5,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT});
     s.setData(cot.map(d=>({time:d.time,value:d.oi})));
@@ -567,16 +546,8 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   active.forEach((key,i)=>{
     const cfg=CATS[key],isLast=idx===panelCount-1;
     const sColor=isLS?(side==='l'?COL_LONG:COL_SHORT):cfg.color;
-    // Build descriptive sub-label
-    const metricSub=isLS
-      ?(side==='l'
-        ?(visMode==='histogram'?'Weekly change · Long positions':'Gross long positions')
-        :(visMode==='histogram'?'Weekly change · Short positions':'Gross short positions'))
-      :(metric==='net'?(visMode==='histogram'?'Net (L−S) · Histogram':'Net (L−S) · Line')
-        :metric==='chgNet'?'Weekly change in net'
-        :'Net (L−S)');
     const sLabel=isLS?(side==='l'?cfg.label+' · Longs':cfg.label+' · Shorts'):cfg.label;
-    const w=mkWrap(cotEl,sLabel,sColor,subH,metricSub);
+    const w=mkWrap(cotEl,sLabel,sColor,subH);
     const ch=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
 
     if(isLS&&visMode==='histogram'){
@@ -851,14 +822,11 @@ function initRightDrag(){
 }
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
-function mkWrap(parent,label,color,h,sub=''){
+function mkWrap(parent,label,color,h){
   const wrap=document.createElement('div');wrap.className='c-wrap';wrap.style.height=h+'px';
-  const hdr=document.createElement('div');hdr.className='c-hdr';
-  const title=document.createElement('div');title.className='c-hdr-title';title.style.color=color;title.textContent=label;
-  hdr.appendChild(title);
-  if(sub){const s=document.createElement('div');s.className='c-hdr-sub';s.textContent=sub;hdr.appendChild(s);}
+  const lbl=document.createElement('div');lbl.className='c-lbl';lbl.style.color=color;lbl.textContent=label;
   const el=document.createElement('div');el.style.cssText=`width:100%;height:${h}px;`;
-  wrap.appendChild(hdr);wrap.appendChild(el);parent.appendChild(wrap);return{wrap,el};
+  wrap.appendChild(lbl);wrap.appendChild(el);parent.appendChild(wrap);return{wrap,el};
 }
 function mkDiv(){const d=document.createElement('div');d.className='c-sub-div';return d;}
 
