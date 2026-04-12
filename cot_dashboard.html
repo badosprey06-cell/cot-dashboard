@@ -364,8 +364,7 @@ function activeCatKeys(){return Object.entries(CATS).filter(([,c])=>c.active).ma
 function filteredData(){const s=rangeStart();return{cot:cotData.filter(d=>d.time>=s),price:priceData.filter(d=>d.time>=s)};}
 
 // ─── SIGNALS STATE ────────────────────────────────────────────────────────────
-let sigFlipThresh=80;   // 80 or 70
-let sigZThresh=2;       // 2, 1.5, or 1
+
 
 // ─── SIGNALS MATH ─────────────────────────────────────────────────────────────
 // FLIP: percentile rank vs FULL history, viewport = selected range
