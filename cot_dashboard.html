@@ -36,14 +36,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 
 /* TOOLBAR */
-#toolbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:42px;background:var(--surface);border-bottom:1px solid var(--border);gap:10px;}
-.tabs{display:flex;gap:2px;}
-.tab{padding:5px 13px;border-radius:4px;font-size:12px;font-weight:500;cursor:pointer;color:var(--muted2);transition:all .15s;}
-.tab:hover{color:var(--text);}
-.tab.active{background:var(--card2);color:var(--text);}
-.tsep{width:1px;height:18px;background:var(--border2);flex-shrink:0;}
-.sel{background:var(--card2);border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;padding:4px 8px;border-radius:4px;cursor:pointer;outline:none;transition:border-color .15s;}
-.sel:hover{border-color:var(--muted);}
+#toolbar{flex:0 0 auto;display:flex;align-items:center;justify-content:flex-end;padding:0 18px;height:42px;background:var(--surface);border-bottom:1px solid var(--border);gap:10px;}
 .range-group{display:flex;gap:3px;}
 .rbtn{padding:4px 11px;border-radius:4px;border:1px solid transparent;font-size:11px;font-weight:600;font-family:var(--mono);letter-spacing:.06em;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;}
 .rbtn:hover{color:var(--text);}
@@ -53,10 +46,27 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 #main{flex:1 1 0;min-height:0;display:flex;overflow:hidden;}
 
 /* SIDEBAR */
-#sidebar{flex:0 0 172px;background:var(--surface);border-right:1px solid var(--border);padding:12px 10px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+#sidebar{flex:0 0 172px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;}
 #sidebar.hidden{display:none;}
+
+/* Sidebar page tabs (Chart / Table) */
+#sidebar-tabs{display:flex;border-bottom:1px solid var(--border);}
+.stab{flex:1;padding:11px 0;text-align:center;font-size:12px;font-weight:500;cursor:pointer;color:var(--muted2);transition:all .15s;border-bottom:2px solid transparent;margin-bottom:-1px;}
+.stab:hover{color:var(--text);}
+.stab.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--accent-dim);}
+
+/* Sidebar controls groups */
+#sidebar-controls{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;}
 .s-group{display:flex;flex-direction:column;gap:4px;}
 .s-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-bottom:7px;border-bottom:1px solid var(--border);margin-bottom:2px;}
+
+/* Pill button group for settings */
+.pill-group{display:flex;flex-direction:column;gap:2px;}
+.pill{padding:6px 10px;border-radius:4px;font-size:11px;font-weight:500;cursor:pointer;color:var(--muted2);transition:all .15s;font-family:var(--font);border:1px solid transparent;}
+.pill:hover{color:var(--text);background:var(--card);}
+.pill.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(79,142,255,.2);}
+
+/* Category toggles */
 .tog-row{display:flex;align-items:center;justify-content:space-between;padding:5px 6px;cursor:pointer;border-radius:4px;transition:background .1s;}
 .tog-row:hover{background:var(--card);}
 .tog-lbl{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);transition:color .15s;}
@@ -137,28 +147,6 @@ tbody tr:hover .td-date{background:var(--surface)!important;}
     <div id="hdr-status"><div class="dot" id="sdot"></div><span id="stxt">Loading…</span></div>
   </div>
   <div id="toolbar">
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div class="tabs">
-        <div class="tab active" data-page="chart">Chart</div>
-        <div class="tab" data-page="table">Table</div>
-      </div>
-      <div class="tsep"></div>
-      <select class="sel" id="sel-type" onchange="renderCharts()">
-        <option value="candle">Candlestick</option>
-        <option value="line">Line</option>
-      </select>
-      <div class="tsep"></div>
-      <select class="sel" id="sel-metric" onchange="onMetricChange()">
-        <option value="net">Net (L − S)</option>
-        <option value="chgNet">Chg Net</option>
-        <option value="ls">L &amp; S</option>
-      </select>
-      <div class="tsep" id="vis-sep" style="display:none;"></div>
-      <select class="sel" id="sel-vis" style="display:none;" onchange="renderCharts()">
-        <option value="line">Line</option>
-        <option value="histogram">Histogram</option>
-      </select>
-    </div>
     <div class="range-group" id="range-btns">
       <button class="rbtn" data-range="ytd">YTD</button>
       <button class="rbtn" data-range="1">1Y</button>
@@ -168,15 +156,45 @@ tbody tr:hover .td-date{background:var(--surface)!important;}
   </div>
   <div id="main">
     <div id="sidebar">
-      <div class="s-group">
-        <div class="s-lbl">Categories</div>
-        <div id="cat-toggles"></div>
+      <!-- Chart / Table tabs -->
+      <div id="sidebar-tabs">
+        <div class="stab active" data-page="chart">Chart</div>
+        <div class="stab" data-page="table">Table</div>
       </div>
-      <div class="s-group">
-        <div class="s-lbl">Extra</div>
-        <div class="tog-row" onclick="toggleOI()">
-          <div class="tog-lbl" id="tl-oi"><div class="cdot" style="background:#e8a44a"></div>Open Interest</div>
-          <div class="sw" id="ts-oi"></div>
+      <!-- Controls (only shown in chart mode) -->
+      <div id="sidebar-controls">
+        <div class="s-group" id="ctrl-price-group">
+          <div class="s-lbl">Price</div>
+          <div class="pill-group">
+            <div class="pill active" data-ctrl="type" data-val="candle">Candlestick</div>
+            <div class="pill" data-ctrl="type" data-val="line">Line</div>
+          </div>
+        </div>
+        <div class="s-group" id="ctrl-metric-group">
+          <div class="s-lbl">COT Data</div>
+          <div class="pill-group">
+            <div class="pill active" data-ctrl="metric" data-val="net">Net (Longs − Shorts)</div>
+            <div class="pill" data-ctrl="metric" data-val="chgNet">Change Net</div>
+            <div class="pill" data-ctrl="metric" data-val="ls">Longs and Shorts</div>
+          </div>
+        </div>
+        <div class="s-group" id="ctrl-vis-group">
+          <div class="s-lbl">Display</div>
+          <div class="pill-group">
+            <div class="pill active" data-ctrl="vis" data-val="line">Line</div>
+            <div class="pill" data-ctrl="vis" data-val="histogram">Histogram</div>
+          </div>
+        </div>
+        <div class="s-group">
+          <div class="s-lbl">Categories</div>
+          <div id="cat-toggles"></div>
+        </div>
+        <div class="s-group">
+          <div class="s-lbl">Extra</div>
+          <div class="tog-row" onclick="toggleOI()">
+            <div class="tog-lbl" id="tl-oi"><div class="cdot" style="background:#e8a44a"></div>Open Interest</div>
+            <div class="sw" id="ts-oi"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -223,12 +241,6 @@ const INSTRUMENTS={
   '6E':{id:'6E',label:'6E',fullName:'EURO FX',exchange:'Chicago Mercantile Exchange',
         cftcName:'EURO FX - CHICAGO MERCANTILE EXCHANGE',yahooTicker:'6E=F',
         priceLabel:'6E · Weekly',dataset:'tff'},
-  GC:{id:'GC',label:'GC',fullName:'GOLD',exchange:'Commodity Exchange Inc.',
-      cftcName:'GOLD - COMMODITY EXCHANGE INC.',yahooTicker:'GC=F',
-      priceLabel:'GC · Weekly',dataset:'disagg'},
-  CL:{id:'CL',label:'CL',fullName:'CRUDE OIL, LIGHT SWEET',exchange:'New York Mercantile Exchange',
-      cftcName:'CRUDE OIL, LIGHT SWEET - NEW YORK MERCANTILE EXCHANGE',yahooTicker:'CL=F',
-      priceLabel:'CL · Weekly',dataset:'disagg'},
 };
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
@@ -282,6 +294,11 @@ let activeInstrument='ES';
 let cotData=[],priceData=[],showOI=false,lwCharts=[],priceChart=null;
 let activeRange='3',splitRatio=0.45,isDragging=false,rightDragInited=false;
 const chartSeries=new Map();
+
+// UI control state (replaces DOM selects)
+let uiType='candle';    // candle | line
+let uiMetric='net';     // net | chgNet | ls
+let uiVis='line';       // line | histogram
 
 // Returns category config for current instrument
 function getCats(){
@@ -467,10 +484,9 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   // price chart
   const el=document.createElement('div');el.className='cel';el.style.cssText=`width:100%;height:${priceH}px;`;ppEl.appendChild(el);
   const pChart=LightweightCharts.createChart(el,{...(panelCount>0?BASE_NT:BASE),width:W,height:priceH});
-  // Apply compact price formatter so price axis stays same width as COT axes
   pChart.applyOptions({rightPriceScale:{...PRICE_SCALE_OPTS,scaleMargins:{top:.08,bottom:.08}}});
   let pSeries;
-  if(document.getElementById('sel-type').value==='candle'){
+  if(uiType==='candle'){
     pSeries=pChart.addCandlestickSeries({upColor:'#3dd68c',downColor:'#f16b6b',borderUpColor:'#3dd68c',borderDownColor:'#f16b6b',wickUpColor:'#3dd68c',wickDownColor:'#f16b6b',priceFormat:COT_FMT});
     pSeries.setData(price.length?price:[]);
   }else{
@@ -483,7 +499,7 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   const subH=Math.max(50,Math.floor(cotH/panelCount));
   let idx=0;
   const isLS=metric==='ls';
-  const visMode=(isLS||metric==='net')?document.getElementById('sel-vis').value:'line';
+  const visMode=(isLS||metric==='net')?uiVis:'line';
 
   if(showOI){
     const isLast=idx===panelCount-1;
@@ -546,10 +562,9 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
 
 // ─── METRIC CHANGE ────────────────────────────────────────────────────────────
 function onMetricChange(){
-  const metric=document.getElementById('sel-metric').value;
-  const showVis=metric==='ls'||metric==='net';
-  document.getElementById('sel-vis').style.display=showVis?'':'none';
-  document.getElementById('vis-sep').style.display=showVis?'':'none';
+  // Show/hide vis group based on metric
+  const showVis = uiMetric==='net'||uiMetric==='ls';
+  document.getElementById('ctrl-vis-group').style.display = showVis?'':'none';
   renderCharts();
 }
 
@@ -591,7 +606,7 @@ function renderCharts(){
   lwCharts=[];priceChart=null;chartSeries.clear();rightDragInited=false;
   const{cot,price}=filteredData();
   const active=activeCatKeys();
-  const metric=document.getElementById('sel-metric').value;
+  const metric=uiMetric;
   const isLS=metric==='ls';
   document.getElementById('chart-area').classList.toggle('ls-mode',isLS);
   const inst=INSTRUMENTS[activeInstrument];
@@ -665,18 +680,34 @@ function buildSidebar(){
 }
 function toggleOI(){showOI=!showOI;document.getElementById('ts-oi').classList.toggle('on',showOI);document.getElementById('tl-oi').classList.toggle('on',showOI);renderCharts();}
 
+// ─── PILL CONTROLS ────────────────────────────────────────────────────────────
+function setupPills(){
+  document.querySelectorAll('.pill').forEach(pill=>{
+    pill.addEventListener('click',()=>{
+      const ctrl=pill.dataset.ctrl, val=pill.dataset.val;
+      // Deactivate siblings
+      pill.closest('.pill-group').querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+      pill.classList.add('active');
+      if(ctrl==='type'){uiType=val;renderCharts();}
+      else if(ctrl==='metric'){uiMetric=val;onMetricChange();}
+      else if(ctrl==='vis'){uiVis=val;renderCharts();}
+    });
+  });
+}
+
 // ─── TABS & RANGE ─────────────────────────────────────────────────────────────
 let activePage='chart';
 function switchPage(pg){
   activePage=pg;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.page===pg));
+  document.querySelectorAll('.stab').forEach(t=>t.classList.toggle('active',t.dataset.page===pg));
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+pg));
-  document.getElementById('sidebar').classList.toggle('hidden',pg==='table');
+  // Show/hide chart controls in sidebar
+  document.getElementById('sidebar-controls').style.display=pg==='table'?'none':'';
   document.getElementById('range-btns').style.display=pg==='table'?'none':'';
   if(pg==='chart'){requestAnimationFrame(()=>renderCharts());}
   if(pg==='table'&&cotData.length){buildTable();}
 }
-document.querySelectorAll('.tab').forEach(tab=>{tab.onclick=()=>switchPage(tab.dataset.page);});
+document.querySelectorAll('.stab').forEach(tab=>{tab.onclick=()=>switchPage(tab.dataset.page);});
 document.querySelectorAll('.rbtn').forEach(btn=>{btn.onclick=()=>{
   document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
   activeRange=btn.dataset.range;
@@ -735,7 +766,7 @@ function buildTable(){
 
 // ─── RESIZE ───────────────────────────────────────────────────────────────────
 window.onresize=()=>{
-  const isLS=document.getElementById('sel-metric').value==='ls';
+  const isLS=uiMetric==='ls';
   const wL=document.getElementById('split-wrap').clientWidth;
   const wR=isLS?document.getElementById('split-wrap-r').clientWidth:0;
   const half=Math.ceil(lwCharts.length/2);
@@ -772,6 +803,8 @@ async function loadData(){
 }
 
 window.onload=async()=>{
+  setupPills();
+  onMetricChange(); // set initial vis group visibility
   buildSidebar();buildInstTabs();updateHeaderName();await loadData();
 };
 </script>
