@@ -257,19 +257,21 @@ const CATS_TFF={
 };
 
 // Disaggregated categories (GC, CL)
+// Note: CFTC API has a quirk — swap short uses double underscore: swap__positions_short_all
+// Producer and Other Rept fields have no _all suffix on positions (but change fields also lack _all)
 const CATS_DISAGG={
   producer:{label:'Producer / Merchant',short:'Producer', color:'#4f8eff',
-            pfxL:'prod_merc_positions_long_all',   pfxS:'prod_merc_positions_short_all',
-            pfxCL:'change_in_prod_merc_long_all',  pfxCS:'change_in_prod_merc_short_all',active:true},
+            pfxL:'prod_merc_positions_long',        pfxS:'prod_merc_positions_short',
+            pfxCL:'change_in_prod_merc_long',       pfxCS:'change_in_prod_merc_short',  active:true},
   swap:    {label:'Swap Dealer',        short:'Swap Dlr', color:'#3dd68c',
-            pfxL:'swap_positions_long_all',         pfxS:'swap_positions_short_all',
-            pfxCL:'change_in_swap_long_all',        pfxCS:'change_in_swap_short_all',active:true},
+            pfxL:'swap_positions_long_all',         pfxS:'swap__positions_short_all',   // note double __
+            pfxCL:'change_in_swap_long_all',        pfxCS:'change_in_swap_short_all',   active:true},
   money:   {label:'Managed Money',      short:'Mgd Money',color:'#a78bfa',
             pfxL:'m_money_positions_long_all',      pfxS:'m_money_positions_short_all',
             pfxCL:'change_in_m_money_long_all',     pfxCS:'change_in_m_money_short_all',active:true},
   other:   {label:'Other Reportable',  short:'Other Rept',color:'#fb923c',
-            pfxL:'other_rept_positions_long_all',   pfxS:'other_rept_positions_short_all',
-            pfxCL:'change_in_oth_rept_long_all',    pfxCS:'change_in_oth_rept_short_all',active:false},
+            pfxL:'other_rept_positions_long',       pfxS:'other_rept_positions_short',
+            pfxCL:'change_in_other_rept_long',      pfxCS:'change_in_other_rept_short', active:false},
   nonrept: {label:'Non-Reportable',    short:'Non-Rept',  color:'#64748b',
             pfxL:'nonrept_positions_long_all',      pfxS:'nonrept_positions_short_all',
             pfxCL:'change_in_nonrept_long_all',     pfxCS:'change_in_nonrept_short_all',active:false},
