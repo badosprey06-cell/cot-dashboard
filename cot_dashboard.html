@@ -50,10 +50,8 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .dot.err{background:var(--red);animation:none;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
 
-/* TOOLBAR */
-#toolbar{flex:0 0 auto;display:flex;align-items:center;justify-content:flex-end;padding:0 16px;height:38px;background:var(--surface);border-bottom:1px solid var(--border);}
-.range-group{display:flex;gap:3px;}
-.rbtn{padding:4px 10px;border-radius:4px;border:1px solid transparent;font-size:11px;font-weight:600;font-family:var(--mono);letter-spacing:.06em;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;}
+/* RBTN — range buttons, now live in header */
+.rbtn{padding:4px 9px;border-radius:4px;border:1px solid transparent;font-size:11px;font-weight:600;font-family:var(--mono);letter-spacing:.06em;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;}
 .rbtn:hover{color:var(--text);}
 .rbtn.active{background:var(--card2);border-color:var(--border2);color:var(--text);}
 
@@ -113,9 +111,9 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 #page-signals{overflow:hidden;}
 #signals-grid{flex:1 1 0;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;}
 .sig-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;min-height:0;}
-.sig-card-hdr{flex:0 0 auto;padding:9px 12px 6px;border-bottom:1px solid var(--border);}
-.sig-card-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-family:var(--mono);color:var(--muted2);}
-.sig-card-sub{font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+.sig-card-hdr{flex:0 0 auto;padding:11px 14px 8px;border-bottom:1px solid var(--border);}
+.sig-card-title{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono);color:var(--text);}
+.sig-card-sub{font-size:10px;color:var(--muted2);font-family:var(--mono);margin-top:3px;}
 .sig-panels{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
 .sig-p-wrap{position:relative;flex:1 1 0;min-height:0;overflow:hidden;}
 .sig-p-div{flex:0 0 1px;background:var(--border);}
@@ -173,17 +171,15 @@ tbody tr:hover .td-date{background:var(--surface)!important;}
         <div class="hbtn" data-ctrl="vis" data-val="histogram">Histogram</div>
       </div>
     </div>
-    <div class="hdr-mid" id="hdr-name"><strong>E-MINI S&amp;P 500</strong> · Chicago Mercantile Exchange</div>
-    <div id="hdr-status"><div class="dot" id="sdot"></div><span id="stxt">Loading…</span></div>
-  </div>
-
-  <div id="toolbar">
-    <div class="range-group" id="range-btns">
+    <!-- Range buttons in header -->
+    <div class="hdr-ctrl-group" id="range-btns" style="border-left:1px solid var(--border2);border-right:none;padding:0 10px;">
       <button class="rbtn" data-range="ytd">YTD</button>
       <button class="rbtn" data-range="1">1Y</button>
       <button class="rbtn" data-range="2">2Y</button>
       <button class="rbtn active" data-range="3">3Y</button>
     </div>
+    <div class="hdr-mid" id="hdr-name"><strong>E-MINI S&amp;P 500</strong> · Chicago Mercantile Exchange</div>
+    <div id="hdr-status"><div class="dot" id="sdot"></div><span id="stxt">Loading…</span></div>
   </div>
 
   <div id="main">
@@ -785,6 +781,7 @@ function switchPage(pg){
   document.querySelectorAll('.ptab').forEach(t=>t.classList.toggle('active',t.dataset.page===pg));
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+pg));
   document.getElementById('sidebar').classList.toggle('hidden',pg==='table');
+  // Range + chart controls hidden on table
   document.getElementById('range-btns').style.display=pg==='table'?'none':'flex';
   document.getElementById('hdr-controls').style.display=pg==='chart'?'flex':'none';
   if(pg==='chart') requestAnimationFrame(()=>renderCharts());
