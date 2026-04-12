@@ -98,7 +98,10 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 #chart-area.ls-mode #chart-card-r{display:block;}
 #split-wrap,#split-wrap-r{position:absolute;inset:0;}
 #price-pane,#price-pane-r{position:absolute;top:0;left:0;right:0;overflow:hidden;}
-#price-lbl,#price-lbl-r{position:absolute;top:8px;left:12px;z-index:5;font-size:10px;font-weight:600;color:var(--muted2);letter-spacing:.08em;pointer-events:none;text-transform:uppercase;font-family:var(--mono);}
+.price-hdr{position:absolute;top:0;left:0;right:0;z-index:5;padding:8px 12px 6px;pointer-events:none;border-bottom:1px solid var(--border);background:rgba(15,18,24,0.7);backdrop-filter:blur(4px);}
+.price-hdr-title{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono);color:var(--text);}
+.price-hdr-sub{font-size:10px;color:var(--muted2);font-family:var(--mono);margin-top:2px;}
+#price-lbl,#price-lbl-r{display:none;}
 #divider,#divider-r{position:absolute;left:0;right:0;height:3px;background:var(--border);cursor:ns-resize;z-index:10;transition:background .15s;}
 #divider:hover,#divider.dragging,#divider-r:hover,#divider-r.dragging{background:var(--accent);}
 #cot-pane,#cot-pane-r{position:absolute;left:0;right:0;bottom:0;overflow:hidden;}
@@ -222,14 +225,26 @@ tbody tr:hover .td-date{background:var(--surface)!important;}
         <div id="chart-area">
           <div id="chart-card">
             <div id="split-wrap">
-              <div id="price-pane"><div id="price-lbl">ES · Weekly</div></div>
+              <div id="price-pane">
+                <div id="price-lbl"></div>
+                <div class="price-hdr">
+                  <div class="price-hdr-title" id="price-hdr-title">ES · Weekly</div>
+                  <div class="price-hdr-sub" id="price-hdr-sub">E-Mini S&amp;P 500 · Price</div>
+                </div>
+              </div>
               <div id="divider"></div>
               <div id="cot-pane"><div id="cot-panels"></div></div>
             </div>
           </div>
           <div id="chart-card-r">
             <div id="split-wrap-r">
-              <div id="price-pane-r"><div id="price-lbl-r">ES · Weekly</div></div>
+              <div id="price-pane-r">
+                <div id="price-lbl-r"></div>
+                <div class="price-hdr">
+                  <div class="price-hdr-title" id="price-hdr-title-r">ES · Weekly</div>
+                  <div class="price-hdr-sub" id="price-hdr-sub-r">E-Mini S&amp;P 500 · Price</div>
+                </div>
+              </div>
               <div id="divider-r"></div>
               <div id="cot-pane-r"><div id="cot-panels-r"></div></div>
             </div>
@@ -449,6 +464,14 @@ async function switchInstrument(id){
 function updateHeaderName(){
   const i=INSTRUMENTS[activeInstrument];
   document.getElementById('hdr-name').innerHTML=`<strong>${i.fullName}</strong> · ${i.exchange}`;
+  const title=i.priceLabel;
+  const sub=i.fullName+' · Price';
+  ['','- r'].forEach((sfx,idx)=>{
+    const t=document.getElementById(idx===0?'price-hdr-title':'price-hdr-title-r');
+    const s=document.getElementById(idx===0?'price-hdr-sub':'price-hdr-sub-r');
+    if(t)t.textContent=title;
+    if(s)s.textContent=sub;
+  });
 }
 
 // ─── CARDS ────────────────────────────────────────────────────────────────────
@@ -776,8 +799,7 @@ function renderCharts(){
   const metric=uiMetric,isLS=metric==='ls';
   document.getElementById('chart-area').classList.toggle('ls-mode',isLS);
   const inst=INSTRUMENTS[activeInstrument];
-  document.getElementById('price-lbl').textContent=inst.priceLabel;
-  document.getElementById('price-lbl-r').textContent=inst.priceLabel;
+  updateHeaderName();
   requestAnimationFrame(()=>{
     const WL=document.getElementById('split-wrap').clientWidth;
     const left=buildPanel('cot-panels','price-pane','l',WL,totalH,cot,price,metric,active);
