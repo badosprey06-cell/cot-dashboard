@@ -111,10 +111,21 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 #page-signals{overflow:hidden;}
 #signals-grid{flex:1 1 0;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;}
 .sig-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;min-height:0;}
-.sig-card-hdr{flex:0 0 auto;padding:11px 14px 8px;border-bottom:1px solid var(--border);}
+.sig-card-hdr{flex:0 0 auto;padding:9px 12px 7px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.sig-card-hdr-left{display:flex;flex-direction:column;gap:2px;}
 .sig-card-title{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono);color:var(--text);}
-.sig-card-sub{font-size:10px;color:var(--muted2);font-family:var(--mono);margin-top:3px;}
+.sig-card-sub{font-size:10px;color:var(--muted2);font-family:var(--mono);}
+/* Threshold toggle pills */
+.sig-toggle-group{display:flex;gap:2px;flex-shrink:0;}
+.sig-tog{padding:3px 8px;border-radius:3px;font-size:10px;font-weight:600;font-family:var(--mono);cursor:pointer;color:var(--muted);border:1px solid transparent;transition:all .15s;white-space:nowrap;}
+.sig-tog:hover{color:var(--text);}
+.sig-tog.active{background:var(--card2);border-color:var(--border2);color:var(--text);}
+/* Split: price top + indicator bottom */
 .sig-panels{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
+.sig-price-wrap{position:relative;overflow:hidden;flex:0 0 35%;}
+.sig-ind-wrap{position:relative;overflow:hidden;flex:1 1 0;min-height:0;}
+.sig-split-div{flex:0 0 1px;background:var(--border);}
+.sig-cat-panels{flex:1 1 0;min-height:0;display:flex;flex-direction:column;overflow:hidden;}
 .sig-p-wrap{position:relative;flex:1 1 0;min-height:0;overflow:hidden;}
 .sig-p-div{flex:0 0 1px;background:var(--border);}
 .sig-p-lbl{position:absolute;top:5px;left:10px;z-index:5;font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;pointer-events:none;font-family:var(--mono);opacity:.65;}
@@ -229,34 +240,70 @@ tbody tr:hover .td-date{background:var(--surface)!important;}
       <!-- SIGNALS PAGE -->
       <div class="page" id="page-signals">
         <div id="signals-grid">
+
+          <!-- 1. FLIP Percentile -->
           <div class="sig-card">
             <div class="sig-card-hdr">
-              <div class="sig-card-title">FLIP Percentile</div>
-              <div class="sig-card-sub">Position in full historical range · zones 20% / 80%</div>
+              <div class="sig-card-hdr-left">
+                <div class="sig-card-title">FLIP Percentile</div>
+                <div class="sig-card-sub">Position in full historical range</div>
+              </div>
+              <div class="sig-toggle-group" id="flip-togs">
+                <div class="sig-tog active" data-flip="80">80/20</div>
+                <div class="sig-tog" data-flip="70">70/30</div>
+              </div>
             </div>
             <div class="sig-panels" id="sig-flip-panels"></div>
           </div>
+
+          <!-- 2. Z-Score Net -->
           <div class="sig-card">
             <div class="sig-card-hdr">
-              <div class="sig-card-title">Z-Score</div>
-              <div class="sig-card-sub">Std deviations from 52-week mean · zones ±2σ</div>
+              <div class="sig-card-hdr-left">
+                <div class="sig-card-title">Z-Score · Net</div>
+                <div class="sig-card-sub">Std deviations from 52-week mean · Net (L−S)</div>
+              </div>
+              <div class="sig-toggle-group" id="znet-togs">
+                <div class="sig-tog active" data-z="2">2σ</div>
+                <div class="sig-tog" data-z="1.5">1.5σ</div>
+                <div class="sig-tog" data-z="1">1σ</div>
+              </div>
             </div>
-            <div class="sig-panels" id="sig-zscore-panels"></div>
+            <div class="sig-panels" id="sig-znet-panels"></div>
           </div>
+
+          <!-- 3. Z-Score Longs -->
           <div class="sig-card">
             <div class="sig-card-hdr">
-              <div class="sig-card-title">Net Position + Flip Signal</div>
-              <div class="sig-card-sub">Net (L−S) · arrows mark zero-cross</div>
+              <div class="sig-card-hdr-left">
+                <div class="sig-card-title">Z-Score · Longs</div>
+                <div class="sig-card-sub">Std deviations from 52-week mean · Long positions</div>
+              </div>
+              <div class="sig-toggle-group" id="zlong-togs">
+                <div class="sig-tog active" data-z="2">2σ</div>
+                <div class="sig-tog" data-z="1.5">1.5σ</div>
+                <div class="sig-tog" data-z="1">1σ</div>
+              </div>
             </div>
-            <div class="sig-panels" id="sig-net-panels"></div>
+            <div class="sig-panels" id="sig-zlong-panels"></div>
           </div>
+
+          <!-- 4. Z-Score Shorts -->
           <div class="sig-card">
             <div class="sig-card-hdr">
-              <div class="sig-card-title">Price vs Net Divergence</div>
-              <div class="sig-card-sub">Normalised 0–100 · white = price · colour = net</div>
+              <div class="sig-card-hdr-left">
+                <div class="sig-card-title">Z-Score · Shorts</div>
+                <div class="sig-card-sub">Std deviations from 52-week mean · Short positions</div>
+              </div>
+              <div class="sig-toggle-group" id="zshort-togs">
+                <div class="sig-tog active" data-z="2">2σ</div>
+                <div class="sig-tog" data-z="1.5">1.5σ</div>
+                <div class="sig-tog" data-z="1">1σ</div>
+              </div>
             </div>
-            <div class="sig-panels" id="sig-div-panels"></div>
+            <div class="sig-panels" id="sig-zshort-panels"></div>
           </div>
+
         </div>
       </div>
 
@@ -316,26 +363,30 @@ const nf=v=>parseFloat(v)||0;
 function activeCatKeys(){return Object.entries(CATS).filter(([,c])=>c.active).map(([k])=>k);}
 function filteredData(){const s=rangeStart();return{cot:cotData.filter(d=>d.time>=s),price:priceData.filter(d=>d.time>=s)};}
 
+// ─── SIGNALS STATE ────────────────────────────────────────────────────────────
+let sigFlipThresh=80;   // 80 or 70
+let sigZThresh=2;       // 2, 1.5, or 1
+
 // ─── SIGNALS MATH ─────────────────────────────────────────────────────────────
-// FLIP: percentile rank vs FULL history (all loaded weeks), viewport = selected range
+// FLIP: percentile rank vs FULL history, viewport = selected range
 function computeFlip(catKey){
   const nets=cotData.map(d=>d[catKey].net);
   const mn=Math.min(...nets),mx=Math.max(...nets),rng=mx-mn||1;
   return cotData.map(d=>({time:d.time,value:Math.round((d[catKey].net-mn)/rng*100)}));
 }
-// Z-score: rolling 52-week window over full history
-function computeZ(catKey,win=52){
-  return cotData.map((d,i)=>{
-    const sl=cotData.slice(Math.max(0,i-win+1),i+1).map(x=>x[catKey].net);
+// Generic Z-score on any value array, rolling 52w window
+function computeZgeneric(valueArr,win=52){
+  return valueArr.map((v,i)=>{
+    const sl=valueArr.slice(Math.max(0,i-win+1),i+1);
     const mu=sl.reduce((a,b)=>a+b,0)/sl.length;
     const sd=Math.sqrt(sl.reduce((a,b)=>a+(b-mu)**2,0)/sl.length)||1;
-    return{time:d.time,value:+((d[catKey].net-mu)/sd).toFixed(2)};
+    return +((v-mu)/sd).toFixed(2);
   });
 }
-// Normalise to 0-100
-function norm(arr){
-  const vs=arr.map(d=>d.value),mn=Math.min(...vs),mx=Math.max(...vs),rng=mx-mn||1;
-  return arr.map(d=>({...d,value:+((d.value-mn)/rng*100).toFixed(2)}));
+function computeZ(catKey,field='net',win=52){
+  const vals=cotData.map(d=>d[catKey][field]);
+  const zs=computeZgeneric(vals,win);
+  return cotData.map((d,i)=>({time:d.time,value:zs[i]}));
 }
 
 // ─── FETCH ────────────────────────────────────────────────────────────────────
@@ -532,56 +583,90 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   return charts;
 }
 
+// ─── SIGNALS STATE ────────────────────────────────────────────────────────────
+let sigFlipThresh=80;
+let sigZThresh=2;
+
+// ─── SIGNALS MATH ─────────────────────────────────────────────────────────────
+function computeFlip(catKey){
+  const nets=cotData.map(d=>d[catKey].net);
+  const mn=Math.min(...nets),mx=Math.max(...nets),rng=mx-mn||1;
+  return cotData.map(d=>({time:d.time,value:Math.round((d[catKey].net-mn)/rng*100)}));
+}
+function computeZ(catKey,field='net',win=52){
+  const vals=cotData.map(d=>d[catKey][field]);
+  return cotData.map((d,i)=>{
+    const sl=vals.slice(Math.max(0,i-win+1),i+1);
+    const mu=sl.reduce((a,b)=>a+b,0)/sl.length;
+    const sd=Math.sqrt(sl.reduce((a,b)=>a+(b-mu)**2,0)/sl.length)||1;
+    return{time:d.time,value:+((vals[i]-mu)/sd).toFixed(2)};
+  });
+}
+
 // ─── SIGNALS BUILDER ──────────────────────────────────────────────────────────
 function clearSigCharts(){
   sigCharts.forEach(c=>{try{c.remove();}catch(e){}});
   sigCharts=[];
-  ['sig-flip-panels','sig-zscore-panels','sig-net-panels','sig-div-panels'].forEach(id=>{
-    document.getElementById(id).innerHTML='';
+  ['sig-flip-panels','sig-znet-panels','sig-zlong-panels','sig-zshort-panels'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.innerHTML='';
   });
 }
 
-// Build one panel row inside a sig-card
-function addSigPanel(containerId, seriesList, label, color, isLast, opts={}){
-  const container=document.getElementById(containerId);
-  const wrap=document.createElement('div');wrap.className='sig-p-wrap';
-  const lbl=document.createElement('div');lbl.className='sig-p-lbl';lbl.style.color=color;lbl.textContent=label;
-  const el=document.createElement('div');el.style.cssText='width:100%;height:100%;';
-  wrap.appendChild(lbl);wrap.appendChild(el);
-  if(!isLast){const div=document.createElement('div');div.className='sig-p-div';container.appendChild(wrap);container.appendChild(div);}
-  else container.appendChild(wrap);
-
+function buildSigCard(panelsId, priceSeries, catData, opts={}){
+  const container=document.getElementById(panelsId);
+  if(!container)return;
   const W=container.clientWidth||600;
-  const H=Math.max(60,wrap.clientHeight||80);
-  const cfg={...(isLast?BASE:BASE_NT),width:W,height:H};
-  cfg.rightPriceScale={...PS,scaleMargins:opts.scaleMargins||{top:.1,bottom:.1}};
-  const ch=LightweightCharts.createChart(el,cfg);
+  const totalH=container.clientHeight||300;
+  const priceH=Math.floor(totalH*0.35);
+  const indH=totalH-priceH-1;
+  const n=catData.length;
+  const rowH=Math.max(38,Math.floor(indH/n));
+  const PS_SIG={borderColor:'#181d27',minimumWidth:AXIS_W,scaleMargins:{top:.08,bottom:.08}};
 
-  seriesList.forEach(sd=>{
-    let s;
-    if(sd.type==='histogram'){
-      s=ch.addHistogramSeries({color:sd.color,priceLineVisible:false,lastValueVisible:!!sd.label,priceFormat:sd.fmt||COT_FMT,base:0});
-    }else{
-      s=ch.addLineSeries({color:sd.color,lineWidth:sd.lineWidth||1.5,priceLineVisible:false,lastValueVisible:!!sd.label,lineStyle:sd.dash?2:0,crosshairMarkerVisible:sd.marker!==false,priceFormat:sd.fmt||COT_FMT});
-    }
-    s.setData(sd.data);
-    // Threshold price lines
-    if(sd.lines) sd.lines.forEach(l=>s.createPriceLine({price:l.v,color:l.c,lineWidth:1,lineStyle:2,axisLabelVisible:true,title:l.t||''}));
-    // Zero-cross markers
-    if(sd.markers&&sd.data.length){
-      const markers=[];
-      for(let i=1;i<sd.data.length;i++){
-        const pv=sd.data[i-1].value,cv=sd.data[i].value;
-        if(pv<0&&cv>=0) markers.push({time:sd.data[i].time,position:'belowBar',color:'#3dd68c',shape:'arrowUp',size:1});
-        else if(pv>=0&&cv<0) markers.push({time:sd.data[i].time,position:'aboveBar',color:'#f16b6b',shape:'arrowDown',size:1});
-      }
-      s.setMarkers(markers);
-    }
-    if(sd.isPrimary) chartSeries.set(ch,s);
+  // Price pane
+  const priceWrap=document.createElement('div');
+  priceWrap.style.cssText=`position:relative;height:${priceH}px;overflow:hidden;flex-shrink:0;`;
+  const priceLbl=document.createElement('div');
+  priceLbl.className='sig-p-lbl';priceLbl.style.color='var(--muted)';
+  priceLbl.textContent=INSTRUMENTS[activeInstrument].priceLabel;
+  const priceEl=document.createElement('div');priceEl.style.cssText='width:100%;height:100%;';
+  priceWrap.appendChild(priceLbl);priceWrap.appendChild(priceEl);
+  container.appendChild(priceWrap);
+
+  const pChart=LightweightCharts.createChart(priceEl,{...BASE_NT,width:W,height:priceH,rightPriceScale:{...PS_SIG}});
+  const pSeries=pChart.addLineSeries({color:'rgba(200,208,222,0.45)',lineWidth:1.5,priceLineVisible:false,lastValueVisible:false,priceFormat:COT_FMT});
+  if(priceSeries.length) pSeries.setData(priceSeries);
+  chartSeries.set(pChart,pSeries);
+  sigCharts.push(pChart);
+
+  // Split divider
+  const splitDiv=document.createElement('div');splitDiv.style.cssText='height:1px;background:var(--border);flex-shrink:0;';
+  container.appendChild(splitDiv);
+
+  // Indicator rows
+  const indWrap=document.createElement('div');
+  indWrap.style.cssText=`display:flex;flex-direction:column;height:${indH}px;overflow:hidden;`;
+  container.appendChild(indWrap);
+
+  catData.forEach((cat,i)=>{
+    const isLast=i===n-1;
+    const wrap=document.createElement('div');
+    wrap.style.cssText=`position:relative;height:${rowH}px;overflow:hidden;flex-shrink:0;`;
+    const lbl=document.createElement('div');lbl.className='sig-p-lbl';lbl.style.color=cat.color;lbl.textContent=cat.label;
+    const el=document.createElement('div');el.style.cssText='width:100%;height:100%;';
+    wrap.appendChild(lbl);wrap.appendChild(el);indWrap.appendChild(wrap);
+    if(!isLast){const d=document.createElement('div');d.style.cssText='height:1px;background:var(--border);flex-shrink:0;';indWrap.appendChild(d);}
+
+    const ch=LightweightCharts.createChart(el,{
+      ...(isLast?BASE:BASE_NT),width:W,height:rowH,
+      rightPriceScale:{...PS_SIG,scaleMargins:opts.scaleMargins||{top:.1,bottom:.1}},
+    });
+    const s=ch.addLineSeries({color:cat.color,lineWidth:1.5,priceLineVisible:false,lastValueVisible:true,priceFormat:cat.fmt||COT_FMT});
+    s.setData(cat.data);
+    if(opts.lines) opts.lines.forEach(l=>s.createPriceLine({price:l.v,color:l.c,lineWidth:1,lineStyle:2,axisLabelVisible:true,title:l.t||''}));
+    chartSeries.set(ch,s);
+    sigCharts.push(ch);
   });
-
-  sigCharts.push(ch);
-  return ch;
 }
 
 function renderSignals(){
@@ -590,54 +675,62 @@ function renderSignals(){
   if(!cot.length)return;
   const active=activeCatKeys();
   if(!active.length)return;
-  const n=active.length;
   const rs=rangeStart();
-
-  // Normalised price for divergence (aligned to cot dates via time set)
-  const cotTimeSet=new Set(cot.map(d=>d.time));
-  const priceNormFull=price.length ? norm(price.map(d=>({time:d.time,value:d.close}))) : [];
-  const priceNormAligned=priceNormFull.filter(d=>cotTimeSet.has(d.time));
+  const priceLine=price.map(d=>({time:d.time,value:d.close}));
+  const fHi=sigFlipThresh,fLo=100-sigFlipThresh;
+  const zT=sigZThresh;
 
   requestAnimationFrame(()=>{
-    active.forEach((key,i)=>{
-      const cfg=CATS[key],color=cfg.color,isLast=i===n-1;
+    // 1. FLIP
+    buildSigCard('sig-flip-panels',priceLine,
+      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:cfg.color,fmt:PCT_FMT,data:computeFlip(key).filter(d=>d.time>=rs)};}),
+      {scaleMargins:{top:.06,bottom:.06},lines:[{v:fHi,c:'rgba(241,107,107,0.55)',t:`${fHi}%`},{v:fLo,c:'rgba(61,214,140,0.55)',t:`${fLo}%`},{v:50,c:'rgba(90,106,128,0.2)',t:''}]}
+    );
+    // 2. Z Net
+    buildSigCard('sig-znet-panels',priceLine,
+      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:cfg.color,fmt:Z_FMT,data:computeZ(key,'net').filter(d=>d.time>=rs)};}),
+      {scaleMargins:{top:.1,bottom:.1},lines:[{v:zT,c:'rgba(241,107,107,0.55)',t:`+${zT}σ`},{v:-zT,c:'rgba(61,214,140,0.55)',t:`-${zT}σ`},{v:0,c:'rgba(90,106,128,0.2)',t:''}]}
+    );
+    // 3. Z Longs
+    buildSigCard('sig-zlong-panels',priceLine,
+      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:cfg.color,fmt:Z_FMT,data:computeZ(key,'longs').filter(d=>d.time>=rs)};}),
+      {scaleMargins:{top:.1,bottom:.1},lines:[{v:zT,c:'rgba(241,107,107,0.55)',t:`+${zT}σ`},{v:-zT,c:'rgba(61,214,140,0.55)',t:`-${zT}σ`},{v:0,c:'rgba(90,106,128,0.2)',t:''}]}
+    );
+    // 4. Z Shorts
+    buildSigCard('sig-zshort-panels',priceLine,
+      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:cfg.color,fmt:Z_FMT,data:computeZ(key,'shorts').filter(d=>d.time>=rs)};}),
+      {scaleMargins:{top:.1,bottom:.1},lines:[{v:zT,c:'rgba(241,107,107,0.55)',t:`+${zT}σ`},{v:-zT,c:'rgba(61,214,140,0.55)',t:`-${zT}σ`},{v:0,c:'rgba(90,106,128,0.2)',t:''}]}
+    );
 
-      // 1. FLIP
-      const flipAll=computeFlip(key).filter(d=>d.time>=rs);
-      addSigPanel('sig-flip-panels',[{
-        data:flipAll,color,fmt:PCT_FMT,isPrimary:true,
-        lines:[{v:80,c:'rgba(241,107,107,0.5)',t:'80%'},{v:20,c:'rgba(61,214,140,0.5)',t:'20%'},{v:50,c:'rgba(90,106,128,0.25)',t:''}],
-      }],cfg.short,color,isLast,{scaleMargins:{top:.08,bottom:.08}});
-
-      // 2. Z-score
-      const zAll=computeZ(key).filter(d=>d.time>=rs);
-      addSigPanel('sig-zscore-panels',[{
-        data:zAll,color,fmt:Z_FMT,isPrimary:true,
-        lines:[{v:2,c:'rgba(241,107,107,0.5)',t:'+2σ'},{v:-2,c:'rgba(61,214,140,0.5)',t:'-2σ'},{v:0,c:'rgba(90,106,128,0.25)',t:''}],
-      }],cfg.short,color,isLast,{scaleMargins:{top:.1,bottom:.1}});
-
-      // 3. Net + flip markers
-      const netData=cot.map(d=>({time:d.time,value:d[key].net}));
-      addSigPanel('sig-net-panels',[{
-        data:netData,color,fmt:COT_FMT,isPrimary:true,markers:true,
-        lines:[{v:0,c:'rgba(90,106,128,0.3)',t:''}],
-      }],cfg.short,color,isLast,{scaleMargins:{top:.1,bottom:.1}});
-
-      // 4. Divergence: net normalised (color) + price normalised (white dim)
-      const netNorm=norm(cot.map(d=>({time:d.time,value:d[key].net})));
-      const series=[{data:netNorm,color,fmt:NRM_FMT,isPrimary:true,marker:false}];
-      if(priceNormAligned.length) series.push({data:priceNormAligned,color:'rgba(200,208,222,0.3)',fmt:NRM_FMT,lineWidth:1,dash:false,marker:false});
-      addSigPanel('sig-div-panels',series,cfg.short,color,isLast,{scaleMargins:{top:.05,bottom:.05}});
-    });
-
-    // Sync timescales within each quadrant group
-    const ids=['sig-flip-panels','sig-zscore-panels','sig-net-panels','sig-div-panels'];
-    // Also sync ALL signal charts together (cross-quadrant)
+    // Sync all signal charts
     sigCharts.forEach(src=>{
       src.timeScale().subscribeVisibleLogicalRangeChange(range=>{
         if(!range)return;
         sigCharts.forEach(o=>{if(o!==src)o.timeScale().setVisibleLogicalRange(range);});
       });
+    });
+  });
+}
+
+// ─── SIGNALS TOGGLE SETUP ─────────────────────────────────────────────────────
+function setupSigToggles(){
+  document.querySelectorAll('#flip-togs .sig-tog').forEach(t=>{
+    t.onclick=()=>{
+      document.querySelectorAll('#flip-togs .sig-tog').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      sigFlipThresh=parseInt(t.dataset.flip);
+      if(activePage==='signals')renderSignals();
+    };
+  });
+  ['znet-togs','zlong-togs','zshort-togs'].forEach(gid=>{
+    document.querySelectorAll(`#${gid} .sig-tog`).forEach(t=>{
+      t.onclick=()=>{
+        ['znet-togs','zlong-togs','zshort-togs'].forEach(g=>{
+          document.querySelectorAll(`#${g} .sig-tog`).forEach(x=>x.classList.toggle('active',x.dataset.z===t.dataset.z));
+        });
+        sigZThresh=parseFloat(t.dataset.z);
+        if(activePage==='signals')renderSignals();
+      };
     });
   });
 }
@@ -870,6 +963,7 @@ async function loadData(){
 
 window.onload=async()=>{
   setupControls();
+  setupSigToggles();
   onMetricChange();
   buildSidebar();
   buildInstTabs();
