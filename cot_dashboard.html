@@ -369,7 +369,15 @@ const chartSeries=new Map();
 let uiType='candle', uiMetric='net', uiVis='line';
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
-function toFriday(s){const d=new Date(s+'T00:00:00Z'),day=d.getUTCDay();d.setUTCDate(d.getUTCDate()+(day<=5?5-day:6));return d.toISOString().slice(0,10);}
+// Align COT date to the Monday of the same week as the Tuesday report
+// Tuesday → subtract 1 day → Monday
+function toMonday(s){
+  const d=new Date(s+'T00:00:00Z'),day=d.getUTCDay();
+  // day=2 is Tuesday (report date), go back to Monday
+  const diff=day===0?-6:1-day; // always land on Monday
+  d.setUTCDate(d.getUTCDate()+diff);
+  return d.toISOString().slice(0,10);
+}
 function rangeStart(){if(activeRange==='ytd')return new Date().getUTCFullYear()+'-01-01';const d=new Date();d.setUTCFullYear(d.getUTCFullYear()-parseInt(activeRange));return d.toISOString().slice(0,10);}
 const today=()=>new Date().toISOString().slice(0,10);
 function fmtK(v){const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(2)+'M':a>=1e3?(v/1e3).toFixed(1)+'K':String(Math.round(v));}
@@ -431,7 +439,7 @@ async function fetchPrice(inst){
 // ─── PARSE ────────────────────────────────────────────────────────────────────
 function parseCOT(raw){
   return raw.map(r=>{
-    const date=r.report_date_as_yyyy_mm_dd.slice(0,10),time=toFriday(date),oi=nf(r.open_interest_all);
+    const date=r.report_date_as_yyyy_mm_dd.slice(0,10),time=toMonday(date),oi=nf(r.open_interest_all);
     const e={date,time,oi};
     Object.entries(CATS).forEach(([k,cfg])=>{
       const L=nf(r[cfg.pfxL]),S=nf(r[cfg.pfxS]),cL=nf(r[cfg.pfxCL]),cS=nf(r[cfg.pfxCS]);
@@ -443,9 +451,9 @@ function parseCOT(raw){
 function parsePrice(res){
   const ts=res.timestamp,q=res.indicators.quote[0],td=today();
   return ts.map((t,i)=>{
-    const mon=new Date(t*1000).toISOString().slice(0,10);
-    const d=new Date(mon+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+4);
-    return{time:d.toISOString().slice(0,10),open:+(q.open[i]||0).toFixed(4),high:+(q.high[i]||0).toFixed(4),low:+(q.low[i]||0).toFixed(4),close:+(q.close[i]||0).toFixed(4)};
+    // Yahoo weekly candle timestamp is Monday 00:00 UTC — use as-is
+    const time=new Date(t*1000).toISOString().slice(0,10);
+    return{time,open:+(q.open[i]||0).toFixed(4),high:+(q.high[i]||0).toFixed(4),low:+(q.low[i]||0).toFixed(4),close:+(q.close[i]||0).toFixed(4)};
   }).filter(b=>b.open&&b.high&&b.low&&b.close&&b.time<=td);
 }
 
