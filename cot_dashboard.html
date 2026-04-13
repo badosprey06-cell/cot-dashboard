@@ -653,6 +653,10 @@ function buildSigCard(panelsId, priceSeries, catData, opts={}){
   const rowH=Math.max(38,Math.floor(indH/n));
   const PS_SIG={borderColor:'#181d27',minimumWidth:AXIS_W,scaleMargins:{top:.08,bottom:.08}};
 
+  // Track charts within this card for internal sync
+  const cardCharts=[];
+  const cardSeries=new Map();
+
   // Price pane
   const priceWrap=document.createElement('div');
   priceWrap.style.cssText=`position:relative;height:${priceH}px;overflow:hidden;flex-shrink:0;`;
@@ -667,6 +671,8 @@ function buildSigCard(panelsId, priceSeries, catData, opts={}){
   const pSeries=pChart.addLineSeries({color:'rgba(200,208,222,0.45)',lineWidth:1.5,priceLineVisible:false,lastValueVisible:false,priceFormat:COT_FMT});
   if(priceSeries.length) pSeries.setData(priceSeries);
   chartSeries.set(pChart,pSeries);
+  cardSeries.set(pChart,pSeries);
+  cardCharts.push(pChart);
   sigCharts.push(pChart);
 
   // Split divider
@@ -695,7 +701,35 @@ function buildSigCard(panelsId, priceSeries, catData, opts={}){
     s.setData(cat.data);
     if(opts.lines) opts.lines.forEach(l=>s.createPriceLine({price:l.v,color:l.c,lineWidth:1,lineStyle:2,axisLabelVisible:true,title:l.t||''}));
     chartSeries.set(ch,s);
+    cardSeries.set(ch,s);
+    cardCharts.push(ch);
     sigCharts.push(ch);
+  });
+
+  // ── Sync all charts within this card ──
+  cardCharts.forEach(src=>{
+    // Timescale sync
+    src.timeScale().subscribeVisibleLogicalRangeChange(range=>{
+      if(!range)return;
+      cardCharts.forEach(o=>{if(o!==src)o.timeScale().setVisibleLogicalRange(range);});
+    });
+    // Crosshair sync by logical index
+    src.subscribeCrosshairMove(param=>{
+      if(param.logical==null||!param.time){
+        cardCharts.forEach(o=>{if(o!==src)o.clearCrosshairPosition();});
+        return;
+      }
+      cardCharts.forEach(o=>{
+        if(o===src)return;
+        const s=cardSeries.get(o);if(!s)return;
+        try{
+          const data=s.data();if(!data||!data.length)return;
+          const idx=Math.max(0,Math.min(Math.round(param.logical),data.length-1));
+          const pt=data[idx];if(!pt)return;
+          o.setCrosshairPosition(pt.value??pt.close??0,pt.time,s);
+        }catch(e){}
+      });
+    });
   });
 }
 
