@@ -369,13 +369,12 @@ const chartSeries=new Map();
 let uiType='candle', uiMetric='net', uiVis='line';
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
-// Align COT date to the Monday of the same week as the Tuesday report
-// Tuesday → subtract 1 day → Monday
+// COT report date is Tuesday. The weekly candle on Yahoo opens Monday of that same week.
+// Tuesday Apr 7 → Monday Apr 7 (same week, Yahoo candle opens Apr 7)
+// So we just subtract 1 day from Tuesday to get Monday.
 function toMonday(s){
-  const d=new Date(s+'T00:00:00Z'),day=d.getUTCDay();
-  // day=2 is Tuesday (report date), go back to Monday
-  const diff=day===0?-6:1-day; // always land on Monday
-  d.setUTCDate(d.getUTCDate()+diff);
+  const d=new Date(s+'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate()-1); // Tuesday → Monday
   return d.toISOString().slice(0,10);
 }
 function rangeStart(){if(activeRange==='ytd')return new Date().getUTCFullYear()+'-01-01';const d=new Date();d.setUTCFullYear(d.getUTCFullYear()-parseInt(activeRange));return d.toISOString().slice(0,10);}
