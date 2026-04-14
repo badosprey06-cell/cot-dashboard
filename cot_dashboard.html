@@ -448,12 +448,17 @@ function parseCOT(raw){
   }).sort((a,b)=>a.time<b.time?-1:1);
 }
 function parsePrice(res){
-  const ts=res.timestamp,q=res.indicators.quote[0],td=today();
+  const ts=res.timestamp,q=res.indicators.quote[0];
+  // Only show fully closed weekly candles — exclude current open week
+  const d=new Date();
+  const day=d.getUTCDay();
+  const lastMon=new Date(d);
+  lastMon.setUTCDate(d.getUTCDate()-(day===0?6:day-1)-7);
+  const cutoff=lastMon.toISOString().slice(0,10);
   return ts.map((t,i)=>{
-    // Yahoo weekly candle timestamp is Monday 00:00 UTC — use as-is
     const time=new Date(t*1000).toISOString().slice(0,10);
     return{time,open:+(q.open[i]||0).toFixed(4),high:+(q.high[i]||0).toFixed(4),low:+(q.low[i]||0).toFixed(4),close:+(q.close[i]||0).toFixed(4)};
-  }).filter(b=>b.open&&b.high&&b.low&&b.close&&b.time<=td);
+  }).filter(b=>b.open&&b.high&&b.low&&b.close&&b.time<=cutoff);
 }
 
 // ─── INSTRUMENT UI ────────────────────────────────────────────────────────────
