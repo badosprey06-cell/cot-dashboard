@@ -318,7 +318,7 @@ async function fetchPrice(inst){
   const ticker=encodeURIComponent(INSTRUMENTS[inst].yahooTicker);
   const now=Math.floor(Date.now()/1000),from=Math.floor((Date.now()-3*365.25*24*3600*1000)/1000);
   const yUrl=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1wk&period1=${from}&period2=${now}&events=history`;
-  const proxies=[u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,u=>`https://thingproxy.freeboard.io/fetch/${u}`];
+  const proxies=[u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,u=>`https://corsproxy.org/?${encodeURIComponent(u)}`];
   for(const mk of proxies){
     try{
       const r=await fetch(mk(yUrl),{signal:AbortSignal.timeout(8000)});if(!r.ok)continue;
