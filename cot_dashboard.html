@@ -111,7 +111,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .tbl-card{flex:1 1 0;min-height:0;background:var(--bg);border-radius:var(--r);overflow:auto;}
 table{border-collapse:separate;border-spacing:0;width:max-content;table-layout:fixed;}
 thead tr:first-child th{position:sticky;top:0;z-index:6;}
-thead tr:last-child th{position:sticky;top:39px;z-index:5;}
+thead tr:last-child th{position:sticky;top:42px;z-index:5;}
 .th-base{background:var(--surface);color:var(--muted2);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:10px 14px;text-align:center;border-bottom:1px solid var(--border2);font-family:var(--mono);white-space:nowrap;}
 .th-sticky{position:sticky;left:0;z-index:9!important;border-right:1px solid var(--border2);}
 .th-cat{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:10px 14px;text-align:center;font-family:var(--mono);color:var(--muted2);background:var(--surface);border-bottom:1px solid var(--border);border-left:1px solid var(--border);}
@@ -360,14 +360,17 @@ function updateCards(){
 const COT_FMT={type:'custom',formatter:axisFmt,minMove:1};
 const PCT_FMT={type:'custom',formatter:v=>v.toFixed(0)+'%',minMove:1};
 const Z_FMT={type:'custom',formatter:v=>v.toFixed(2)+'σ',minMove:0.01};
+const PRICE_FMT={type:'custom',formatter:v=>Math.abs(v)<100?v.toFixed(4):axisFmt(v),minMove:0.0001};
 const HIST_SCALE={top:.1,bottom:.1};
 const PS={borderColor:'#181d27',minimumWidth:AXIS_W,scaleMargins:{top:.08,bottom:.08}};
+const PS_PRICE={borderColor:'#181d27',minimumWidth:95,scaleMargins:{top:.08,bottom:.08}};
 const BASE={
   layout:{background:{color:'transparent'},textColor:'#3d4a5c'},
   grid:{vertLines:{visible:false},horzLines:{visible:false}},
   crosshair:{mode:1,vertLine:{color:'#2e3a4e',style:0,width:1,labelBackgroundColor:'#0f1218'},horzLine:{color:'#2e3a4e',style:0,width:1,labelBackgroundColor:'#0f1218'}},
   timeScale:{borderColor:'#181d27',timeVisible:false,rightOffset:3,visible:true},
   rightPriceScale:PS,
+  leftPriceScale:{visible:false},
   handleScale:{mouseWheel:true,pinch:true},
   handleScroll:{mouseWheel:true,pressedMouseMove:true},
 };
@@ -392,13 +395,13 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   const charts=[];
   const el=document.createElement('div');el.className='cel';el.style.cssText=`width:100%;height:${priceH}px;`;ppEl.appendChild(el);
   const pChart=LightweightCharts.createChart(el,{...(panelCount>0?BASE_NT:BASE),width:W,height:priceH});
-  pChart.applyOptions({rightPriceScale:{...PS}});
+  pChart.applyOptions({rightPriceScale:{...PS_PRICE}});
   let pSeries;
   if(uiType==='candle'){
-    pSeries=pChart.addCandlestickSeries({upColor:'#3dd68c',downColor:'#f16b6b',borderUpColor:'#3dd68c',borderDownColor:'#f16b6b',wickUpColor:'#3dd68c',wickDownColor:'#f16b6b',priceFormat:COT_FMT});
+    pSeries=pChart.addCandlestickSeries({upColor:'#3dd68c',downColor:'#f16b6b',borderUpColor:'#3dd68c',borderDownColor:'#f16b6b',wickUpColor:'#3dd68c',wickDownColor:'#f16b6b',priceFormat:PRICE_FMT});
     pSeries.setData(price.length?price:[]);
   }else{
-    pSeries=pChart.addLineSeries({color:metric==='ls'?'#5a6a80':'#4f8eff',lineWidth:1.5,priceFormat:COT_FMT});
+    pSeries=pChart.addLineSeries({color:metric==='ls'?'#5a6a80':'#4f8eff',lineWidth:1.5,priceFormat:PRICE_FMT});
     pSeries.setData(price.length?price.map(d=>({time:d.time,value:d.close})):[]);
   }
   chartSeries.set(pChart,pSeries);charts.push(pChart);
@@ -725,16 +728,16 @@ function buildTable(){
   const{cot}=filteredData();const keys=Object.keys(CATS);
   const colStats=computeColStats(cot);
   let h=`<table><thead><tr><th class="th-base th-sticky" rowspan="2" style="width:96px">Date</th><th class="th-base" rowspan="2" style="width:80px">OI</th>`;
-  keys.forEach(k=>{const c=CATS[k];h+=`<th class="th-cat" colspan="${MDEF.length}" style="border-left:2px solid ${c.color}40;color:${c.color}">${c.short}</th>`;});
+  keys.forEach(k=>{const c=CATS[k];h+=`<th class="th-cat" colspan="${MDEF.length}" style="border-left:1px solid var(--border2);color:${c.color};background:${c.color}12">${c.short}</th>`;});
   h+=`</tr><tr>`;
-  keys.forEach(k=>{MDEF.forEach((m,mi)=>{const bl=mi===0?`border-left:2px solid ${CATS[k].color}40`:`border-left:1px solid var(--border)`;h+=`<th class="th-m" style="${bl}">${m.label}</th>`;});});
+  keys.forEach(k=>{MDEF.forEach((m,mi)=>{const bl=mi===0?`border-left:1px solid var(--border2)`:`border-left:1px solid var(--border)`;h+=`<th class="th-m" style="${bl}">${m.label}</th>`;});});
   h+=`</tr></thead><tbody>`;
   [...cot].reverse().forEach(d=>{
     h+=`<tr><td class="td-date">${d.date}</td><td class="td-oi">${fmtK(d.oi)}</td>`;
     keys.forEach(k=>{
       const c=d[k],cfg=CATS[k];
       MDEF.forEach((m,mi)=>{
-        const bl=mi===0?`border-left:2px solid ${cfg.color}30`:``;
+        const bl=mi===0?`border-left:1px solid var(--border2)`:``;
         if(m.key==='pctNet'){const v=parseFloat(c.pctNet);h+=`<td class="${v>0?'cell-pos':v<0?'cell-neg':''}" style="${bl}">${v>0?'+':''}${c.pctNet}%</td>`;}
         else{
           const v=c[m.key];const isChg=['chgL','chgS','chgNet'].includes(m.key);let sty=bl;
