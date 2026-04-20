@@ -260,11 +260,11 @@ tbody tr:hover .td-date{background:var(--surface)!important;}
 </div>
 <script>
 const INSTRUMENTS={
-  ES:{id:'ES',label:'ES',fullName:'E-MINI S&P 500',exchange:'Chicago Mercantile Exchange',cftcName:'E-MINI S&P 500 - CHICAGO MERCANTILE EXCHANGE',yahooTicker:'ES=F',priceLabel:'ES · Weekly'},
-  NQ:{id:'NQ',label:'NQ',fullName:'E-MINI NASDAQ-100',exchange:'Chicago Mercantile Exchange',cftcName:'NASDAQ-100 Consolidated - CHICAGO MERCANTILE EXCHANGE',yahooTicker:'NQ=F',priceLabel:'NQ · Weekly'},
-  '6E':{id:'6E',label:'6E',fullName:'EURO FX',exchange:'Chicago Mercantile Exchange',cftcName:'EURO FX - CHICAGO MERCANTILE EXCHANGE',yahooTicker:'6E=F',priceLabel:'6E · Weekly'},
+  ES: {id:'ES', label:'ES',  fullName:'E-MINI S&P 500',      exchange:'Chicago Mercantile Exchange',priceLabel:'ES · Weekly'},
+  NQ: {id:'NQ', label:'NQ',  fullName:'E-MINI NASDAQ-100',    exchange:'Chicago Mercantile Exchange',priceLabel:'NQ · Weekly'},
+  '6E':{id:'6E',label:'6E',  fullName:'EURO FX',              exchange:'Chicago Mercantile Exchange',priceLabel:'6E · Weekly'},
+  BTC:{id:'BTC',label:'BTC', fullName:'BITCOIN',              exchange:'Chicago Mercantile Exchange',priceLabel:'BTC · Weekly'},
 };
-const CFTC_URL='https://publicreporting.cftc.gov/resource/gpe5-46if.json';
 const MAX_WEEKS=156,AXIS_W=80;
 const COL_LONG='#86efac',COL_SHORT='#fca5a5',COL_NEUTRAL='#2e3f58';
 const CATS={
@@ -282,12 +282,9 @@ const chartSeries=new Map();
 let uiType='candle',uiMetric='net',uiVis='line';
 let sigFlipThresh=80,sigZThresh=2;
 
-function toMonday(s){const d=new Date(s+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-1);return d.toISOString().slice(0,10);}
 function rangeStart(){if(activeRange==='ytd')return new Date().getUTCFullYear()+'-01-01';const d=new Date();d.setUTCFullYear(d.getUTCFullYear()-parseInt(activeRange));return d.toISOString().slice(0,10);}
-const today=()=>new Date().toISOString().slice(0,10);
 function fmtK(v){const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(2)+'M':a>=1e3?(v/1e3).toFixed(1)+'K':String(Math.round(v));}
 function axisFmt(v){const a=Math.abs(v);if(!a)return'0';if(a>=1e6)return(v/1e6).toFixed(1)+'M';if(a>=1e5)return Math.round(v/1e3)+'K';if(a>=1e4)return(v/1e3).toFixed(1)+'K';if(a>=1e3)return(v/1e3).toFixed(2)+'K';return String(Math.round(v));}
-const nf=v=>parseFloat(v)||0;
 function activeCatKeys(){return Object.entries(CATS).filter(([,c])=>c.active).map(([k])=>k);}
 function filteredData(){const s=rangeStart();return{cot:cotData.filter(d=>d.time>=s),price:priceData.filter(d=>d.time>=s)};}
 
@@ -306,63 +303,10 @@ function computeZ(catKey,field='net',win=52){
   });
 }
 
-async function fetchCOT(inst){
-  const name=encodeURIComponent(INSTRUMENTS[inst].cftcName);
-  const r=await fetch(`${CFTC_URL}?market_and_exchange_names=${name}&$order=report_date_as_yyyy_mm_dd%20DESC&$limit=${MAX_WEEKS}&_=${Date.now()}`);
-  if(!r.ok)throw new Error('CFTC '+r.status);
-  const data=await r.json();
-  if(!data.length)throw new Error(`No CFTC data for ${inst}`);
-  return data;
-}
-async function fetchPrice(inst){
-  const ticker=encodeURIComponent(INSTRUMENTS[inst].yahooTicker);
-  const now=Math.floor(Date.now()/1000),from=Math.floor((Date.now()-3*365.25*24*3600*1000)/1000);
-  const yUrl=`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1wk&period1=${from}&period2=${now}&events=history`;
-  const proxies=[u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,u=>`https://proxy.cors.sh/${u}`];
-  for(const mk of proxies){
-    try{
-      const r=await fetch(mk(yUrl),{signal:AbortSignal.timeout(8000)});if(!r.ok)continue;
-      const txt=await r.text();let j;try{j=JSON.parse(txt);}catch{continue;}
-      if(j.contents){try{j=JSON.parse(j.contents);}catch{continue;}}
-      const res=j?.chart?.result?.[0];if(res)return res;
-    }catch(e){}
-  }
-  throw new Error('All price proxies failed');
-}
-
-function parseCOT(raw){
-  return raw.map(r=>{
-    const date=r.report_date_as_yyyy_mm_dd.slice(0,10),time=toMonday(date),oi=nf(r.open_interest_all);
-    const e={date,time,oi};
-    Object.entries(CATS).forEach(([k,cfg])=>{
-      const L=nf(r[cfg.pfxL]),S=nf(r[cfg.pfxS]),cL=nf(r[cfg.pfxCL]),cS=nf(r[cfg.pfxCS]);
-      e[k]={longs:L,shorts:S,net:L-S,chgNet:cL-cS,chgL:cL,chgS:cS,pctNet:((L-S)/(oi||1)*100).toFixed(1)};
-    });
-    return e;
-  }).sort((a,b)=>a.time<b.time?-1:1);
-}
-
-// FIXED: Yahoo sometimes returns multiple intra-week bars for the current incomplete week.
-// Collapse all bars of the same ISO week into one candle keyed by Monday.
-function parsePrice(res){
-  const ts=res.timestamp,q=res.indicators.quote[0],td=today();
-  const byWeek=new Map();
-  ts.forEach((t,i)=>{
-    const raw=new Date(t*1000).toISOString().slice(0,10);
-    if(!q.open[i]||!q.high[i]||!q.low[i]||!q.close[i]||raw>td)return;
-    const d=new Date(raw+'T00:00:00Z');
-    const dow=d.getUTCDay();
-    const diff=dow===0?-6:1-dow;
-    d.setUTCDate(d.getUTCDate()+diff);
-    const monday=d.toISOString().slice(0,10);
-    const ex=byWeek.get(monday);
-    if(!ex){
-      byWeek.set(monday,{time:monday,open:+(q.open[i]||0).toFixed(4),high:+(q.high[i]||0).toFixed(4),low:+(q.low[i]||0).toFixed(4),close:+(q.close[i]||0).toFixed(4)});
-    }else{
-      byWeek.set(monday,{time:monday,open:ex.open,high:Math.max(ex.high,+(q.high[i]||0)),low:Math.min(ex.low,+(q.low[i]||0)),close:+(q.close[i]||0).toFixed(4)});
-    }
-  });
-  return [...byWeek.values()].sort((a,b)=>a.time<b.time?-1:1);
+async function loadInstrumentData(inst){
+  const r=await fetch(`data/${inst}.json?v=${Date.now()}`);
+  if(!r.ok)throw new Error(`data/${inst}.json: ${r.status}`);
+  return r.json();
 }
 
 function buildInstTabs(){
@@ -806,11 +750,10 @@ async function loadData(){
   lwCharts.forEach(c=>{try{c.remove();}catch(e){}});
   lwCharts=[];priceChart=null;chartSeries.clear();clearSigCharts();
   try{
-    ltxt.textContent=`cot/${activeInstrument.toLowerCase()} …`;
-    cotData=parseCOT(await fetchCOT(activeInstrument));
-    ltxt.textContent=`price/${INSTRUMENTS[activeInstrument].yahooTicker.toLowerCase()} …`;
-    try{priceData=parsePrice(await fetchPrice(activeInstrument));sdot.className='dot';}
-    catch(e){console.warn('Price:',e.message);priceData=[];sdot.className='dot err';}
+    ltxt.textContent=`data/${activeInstrument.toLowerCase()}.json …`;
+    const d=await loadInstrumentData(activeInstrument);
+    cotData=d.cot||[];priceData=d.price||[];
+    sdot.className='dot';
     const lc=cotData[cotData.length-1]?.date||'—';
     const lp=priceData.length?priceData[priceData.length-1].time:'N/A';
     stxt.textContent=`${lc} · ${activeInstrument} ${lp}`;
