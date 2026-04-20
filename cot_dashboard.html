@@ -109,13 +109,13 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .load-msg{font-size:12px;color:var(--muted);font-family:var(--mono);}
 #page-table{overflow:hidden;}
 .tbl-card{flex:1 1 0;min-height:0;background:var(--bg);border-radius:var(--r);overflow:auto;}
-table{border-collapse:separate;border-spacing:0;width:max-content;}
+table{border-collapse:separate;border-spacing:0;width:max-content;table-layout:fixed;}
 thead tr:first-child th{position:sticky;top:0;z-index:6;}
 thead tr:last-child th{position:sticky;top:39px;z-index:5;}
 .th-base{background:var(--surface);color:var(--muted2);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:10px 14px;text-align:center;border-bottom:1px solid var(--border2);font-family:var(--mono);white-space:nowrap;}
 .th-sticky{position:sticky;left:0;z-index:9!important;border-right:1px solid var(--border2);}
 .th-cat{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:10px 14px;text-align:center;font-family:var(--mono);color:var(--muted2);background:var(--surface);border-bottom:1px solid var(--border);border-left:1px solid var(--border);}
-.th-m{font-size:10px;font-weight:500;letter-spacing:.03em;text-transform:uppercase;padding:7px 12px;text-align:center;color:var(--muted);white-space:nowrap;font-family:var(--mono);background:var(--card);border-bottom:1px solid var(--border2);border-left:1px solid var(--border);}
+.th-m{font-size:10px;font-weight:500;letter-spacing:.03em;text-transform:uppercase;padding:7px 12px;text-align:center;color:var(--muted);white-space:nowrap;font-family:var(--mono);background:var(--card);border-bottom:1px solid var(--border2);border-left:1px solid var(--border);width:78px;}
 td{padding:6px 12px;text-align:right;border-bottom:1px solid var(--border);border-left:1px solid var(--border);white-space:nowrap;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12px;color:var(--muted2);}
 .td-date{text-align:left;position:sticky;left:0;z-index:2;background:var(--surface);color:var(--text);font-size:12px;border-right:1px solid var(--border2);border-left:none;padding:6px 14px;font-weight:500;}
 .td-oi{color:var(--muted2);}
@@ -125,6 +125,11 @@ tbody tr:hover td{background:rgba(79,142,255,.05)!important;}
 tbody tr:hover .td-date{background:var(--surface)!important;}
 .cell-pos{color:#86c8ff;}
 .cell-neg{color:#ff9090;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:var(--border2);}
+::-webkit-scrollbar-thumb{background:var(--muted);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:var(--muted2);}
+html{scrollbar-width:thin;scrollbar-color:var(--muted) var(--border2);}
 </style>
 </head>
 <body>
@@ -705,9 +710,21 @@ document.querySelectorAll('.rbtn').forEach(btn=>{btn.onclick=()=>{
 
 const MDEF=[{key:'net',label:'Net'},{key:'chgNet',label:'Chg Net'},{key:'chgL',label:'Chg L'},{key:'chgS',label:'Chg S'},{key:'longs',label:'Longs'},{key:'shorts',label:'Shorts'},{key:'pctNet',label:'% Net'}];
 const fmt=v=>v==null||isNaN(v)?'—':Math.round(v).toLocaleString('ru-RU');
+function p75(arr){const s=[...arr].sort((a,b)=>a-b);return s[Math.min(Math.floor(s.length*.75),s.length-1)]||0;}
+function computeColStats(cot){
+  const stats={};
+  Object.keys(CATS).forEach(k=>{
+    const abs={chgL:[],chgS:[],chgNet:[]};
+    cot.forEach(d=>{['chgL','chgS','chgNet'].forEach(col=>{abs[col].push(Math.abs(d[k][col]||0));});});
+    stats[k]={};
+    ['chgL','chgS','chgNet'].forEach(col=>{const p=p75(abs[col]);stats[k][col]={p75:p,max:Math.max(...abs[col])};});
+  });
+  return stats;
+}
 function buildTable(){
   const{cot}=filteredData();const keys=Object.keys(CATS);
-  let h=`<table><thead><tr><th class="th-base th-sticky" rowspan="2" style="min-width:96px">Date</th><th class="th-base" rowspan="2" style="min-width:80px">OI</th>`;
+  const colStats=computeColStats(cot);
+  let h=`<table><thead><tr><th class="th-base th-sticky" rowspan="2" style="width:96px">Date</th><th class="th-base" rowspan="2" style="width:80px">OI</th>`;
   keys.forEach(k=>{const c=CATS[k];h+=`<th class="th-cat" colspan="${MDEF.length}" style="border-left:2px solid ${c.color}40;color:${c.color}">${c.short}</th>`;});
   h+=`</tr><tr>`;
   keys.forEach(k=>{MDEF.forEach((m,mi)=>{const bl=mi===0?`border-left:2px solid ${CATS[k].color}40`:`border-left:1px solid var(--border)`;h+=`<th class="th-m" style="${bl}">${m.label}</th>`;});});
@@ -721,7 +738,13 @@ function buildTable(){
         if(m.key==='pctNet'){const v=parseFloat(c.pctNet);h+=`<td class="${v>0?'cell-pos':v<0?'cell-neg':''}" style="${bl}">${v>0?'+':''}${c.pctNet}%</td>`;}
         else{
           const v=c[m.key];const isChg=['chgL','chgS','chgNet'].includes(m.key);let sty=bl;
-          if(isChg&&v!==0){const int=Math.min(Math.abs(v)/120000,.8);sty+=v>0?`;background:rgba(61,214,140,${(int*.18).toFixed(3)});color:#86efac`:`;background:rgba(241,107,107,${(int*.18).toFixed(3)});color:#fca5a5`;}
+          if(isChg&&v!==0){
+            const st=colStats[k][m.key];const absV=Math.abs(v);
+            if(absV>=st.p75&&st.max>st.p75){
+              const alpha=(Math.min((absV-st.p75)/(st.max-st.p75),1)*.25).toFixed(3);
+              sty+=v>0?`;background:rgba(61,214,140,${alpha});color:#86efac`:`;background:rgba(241,107,107,${alpha});color:#fca5a5`;
+            }
+          }
           h+=`<td style="${sty}">${fmt(v)}</td>`;
         }
       });
