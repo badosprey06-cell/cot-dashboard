@@ -130,6 +130,7 @@ tbody tr:hover .td-date{background:var(--surface)!important;}
 ::-webkit-scrollbar-thumb{background:var(--muted);border-radius:4px;}
 ::-webkit-scrollbar-thumb:hover{background:var(--muted2);}
 html{scrollbar-width:thin;scrollbar-color:var(--muted) var(--border2);}
+.tv-lightweight-charts table > tr > td:first-child{width:0!important;padding:0!important;}
 </style>
 </head>
 <body>
@@ -270,7 +271,7 @@ const INSTRUMENTS={
   '6E':{id:'6E',label:'6E',  fullName:'EURO FX',              exchange:'Chicago Mercantile Exchange',priceLabel:'6E · Weekly'},
   BTC:{id:'BTC',label:'BTC', fullName:'BITCOIN',              exchange:'Chicago Mercantile Exchange',priceLabel:'BTC · Weekly'},
 };
-const MAX_WEEKS=156,AXIS_W=64;
+const MAX_WEEKS=156,AXIS_W=76;
 const COL_LONG='#86efac',COL_SHORT='#fca5a5',COL_NEUTRAL='#2e3f58';
 const CATS={
   dealer:  {label:'Dealer / Intermediary',short:'Dealer',color:'#4f8eff',pfxL:'dealer_positions_long_all',pfxS:'dealer_positions_short_all',pfxCL:'change_in_dealer_long_all',pfxCS:'change_in_dealer_short_all',active:true},
