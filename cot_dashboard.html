@@ -15,6 +15,14 @@
   --r:6px;--font:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace;
   --axis-w:80px;
 }
+:root[data-theme="light"]{
+  --bg:#f7f8fa;--surface:#ffffff;--card:#fafbfc;--card2:#eef0f3;
+  --border:#e2e6ec;--border2:#cbd2db;--text:#1a202c;--muted:#5a6576;
+  --muted2:#8b96a7;--accent:#2563eb;--accent-dim:#dbeafe;
+  --green:#059669;--red:#dc2626;--yellow:#d97706;
+}
+.theme-toggle{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 9px;border-radius:4px;cursor:pointer;font-size:13px;line-height:1;transition:color .15s,border-color .15s;margin-right:8px;flex-shrink:0;}
+.theme-toggle:hover{color:var(--text);border-color:var(--border2);}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;overflow:hidden;}
 #app{display:flex;flex-direction:column;width:100%;height:100%;}
@@ -165,6 +173,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--muted) var(--border2);}
       <button class="rbtn active" data-range="3">3Y</button>
     </div>
     <div class="hdr-mid" id="hdr-name"><strong>E-MINI S&amp;P 500</strong> · Chicago Mercantile Exchange</div>
+    <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">☀</button>
     <div id="hdr-status"><div class="dot" id="sdot"></div><span id="stxt">Loading…</span></div>
   </div>
   <div id="main">
@@ -363,19 +372,29 @@ const PCT_FMT={type:'custom',formatter:v=>v.toFixed(0)+'%',minMove:1};
 const Z_FMT={type:'custom',formatter:v=>v.toFixed(2)+'σ',minMove:0.01};
 const PRICE_FMT={type:'custom',formatter:v=>Math.abs(v)<100?v.toFixed(4):axisFmt(v),minMove:0.0001};
 const HIST_SCALE={top:.1,bottom:.1};
-const PS={borderColor:'#181d27',minimumWidth:AXIS_W,scaleMargins:{top:.08,bottom:.08}};
-const PS_PRICE={borderColor:'#181d27',minimumWidth:AXIS_W,scaleMargins:{top:.08,bottom:.08}};
-const BASE={
-  layout:{background:{color:'transparent'},textColor:'#3d4a5c'},
-  grid:{vertLines:{visible:false},horzLines:{visible:false}},
-  crosshair:{mode:1,vertLine:{color:'#2e3a4e',style:0,width:1,labelBackgroundColor:'#0f1218'},horzLine:{color:'#2e3a4e',style:0,width:1,labelBackgroundColor:'#0f1218'}},
-  timeScale:{borderColor:'#181d27',timeVisible:false,rightOffset:3,visible:true},
-  rightPriceScale:PS,
-  leftPriceScale:{visible:false},
-  handleScale:{mouseWheel:true,pinch:true},
-  handleScroll:{mouseWheel:true,pressedMouseMove:true},
-};
-const BASE_NT={...BASE,timeScale:{...BASE.timeScale,visible:false}};
+function getChartColors(){
+  const light=document.documentElement.dataset.theme==='light';
+  return light
+    ?{bg:'#fafbfc',text:'#1a202c',border:'#cbd2db',crosshair:'#5a6576',labelBg:'#ffffff'}
+    :{bg:'transparent',text:'#3d4a5c',border:'#181d27',crosshair:'#2e3a4e',labelBg:'#0f1218'};
+}
+function mkPS(margins){
+  const c=getChartColors();
+  return{borderColor:c.border,minimumWidth:AXIS_W,scaleMargins:margins||{top:.08,bottom:.08}};
+}
+function mkBase(showTime){
+  const c=getChartColors();
+  return{
+    layout:{background:{color:c.bg},textColor:c.text},
+    grid:{vertLines:{visible:false},horzLines:{visible:false}},
+    crosshair:{mode:1,vertLine:{color:c.crosshair,style:0,width:1,labelBackgroundColor:c.labelBg},horzLine:{color:c.crosshair,style:0,width:1,labelBackgroundColor:c.labelBg}},
+    timeScale:{borderColor:c.border,timeVisible:false,rightOffset:3,visible:showTime},
+    rightPriceScale:mkPS(),
+    leftPriceScale:{visible:false},
+    handleScale:{mouseWheel:true,pinch:true},
+    handleScroll:{mouseWheel:true,pressedMouseMove:true},
+  };
+}
 
 function applyPos(totalH,priceH,side='l'){
   const sfx=side==='r'?'-r':'';
@@ -395,8 +414,7 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   const panelCount=active.length+(showOI?1:0);
   const charts=[];
   const el=document.createElement('div');el.className='cel';el.style.cssText=`width:100%;height:${priceH}px;`;ppEl.appendChild(el);
-  const pChart=LightweightCharts.createChart(el,{...(panelCount>0?BASE_NT:BASE),width:W,height:priceH});
-  pChart.applyOptions({rightPriceScale:{...PS_PRICE}});
+  const pChart=LightweightCharts.createChart(el,{...mkBase(panelCount===0),width:W,height:priceH});
   let pSeries;
   if(uiType==='candle'){
     pSeries=pChart.addCandlestickSeries({upColor:'#3dd68c',downColor:'#f16b6b',borderUpColor:'#3dd68c',borderDownColor:'#f16b6b',wickUpColor:'#3dd68c',wickDownColor:'#f16b6b',priceFormat:PRICE_FMT});
@@ -414,7 +432,7 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   if(showOI){
     const isLast=idx===panelCount-1;
     const w=mkWrap(cotEl,'Open Interest','#e8a44a',subH);
-    const ch=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
+    const ch=LightweightCharts.createChart(w.el,{...mkBase(isLast),width:W,height:subH});
     const s=ch.addLineSeries({color:'#e8a44a',lineWidth:1.5,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT});
     s.setData(cot.map(d=>({time:d.time,value:d.oi})));
     chartSeries.set(ch,s);charts.push(ch);idx++;
@@ -425,16 +443,16 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
     const sColor=isLS?(side==='l'?COL_LONG:COL_SHORT):cfg.color;
     const sLabel=isLS?(side==='l'?cfg.label+' · Longs':cfg.label+' · Shorts'):cfg.label;
     const w=mkWrap(cotEl,sLabel,sColor,subH);
-    const ch=LightweightCharts.createChart(w.el,{...(isLast?BASE:BASE_NT),width:W,height:subH});
+    const ch=LightweightCharts.createChart(w.el,{...mkBase(isLast),width:W,height:subH});
     if(isLS&&visMode==='histogram'){
-      ch.applyOptions({rightPriceScale:{...PS,scaleMargins:HIST_SCALE}});
+      ch.applyOptions({rightPriceScale:mkPS(HIST_SCALE)});
       ch.addLineSeries({color:'transparent',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:COT_FMT}).setData(cot.map(d=>({time:d.time,value:0})));
       const chgKey=side==='l'?'chgL':'chgS',posColor=side==='l'?COL_LONG:COL_SHORT;
       const hs=ch.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT,base:0});
       hs.setData(cot.map(d=>{const v=d[key][chgKey];return{time:d.time,value:v,color:v>=0?posColor:COL_NEUTRAL};}));
       chartSeries.set(ch,hs);
     }else if(metric==='net'&&visMode==='histogram'){
-      ch.applyOptions({rightPriceScale:{...PS,scaleMargins:HIST_SCALE}});
+      ch.applyOptions({rightPriceScale:mkPS(HIST_SCALE)});
       ch.addLineSeries({color:'transparent',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:COT_FMT}).setData(cot.map(d=>({time:d.time,value:0})));
       const hs=ch.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT,base:0});
       hs.setData(cot.map(d=>{const v=d[key].net;return{time:d.time,value:v,color:v>=0?COL_LONG:'#f16b6b'};}));
@@ -475,14 +493,13 @@ function buildSigCard(panelsId,priceSeries,catData,opts={}){
   const indH=totalH-priceH-1;
   const n=catData.length;
   const rowH=Math.max(38,Math.floor(indH/n));
-  const PS_SIG={borderColor:'#181d27',minimumWidth:AXIS_W,scaleMargins:{top:.08,bottom:.08}};
   const cardCharts=[],cardSeries=new Map();
   const priceWrap=document.createElement('div');
   priceWrap.style.cssText=`position:relative;height:${priceH}px;overflow:hidden;flex-shrink:0;`;
   const priceLbl=document.createElement('div');priceLbl.className='sig-p-lbl';priceLbl.style.color='var(--muted)';priceLbl.textContent=INSTRUMENTS[activeInstrument].priceLabel;
   const priceEl=document.createElement('div');priceEl.style.cssText='width:100%;height:100%;';
   priceWrap.appendChild(priceLbl);priceWrap.appendChild(priceEl);container.appendChild(priceWrap);
-  const pChart=LightweightCharts.createChart(priceEl,{...BASE_NT,width:W,height:priceH,rightPriceScale:{...PS_SIG}});
+  const pChart=LightweightCharts.createChart(priceEl,{...mkBase(false),width:W,height:priceH,rightPriceScale:mkPS()});
   const pSeries=pChart.addLineSeries({color:'rgba(200,208,222,0.45)',lineWidth:1.5,priceLineVisible:false,lastValueVisible:false,priceFormat:COT_FMT});
   if(priceSeries.length)pSeries.setData(priceSeries);
   chartSeries.set(pChart,pSeries);cardSeries.set(pChart,pSeries);cardCharts.push(pChart);sigCharts.push(pChart);
@@ -495,7 +512,7 @@ function buildSigCard(panelsId,priceSeries,catData,opts={}){
     const el=document.createElement('div');el.style.cssText='width:100%;height:100%;';
     wrap.appendChild(lbl);wrap.appendChild(el);indWrap.appendChild(wrap);
     if(!isLast){const d=document.createElement('div');d.style.cssText='height:1px;background:var(--border);flex-shrink:0;';indWrap.appendChild(d);}
-    const ch=LightweightCharts.createChart(el,{...(isLast?BASE:BASE_NT),width:W,height:rowH,rightPriceScale:{...PS_SIG,scaleMargins:opts.scaleMargins||{top:.1,bottom:.1}}});
+    const ch=LightweightCharts.createChart(el,{...mkBase(isLast),width:W,height:rowH,rightPriceScale:mkPS(opts.scaleMargins||{top:.1,bottom:.1})});
     const s=ch.addLineSeries({color:cat.color,lineWidth:1.5,priceLineVisible:false,lastValueVisible:true,priceFormat:cat.fmt||COT_FMT});
     s.setData(cat.data);
     if(opts.lines)opts.lines.forEach(l=>s.createPriceLine({price:l.v,color:l.c,lineWidth:1,lineStyle:2,axisLabelVisible:true,title:l.t||''}));
@@ -746,7 +763,8 @@ function buildTable(){
           if(isChg&&v!==0){
             const st=colStats[k][m.key];const absV=Math.abs(v);
             if(absV>=st.p75&&st.max>st.p75){
-              const alpha=(Math.min((absV-st.p75)/(st.max-st.p75),1)*.25).toFixed(3);
+              const maxAlpha=document.documentElement.dataset.theme==='light'?.14:.25;
+              const alpha=(Math.min((absV-st.p75)/(st.max-st.p75),1)*maxAlpha).toFixed(3);
               sty+=v>0?`;background:rgba(122,167,255,${alpha});color:#a8c5ff`:`;background:rgba(241,107,107,${alpha});color:#fca5a5`;
             }
           }
@@ -760,6 +778,27 @@ function buildTable(){
   document.getElementById('tbl').innerHTML=h;
 }
 
+function applyThemeToCharts(){
+  const c=getChartColors();
+  const opts={
+    layout:{background:{color:c.bg},textColor:c.text},
+    grid:{vertLines:{visible:false},horzLines:{visible:false}},
+    crosshair:{vertLine:{color:c.crosshair,labelBackgroundColor:c.labelBg},horzLine:{color:c.crosshair,labelBackgroundColor:c.labelBg}},
+    timeScale:{borderColor:c.border},
+    rightPriceScale:{borderColor:c.border},
+  };
+  [...lwCharts,...sigCharts].forEach(ch=>{try{ch.applyOptions(opts);}catch(e){}});
+}
+function toggleTheme(){
+  const root=document.documentElement;
+  const next=(root.dataset.theme||'dark')==='dark'?'light':'dark';
+  root.dataset.theme=next;
+  localStorage.setItem('cot-theme',next);
+  const btn=document.getElementById('theme-btn');
+  if(btn)btn.textContent=next==='dark'?'☀':'🌙';
+  applyThemeToCharts();
+  if(activePage==='table')buildTable();
+}
 window.onresize=()=>{
   if(activePage==='chart'){
     const isLS=uiMetric==='ls';
@@ -796,6 +835,10 @@ async function loadData(){
 }
 
 window.onload=async()=>{
+  const savedTheme=localStorage.getItem('cot-theme')||'dark';
+  document.documentElement.dataset.theme=savedTheme;
+  const btn=document.getElementById('theme-btn');
+  if(btn)btn.textContent=savedTheme==='dark'?'☀':'🌙';
   setupControls();setupSigToggles();onMetricChange();
   buildSidebar();buildInstTabs();updateHeaderName();
   await loadData();
