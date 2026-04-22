@@ -27,11 +27,11 @@ TFF_CATS = {
 
 # Disaggregated field mappings
 DISAG_CATS = {
-    "prodmerc": ("prod_merc_positions_long_all",  "prod_merc_positions_short_all",  "change_in_prod_merc_long_all",  "change_in_prod_merc_short_all"),
-    "swap":     ("swap_positions_long_all",        "swap__positions_short_all",       "change_in_swap_long_all",       "change_in_swap_short_all"),
-    "mngdmoney":("m_money_positions_long_all",     "m_money_positions_short_all",     "change_in_m_money_long_all",    "change_in_m_money_short_all"),
-    "other":    ("other_rept_positions_long_all",  "other_rept_positions_short_all",  "change_in_other_rept_long_all", "change_in_other_rept_short_all"),
-    "nonrept":  ("nonrept_positions_long_all",     "nonrept_positions_short_all",     "change_in_nonrept_long_all",    "change_in_nonrept_short_all"),
+    "prodmerc": ("prod_merc_positions_long",   "prod_merc_positions_short",   "change_in_prod_merc_long",   "change_in_prod_merc_short"),
+    "swap":     ("swap_positions_long_all",     "swap__positions_short_all",   "change_in_swap_long_all",    "change_in_swap_short_all"),
+    "mngdmoney":("m_money_positions_long_all",  "m_money_positions_short_all", "change_in_m_money_long_all", "change_in_m_money_short_all"),
+    "other":    ("other_rept_positions_long",   "other_rept_positions_short",  "change_in_other_rept_long",  "change_in_other_rept_short"),
+    "nonrept":  ("nonrept_positions_long_all",  "nonrept_positions_short_all", "change_in_nonrept_long_all", "change_in_nonrept_short_all"),
 }
 
 TFF_URL   = "https://publicreporting.cftc.gov/resource/gpe5-46if.json"
