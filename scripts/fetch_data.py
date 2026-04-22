@@ -8,14 +8,16 @@ import requests
 import yfinance as yf
 
 INSTRUMENTS = {
-    "ES":  {"cftc_name": "E-MINI S&P 500 - CHICAGO MERCANTILE EXCHANGE",        "yahoo": "ES=F"},
-    "NQ":  {"cftc_name": "NASDAQ-100 Consolidated - CHICAGO MERCANTILE EXCHANGE","yahoo": "NQ=F"},
-    "6E":  {"cftc_name": "EURO FX - CHICAGO MERCANTILE EXCHANGE",                "yahoo": "6E=F"},
-    "BTC": {"cftc_name": "BITCOIN - CHICAGO MERCANTILE EXCHANGE",                "yahoo": "BTC=F"},
+    "ES":  {"report_type": "tff",   "cftc_name": "E-MINI S&P 500 - CHICAGO MERCANTILE EXCHANGE",        "yahoo": "ES=F"},
+    "NQ":  {"report_type": "tff",   "cftc_name": "NASDAQ-100 Consolidated - CHICAGO MERCANTILE EXCHANGE","yahoo": "NQ=F"},
+    "6E":  {"report_type": "tff",   "cftc_name": "EURO FX - CHICAGO MERCANTILE EXCHANGE",                "yahoo": "6E=F"},
+    "BTC": {"report_type": "tff",   "cftc_name": "BITCOIN - CHICAGO MERCANTILE EXCHANGE",                "yahoo": "BTC=F"},
+    "GC":  {"report_type": "disag", "cftc_name": "GOLD - COMMODITY EXCHANGE INC.",                       "yahoo": "GC=F"},
+    "CL":  {"report_type": "disag", "cftc_name": "CRUDE OIL, LIGHT SWEET - NEW YORK MERCANTILE EXCHANGE","yahoo": "CL=F"},
 }
 
-# (long_col, short_col, chg_long_col, chg_short_col)
-CATS = {
+# TFF (Traders in Financial Futures) field mappings
+TFF_CATS = {
     "dealer":   ("dealer_positions_long_all",  "dealer_positions_short_all",  "change_in_dealer_long_all",  "change_in_dealer_short_all"),
     "assetmgr": ("asset_mgr_positions_long",   "asset_mgr_positions_short",   "change_in_asset_mgr_long",   "change_in_asset_mgr_short"),
     "levfunds": ("lev_money_positions_long",    "lev_money_positions_short",   "change_in_lev_money_long",   "change_in_lev_money_short"),
@@ -23,44 +25,38 @@ CATS = {
     "nonrept":  ("nonrept_positions_long_all",  "nonrept_positions_short_all", "change_in_nonrept_long_all", "change_in_nonrept_short_all"),
 }
 
-CFTC_URL = "https://publicreporting.cftc.gov/resource/gpe5-46if.json"
+# Disaggregated field mappings
+DISAG_CATS = {
+    "prodmerc": ("prod_merc_positions_long_all",  "prod_merc_positions_short_all",  "change_in_prod_merc_long_all",  "change_in_prod_merc_short_all"),
+    "swap":     ("swap_positions_long_all",        "swap__positions_short_all",       "change_in_swap_long_all",       "change_in_swap_short_all"),
+    "mngdmoney":("m_money_positions_long_all",     "m_money_positions_short_all",     "change_in_m_money_long_all",    "change_in_m_money_short_all"),
+    "other":    ("other_rept_positions_long_all",  "other_rept_positions_short_all",  "change_in_other_rept_long_all", "change_in_other_rept_short_all"),
+    "nonrept":  ("nonrept_positions_long_all",     "nonrept_positions_short_all",     "change_in_nonrept_long_all",    "change_in_nonrept_short_all"),
+}
+
+TFF_URL   = "https://publicreporting.cftc.gov/resource/gpe5-46if.json"
+DISAG_URL = "https://publicreporting.cftc.gov/resource/72hh-3qpy.json"
 MAX_WEEKS = 156
 
 
 def to_monday_cot(date_str: str) -> str:
-    """COT report dates are Tuesdays; subtract 1 day to get Monday.
-    Mirrors JS: toMonday(s) { d.setUTCDate(d.getUTCDate()-1) }
-    """
+    """COT report dates are Tuesdays; subtract 1 day to get Monday."""
     d = datetime.strptime(date_str, "%Y-%m-%d")
     return (d - timedelta(days=1)).strftime("%Y-%m-%d")
 
 
 def to_monday_price(d: datetime) -> str:
-    """Return Monday of the ISO week for a given date.
-    Mirrors JS parsePrice logic: dow===0 ? -6 : 1-dow
-    Python weekday(): Mon=0 … Sun=6, so subtracting weekday() gives Monday.
-    """
+    """Return Monday of the ISO week for a given date."""
     return (d - timedelta(days=d.weekday())).strftime("%Y-%m-%d")
 
 
-def fetch_cot(cftc_name: str) -> list:
-    params = {
-        "market_and_exchange_names": cftc_name,
-        "$order": "report_date_as_yyyy_mm_dd DESC",
-        "$limit": MAX_WEEKS,
-    }
-    resp = requests.get(CFTC_URL, params=params, timeout=30)
-    resp.raise_for_status()
-    rows = resp.json()
-    if not rows:
-        raise ValueError(f"No CFTC data for: {cftc_name}")
-
+def _parse_rows(rows: list, cats: dict) -> list:
     result = []
     for row in rows:
         date = row["report_date_as_yyyy_mm_dd"][:10]
         oi = float(row.get("open_interest_all") or 0)
         entry = {"date": date, "time": to_monday_cot(date), "oi": oi}
-        for cat, (pl, ps, cl, cs) in CATS.items():
+        for cat, (pl, ps, cl, cs) in cats.items():
             L  = float(row.get(pl) or 0)
             S  = float(row.get(ps) or 0)
             cL = float(row.get(cl) or 0)
@@ -75,8 +71,35 @@ def fetch_cot(cftc_name: str) -> list:
                 "pctNet": round((L - S) / (oi or 1) * 100, 1),
             }
         result.append(entry)
-
     return sorted(result, key=lambda x: x["time"])
+
+
+def fetch_tff(cftc_name: str) -> list:
+    params = {
+        "market_and_exchange_names": cftc_name,
+        "$order": "report_date_as_yyyy_mm_dd DESC",
+        "$limit": MAX_WEEKS,
+    }
+    resp = requests.get(TFF_URL, params=params, timeout=30)
+    resp.raise_for_status()
+    rows = resp.json()
+    if not rows:
+        raise ValueError(f"No TFF data for: {cftc_name}")
+    return _parse_rows(rows, TFF_CATS)
+
+
+def fetch_disaggregated(cftc_name: str) -> list:
+    params = {
+        "market_and_exchange_names": cftc_name,
+        "$order": "report_date_as_yyyy_mm_dd DESC",
+        "$limit": MAX_WEEKS,
+    }
+    resp = requests.get(DISAG_URL, params=params, timeout=30)
+    resp.raise_for_status()
+    rows = resp.json()
+    if not rows:
+        raise ValueError(f"No Disaggregated data for: {cftc_name}")
+    return _parse_rows(rows, DISAG_CATS)
 
 
 def fetch_price(yahoo_ticker: str) -> list:
@@ -120,10 +143,10 @@ def fetch_price(yahoo_ticker: str) -> list:
             ex = by_week[monday]
             by_week[monday] = {
                 "time":  monday,
-                "open":  ex["open"],               # keep first open of the week
+                "open":  ex["open"],
                 "high":  round(max(ex["high"], h), 4),
                 "low":   round(min(ex["low"],  l), 4),
-                "close": round(c, 4),               # last close wins
+                "close": round(c, 4),
             }
 
     return sorted(by_week.values(), key=lambda x: x["time"])
@@ -135,9 +158,13 @@ def main():
 
     errors = []
     for inst, cfg in INSTRUMENTS.items():
-        print(f"[{inst}] fetching COT …", flush=True)
+        rtype = cfg["report_type"]
+        print(f"[{inst}] fetching COT ({rtype}) …", flush=True)
         try:
-            cot = fetch_cot(cfg["cftc_name"])
+            if rtype == "tff":
+                cot = fetch_tff(cfg["cftc_name"])
+            else:
+                cot = fetch_disaggregated(cfg["cftc_name"])
         except Exception as e:
             print(f"[{inst}] COT FAILED: {e}", file=sys.stderr)
             errors.append(inst)
