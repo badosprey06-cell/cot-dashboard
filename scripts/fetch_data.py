@@ -13,7 +13,7 @@ INSTRUMENTS = {
     "6E":  {"report_type": "tff",   "cftc_name": "EURO FX - CHICAGO MERCANTILE EXCHANGE",                "yahoo": "6E=F"},
     "BTC": {"report_type": "tff",   "cftc_name": "BITCOIN - CHICAGO MERCANTILE EXCHANGE",                "yahoo": "BTC=F"},
     "GC":  {"report_type": "disag", "cftc_name": "GOLD - COMMODITY EXCHANGE INC.",                       "yahoo": "GC=F"},
-    "CL":  {"report_type": "disag", "cftc_name": "CRUDE OIL, LIGHT SWEET - NEW YORK MERCANTILE EXCHANGE","yahoo": "CL=F"},
+    "CL":  {"report_type": "disag", "cftc_name": "WTI-PHYSICAL - NEW YORK MERCANTILE EXCHANGE",          "yahoo": "CL=F"},
 }
 
 # TFF (Traders in Financial Futures) field mappings
