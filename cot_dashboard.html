@@ -276,21 +276,27 @@ html{scrollbar-width:thin;scrollbar-color:var(--muted) var(--border2);}
 </div>
 <script>
 const INSTRUMENTS={
-  ES: {id:'ES', label:'ES',  fullName:'E-MINI S&P 500',      exchange:'Chicago Mercantile Exchange',priceLabel:'ES · Weekly'},
-  NQ: {id:'NQ', label:'NQ',  fullName:'E-MINI NASDAQ-100',    exchange:'Chicago Mercantile Exchange',priceLabel:'NQ · Weekly'},
-  '6E':{id:'6E',label:'6E',  fullName:'EURO FX',              exchange:'Chicago Mercantile Exchange',priceLabel:'6E · Weekly'},
-  BTC:{id:'BTC',label:'BTC', fullName:'BITCOIN',              exchange:'Chicago Mercantile Exchange',priceLabel:'BTC · Weekly'},
+  ES:  {id:'ES',  label:'ES',  fullName:'E-MINI S&P 500',   exchange:'Chicago Mercantile Exchange',priceLabel:'ES · Weekly', reportType:'tff',   categories:['dealer','assetmgr','levfunds','other','nonrept'], defaultCats:['dealer','assetmgr','levfunds']},
+  NQ:  {id:'NQ',  label:'NQ',  fullName:'E-MINI NASDAQ-100', exchange:'Chicago Mercantile Exchange',priceLabel:'NQ · Weekly', reportType:'tff',   categories:['dealer','assetmgr','levfunds','other','nonrept'], defaultCats:['dealer','assetmgr','levfunds']},
+  '6E':{id:'6E',  label:'6E',  fullName:'EURO FX',           exchange:'Chicago Mercantile Exchange',priceLabel:'6E · Weekly', reportType:'tff',   categories:['dealer','assetmgr','levfunds','other','nonrept'], defaultCats:['dealer','assetmgr','levfunds']},
+  BTC: {id:'BTC', label:'BTC', fullName:'BITCOIN',           exchange:'Chicago Mercantile Exchange',priceLabel:'BTC · Weekly',reportType:'tff',   categories:['dealer','assetmgr','levfunds','other','nonrept'], defaultCats:['dealer','assetmgr','levfunds']},
+  GC:  {id:'GC',  label:'GC',  fullName:'GOLD',              exchange:'COMEX (CME Group)',          priceLabel:'GC · Weekly', reportType:'disag', categories:['prodmerc','swap','mngdmoney','other','nonrept'],  defaultCats:['mngdmoney']},
+  CL:  {id:'CL',  label:'CL',  fullName:'CRUDE OIL (WTI)',   exchange:'NYMEX (CME Group)',          priceLabel:'CL · Weekly', reportType:'disag', categories:['prodmerc','swap','mngdmoney','other','nonrept'],  defaultCats:['mngdmoney']},
 };
 const MAX_WEEKS=156,AXIS_W=76;
-const COL_LONG='#86efac',COL_SHORT='#fca5a5',COL_NEUTRAL='#2e3f58';
 const CATS={
-  dealer:  {label:'Dealer / Intermediary',short:'Dealer',color:'#7aa7ff',colorLight:'#2563eb',pfxL:'dealer_positions_long_all',pfxS:'dealer_positions_short_all',pfxCL:'change_in_dealer_long_all',pfxCS:'change_in_dealer_short_all',active:true},
-  assetmgr:{label:'Asset Manager / Inst.',short:'Asset Mgr',color:'#7ad0aa',colorLight:'#0d9488',pfxL:'asset_mgr_positions_long',pfxS:'asset_mgr_positions_short',pfxCL:'change_in_asset_mgr_long',pfxCS:'change_in_asset_mgr_short',active:true},
-  levfunds:{label:'Leveraged Funds',short:'Lev Funds',color:'#c4a8f5',colorLight:'#7c3aed',pfxL:'lev_money_positions_long',pfxS:'lev_money_positions_short',pfxCL:'change_in_lev_money_long',pfxCS:'change_in_lev_money_short',active:true},
-  other:   {label:'Other Reportable',short:'Other Rept',color:'#f5b584',colorLight:'#ea580c',pfxL:'other_rept_positions_long',pfxS:'other_rept_positions_short',pfxCL:'change_in_other_rept_long',pfxCS:'change_in_other_rept_short',active:false},
-  nonrept: {label:'Non-Reportable',short:'Non-Rept',color:'#8a96a8',colorLight:'#475569',pfxL:'nonrept_positions_long_all',pfxS:'nonrept_positions_short_all',pfxCL:'change_in_nonrept_long_all',pfxCS:'change_in_nonrept_short_all',active:false},
+  dealer:   {key:'dealer',   label:'Dealer',       labelFull:'Dealer / Intermediary',              labelTable:'DEALER / INTERMEDIARY',      color:'#7aa7ff',colorLight:'#2563eb'},
+  assetmgr: {key:'assetmgr', label:'Asset Mgr',    labelFull:'Asset Manager / Inst.',              labelTable:'ASSET MGR',                  color:'#7ad0aa',colorLight:'#0d9488'},
+  levfunds: {key:'levfunds', label:'Lev Funds',    labelFull:'Leveraged Funds',                    labelTable:'LEV FUNDS',                  color:'#c4a8f5',colorLight:'#7c3aed'},
+  prodmerc: {key:'prodmerc', label:'Prod/Merch',   labelFull:'Producer / Merchant / Proc. / User', labelTable:'PROD / MERCH / PROC / USER', color:'#7aa7ff',colorLight:'#2563eb'},
+  swap:     {key:'swap',     label:'Swap Dealers', labelFull:'Swap Dealers',                       labelTable:'SWAP DEALERS',               color:'#7ad0aa',colorLight:'#0d9488'},
+  mngdmoney:{key:'mngdmoney',label:'Managed Money',labelFull:'Managed Money',                      labelTable:'MANAGED MONEY',              color:'#c4a8f5',colorLight:'#7c3aed'},
+  other:    {key:'other',    label:'Other Rept',   labelFull:'Other Reportable',                   labelTable:'OTHER REPT',                 color:'#f5b584',colorLight:'#ea580c'},
+  nonrept:  {key:'nonrept',  label:'Non-Rept',     labelFull:'Non-Reportable',                     labelTable:'NON-REPT',                   color:'#8a96a8',colorLight:'#475569'},
 };
 function catColor(cfg){return document.documentElement.dataset.theme==='light'?cfg.colorLight:cfg.color;}
+let activeCats=new Set(['dealer','assetmgr','levfunds']);
+function initActiveCats(inst){activeCats=new Set(inst.defaultCats);}
 let activeInstrument='ES',activePage='chart';
 let cotData=[],priceData=[],showOI=false;
 let lwCharts=[],priceChart=null,sigCharts=[];
@@ -302,7 +308,7 @@ let sigFlipThresh=80,sigZThresh=2;
 function rangeStart(){if(activeRange==='ytd')return new Date().getUTCFullYear()+'-01-01';const d=new Date();d.setUTCFullYear(d.getUTCFullYear()-parseInt(activeRange));return d.toISOString().slice(0,10);}
 function fmtK(v){const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(2)+'M':a>=1e3?(v/1e3).toFixed(1)+'K':String(Math.round(v));}
 function axisFmt(v){const a=Math.abs(v);if(!a)return'0';if(a>=1e6)return(v/1e6).toFixed(1)+'M';if(a>=1e5)return Math.round(v/1e3)+'K';if(a>=1e4)return(v/1e3).toFixed(1)+'K';if(a>=1e3)return(v/1e3).toFixed(2)+'K';return String(Math.round(v));}
-function activeCatKeys(){return Object.entries(CATS).filter(([,c])=>c.active).map(([k])=>k);}
+function activeCatKeys(){return INSTRUMENTS[activeInstrument].categories.filter(k=>activeCats.has(k));}
 function filteredData(){const s=rangeStart();return{cot:cotData.filter(d=>d.time>=s),price:priceData.filter(d=>d.time>=s)};}
 
 function computeFlip(catKey){
@@ -328,14 +334,22 @@ async function loadInstrumentData(inst){
 
 function buildInstTabs(){
   const el=document.getElementById('inst-tabs');el.innerHTML='';
+  let prevType=null;
   Object.keys(INSTRUMENTS).forEach(id=>{
+    const inst=INSTRUMENTS[id];
+    if(prevType!==null&&inst.reportType!==prevType){
+      const sep=document.createElement('div');
+      sep.style.cssText='width:1px;height:18px;background:var(--border);margin:0 4px;flex-shrink:0;';
+      el.appendChild(sep);
+    }
     const t=document.createElement('div');t.className='itab'+(id===activeInstrument?' active':'');
-    t.textContent=INSTRUMENTS[id].label;t.onclick=()=>switchInstrument(id);el.appendChild(t);
+    t.textContent=inst.label;t.onclick=()=>switchInstrument(id);el.appendChild(t);
+    prevType=inst.reportType;
   });
 }
 async function switchInstrument(id){
   if(id===activeInstrument)return;
-  activeInstrument=id;buildInstTabs();updateHeaderName();buildSidebar();await loadData();
+  activeInstrument=id;initActiveCats(INSTRUMENTS[id]);buildInstTabs();updateHeaderName();buildSidebar();await loadData();
 }
 function updateHeaderName(){
   const i=INSTRUMENTS[activeInstrument];
@@ -357,7 +371,7 @@ function updateCards(){
   document.getElementById('cc-oi').innerHTML=`<span class="${oiChg>=0?'up':'dn'}">${oiChg>=0?'+':''}${fmtK(oiChg)}</span> vs prev`;
   let tL=0,tS=0,pL=0,pS=0;
   active.forEach(k=>{tL+=last[k].longs;tS+=last[k].shorts;pL+=prev[k].longs;pS+=prev[k].shorts;});
-  const np=tL-tS,npChg=np-(pL-pS),sfx=active.length?' · '+active.map(k=>CATS[k].short).join(', '):'';
+  const np=tL-tS,npChg=np-(pL-pS),sfx=active.length?' · '+active.map(k=>CATS[k].label).join(', '):'';
   document.getElementById('lbl-nl').textContent='Net Long'+sfx;
   document.getElementById('lbl-ns').textContent='Net Short'+sfx;
   document.getElementById('lbl-np').textContent='Net Position'+sfx;
@@ -445,7 +459,7 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   active.forEach((key,i)=>{
     const cfg=CATS[key],isLast=idx===panelCount-1;
     const sColor=isLS?(side==='l'?cc.green:cc.red):catColor(cfg);
-    const sLabel=isLS?(side==='l'?cfg.label+' · Longs':cfg.label+' · Shorts'):cfg.label;
+    const sLabel=isLS?(side==='l'?cfg.labelFull+' · Longs':cfg.labelFull+' · Shorts'):cfg.labelFull;
     const w=mkWrap(cotEl,sLabel,sColor,subH);
     const ch=LightweightCharts.createChart(w.el,{...mkBase(isLast),width:W,height:subH});
     if(isLS&&visMode==='histogram'){
@@ -550,19 +564,19 @@ function renderSignals(){
   const fHi=sigFlipThresh,fLo=100-sigFlipThresh,zT=sigZThresh;
   requestAnimationFrame(()=>{
     buildSigCard('sig-flip-panels',priceLine,
-      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:catColor(cfg),fmt:PCT_FMT,data:computeFlip(key).filter(d=>d.time>=rs)};}),
+      active.map(key=>{const cfg=CATS[key];return{label:cfg.label,color:catColor(cfg),fmt:PCT_FMT,data:computeFlip(key).filter(d=>d.time>=rs)};}),
       {scaleMargins:{top:.06,bottom:.06},lines:[{v:fHi,c:'rgba(241,107,107,0.55)',t:`${fHi}%`},{v:fLo,c:'rgba(61,214,140,0.55)',t:`${fLo}%`},{v:50,c:'rgba(90,106,128,0.2)',t:''}]}
     );
     buildSigCard('sig-znet-panels',priceLine,
-      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:catColor(cfg),fmt:Z_FMT,data:computeZ(key,'net').filter(d=>d.time>=rs)};}),
+      active.map(key=>{const cfg=CATS[key];return{label:cfg.label,color:catColor(cfg),fmt:Z_FMT,data:computeZ(key,'net').filter(d=>d.time>=rs)};}),
       {scaleMargins:{top:.1,bottom:.1},lines:[{v:zT,c:'rgba(241,107,107,0.55)',t:`+${zT}σ`},{v:-zT,c:'rgba(61,214,140,0.55)',t:`-${zT}σ`},{v:0,c:'rgba(90,106,128,0.2)',t:''}]}
     );
     buildSigCard('sig-zlong-panels',priceLine,
-      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:catColor(cfg),fmt:Z_FMT,data:computeZ(key,'longs').filter(d=>d.time>=rs)};}),
+      active.map(key=>{const cfg=CATS[key];return{label:cfg.label,color:catColor(cfg),fmt:Z_FMT,data:computeZ(key,'longs').filter(d=>d.time>=rs)};}),
       {scaleMargins:{top:.1,bottom:.1},lines:[{v:zT,c:'rgba(241,107,107,0.55)',t:`+${zT}σ`},{v:-zT,c:'rgba(61,214,140,0.55)',t:`-${zT}σ`},{v:0,c:'rgba(90,106,128,0.2)',t:''}]}
     );
     buildSigCard('sig-zshort-panels',priceLine,
-      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:catColor(cfg),fmt:Z_FMT,data:computeZ(key,'shorts').filter(d=>d.time>=rs)};}),
+      active.map(key=>{const cfg=CATS[key];return{label:cfg.label,color:catColor(cfg),fmt:Z_FMT,data:computeZ(key,'shorts').filter(d=>d.time>=rs)};}),
       {scaleMargins:{top:.1,bottom:.1},lines:[{v:zT,c:'rgba(241,107,107,0.55)',t:`+${zT}σ`},{v:-zT,c:'rgba(61,214,140,0.55)',t:`-${zT}σ`},{v:0,c:'rgba(90,106,128,0.2)',t:''}]}
     );
     sigCharts.forEach(src=>{
@@ -681,14 +695,17 @@ function mkWrap(parent,label,color,h){
 function mkDiv(){const d=document.createElement('div');d.className='c-sub-div';return d;}
 
 function buildSidebar(){
+  const inst=INSTRUMENTS[activeInstrument];
   const sec=document.getElementById('cat-toggles');sec.innerHTML='';
-  Object.entries(CATS).forEach(([key,cfg])=>{
+  inst.categories.forEach(key=>{
+    const cfg=CATS[key],isOn=activeCats.has(key);
     const row=document.createElement('div');row.className='tog-row';
-    row.innerHTML=`<div class="tog-lbl ${cfg.active?'on':''}" id="tl-${key}"><div class="cdot" style="background:${catColor(cfg)}"></div>${cfg.short}</div><div class="sw ${cfg.active?'on':''}" id="ts-${key}"></div>`;
+    row.innerHTML=`<div class="tog-lbl ${isOn?'on':''}" id="tl-${key}"><div class="cdot" style="background:${catColor(cfg)}"></div>${cfg.label}</div><div class="sw ${isOn?'on':''}" id="ts-${key}"></div>`;
     row.onclick=()=>{
-      cfg.active=!cfg.active;
-      document.getElementById('ts-'+key).classList.toggle('on',cfg.active);
-      document.getElementById('tl-'+key).classList.toggle('on',cfg.active);
+      const on=activeCats.has(key);
+      if(on)activeCats.delete(key);else activeCats.add(key);
+      document.getElementById('ts-'+key).classList.toggle('on',!on);
+      document.getElementById('tl-'+key).classList.toggle('on',!on);
       if(activePage==='chart')renderCharts();
       else if(activePage==='signals')renderSignals();
     };
@@ -739,8 +756,8 @@ const MDEF=[{key:'net',label:'Net'},{key:'chgNet',label:'Chg Net'},{key:'chgL',l
 const fmt=v=>v==null||isNaN(v)?'—':Math.round(v).toLocaleString('ru-RU');
 function p75(arr){const s=[...arr].sort((a,b)=>a-b);return s[Math.min(Math.floor(s.length*.75),s.length-1)]||0;}
 function computeColStats(cot){
-  const stats={};
-  Object.keys(CATS).forEach(k=>{
+  const inst=INSTRUMENTS[activeInstrument],stats={};
+  inst.categories.forEach(k=>{
     const abs={chgL:[],chgS:[],chgNet:[]};
     cot.forEach(d=>{['chgL','chgS','chgNet'].forEach(col=>{abs[col].push(Math.abs(d[k][col]||0));});});
     stats[k]={};
@@ -749,7 +766,8 @@ function computeColStats(cot){
   return stats;
 }
 function buildTable(){
-  const{cot}=filteredData();const keys=Object.keys(CATS);
+  const inst=INSTRUMENTS[activeInstrument];
+  const{cot}=filteredData();const keys=inst.categories;
   const colStats=computeColStats(cot);
   const isLight=document.documentElement.dataset.theme==='light';
   const pctPos=isLight?'#1e3a8a':'#86c8ff',pctNeg=isLight?'#991b1b':'#ff9090';
@@ -757,7 +775,7 @@ function buildTable(){
   const hiPosText=isLight?'#1e3a8a':'#a8c5ff',hiNegText=isLight?'#7f1d1d':'#fca5a5';
   const maxAlpha=isLight?.35:.25;
   let h=`<table class="cot-table"><thead><tr><th class="th-base th-sticky" rowspan="2" style="width:96px">Date</th><th class="th-base" rowspan="2" style="width:80px">OI</th>`;
-  keys.forEach((k,ki)=>{const c=CATS[k];const cc2=catColor(c);const cf=ki>0?' cat-first':'';h+=`<th class="th-cat${cf}" colspan="${MDEF.length}" style="color:${cc2};background:var(--surface);border-bottom:2px solid ${cc2}">${c.short}</th>`;});
+  keys.forEach((k,ki)=>{const c=CATS[k];const cc2=catColor(c);const cf=ki>0?' cat-first':'';h+=`<th class="th-cat${cf}" colspan="${MDEF.length}" style="color:${cc2};background:var(--surface);border-bottom:2px solid ${cc2}">${c.labelTable}</th>`;});
   h+=`</tr><tr>`;
   keys.forEach((k,ki)=>{MDEF.forEach((m,mi)=>{const cf=ki>0&&mi===0?' cat-first':'';const bl=mi===0&&ki===0?`border-left:1px solid var(--border2)`:`border-left:1px solid var(--border)`;h+=`<th class="th-m${cf}" style="${bl}">${m.label}</th>`;});});
   h+=`</tr></thead><tbody>`;
@@ -855,6 +873,7 @@ window.onload=async()=>{
   document.documentElement.dataset.theme=savedTheme;
   updateThemeIcon();
   setupControls();setupSigToggles();onMetricChange();
+  initActiveCats(INSTRUMENTS[activeInstrument]);
   buildSidebar();buildInstTabs();updateHeaderName();
   await loadData();
 };
