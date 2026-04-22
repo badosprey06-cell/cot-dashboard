@@ -17,12 +17,12 @@
 }
 :root[data-theme="light"]{
   --bg:#f7f8fa;--surface:#ffffff;--card:#fafbfc;--card2:#eef0f3;
-  --border:#e2e6ec;--border2:#cbd2db;--text:#1a202c;--muted:#5a6576;
-  --muted2:#8b96a7;--accent:#2563eb;--accent-dim:#dbeafe;
+  --border:#e2e6ec;--border2:#cbd2db;--text:#0f172a;--muted:#475569;
+  --muted2:#64748b;--accent:#2563eb;--accent-dim:#dbeafe;
   --green:#059669;--red:#dc2626;--yellow:#d97706;
 }
-.theme-toggle{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 9px;border-radius:4px;cursor:pointer;font-size:13px;line-height:1;transition:color .15s,border-color .15s;margin-right:8px;flex-shrink:0;}
-.theme-toggle:hover{color:var(--text);border-color:var(--border2);}
+.theme-toggle{background:transparent;border:1px solid var(--border);color:var(--muted);width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;padding:0;border-radius:6px;cursor:pointer;transition:color .15s,border-color .15s,background .15s;margin-right:8px;flex-shrink:0;}
+.theme-toggle:hover{color:var(--text);border-color:var(--border2);background:var(--card2);}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;overflow:hidden;}
 #app{display:flex;flex-direction:column;width:100%;height:100%;}
@@ -87,7 +87,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 #chart-area.ls-mode #chart-card-r{display:block;}
 #split-wrap,#split-wrap-r{position:absolute;inset:0;}
 #price-pane,#price-pane-r{position:absolute;top:0;left:0;right:0;overflow:hidden;}
-.price-hdr{position:absolute;top:0;left:0;right:0;z-index:5;padding:8px 12px 6px;pointer-events:none;border-bottom:1px solid var(--border);background:rgba(15,18,24,0.7);backdrop-filter:blur(4px);}
+.price-hdr{position:absolute;top:0;left:0;right:0;z-index:5;padding:8px 12px 6px;pointer-events:none;border-bottom:1px solid var(--border);background:var(--surface);background:color-mix(in srgb,var(--surface) 85%,transparent);backdrop-filter:blur(4px);}
 .price-hdr-title{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono);color:var(--text);}
 .price-hdr-sub{font-size:10px;color:var(--muted2);font-family:var(--mono);margin-top:2px;}
 #price-lbl,#price-lbl-r{display:none;}
@@ -372,11 +372,13 @@ const PCT_FMT={type:'custom',formatter:v=>v.toFixed(0)+'%',minMove:1};
 const Z_FMT={type:'custom',formatter:v=>v.toFixed(2)+'σ',minMove:0.01};
 const PRICE_FMT={type:'custom',formatter:v=>Math.abs(v)<100?v.toFixed(4):axisFmt(v),minMove:0.0001};
 const HIST_SCALE={top:.1,bottom:.1};
+const SUN_SVG=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>`;
+const MOON_SVG=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
 function getChartColors(){
   const light=document.documentElement.dataset.theme==='light';
   return light
-    ?{bg:'#fafbfc',text:'#1a202c',border:'#cbd2db',crosshair:'#5a6576',labelBg:'#ffffff'}
-    :{bg:'transparent',text:'#3d4a5c',border:'#181d27',crosshair:'#2e3a4e',labelBg:'#0f1218'};
+    ?{bg:'#fafbfc',text:'#1a202c',border:'#cbd2db',crosshair:'#5a6576',labelBg:'#ffffff',green:'#16a34a',red:'#dc2626'}
+    :{bg:'transparent',text:'#3d4a5c',border:'#181d27',crosshair:'#2e3a4e',labelBg:'#0f1218',green:'#3dd68c',red:'#f16b6b'};
 }
 function mkPS(margins){
   const c=getChartColors();
@@ -412,12 +414,12 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   const priceH=Math.max(80,Math.floor(totalH*splitRatio));
   const cotH=applyPos(totalH,priceH,side);
   const panelCount=active.length+(showOI?1:0);
-  const charts=[];
+  const charts=[],cc=getChartColors();
   const el=document.createElement('div');el.className='cel';el.style.cssText=`width:100%;height:${priceH}px;`;ppEl.appendChild(el);
   const pChart=LightweightCharts.createChart(el,{...mkBase(panelCount===0),width:W,height:priceH});
   let pSeries;
   if(uiType==='candle'){
-    pSeries=pChart.addCandlestickSeries({upColor:'#3dd68c',downColor:'#f16b6b',borderUpColor:'#3dd68c',borderDownColor:'#f16b6b',wickUpColor:'#3dd68c',wickDownColor:'#f16b6b',priceFormat:PRICE_FMT});
+    pSeries=pChart.addCandlestickSeries({upColor:cc.green,downColor:cc.red,borderUpColor:cc.green,borderDownColor:cc.red,wickUpColor:cc.green,wickDownColor:cc.red,priceFormat:PRICE_FMT});
     pSeries.setData(price.length?price:[]);
   }else{
     pSeries=pChart.addLineSeries({color:metric==='ls'?'#5a6a80':'#4f8eff',lineWidth:1.5,priceFormat:PRICE_FMT});
@@ -440,22 +442,22 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   }
   active.forEach((key,i)=>{
     const cfg=CATS[key],isLast=idx===panelCount-1;
-    const sColor=isLS?(side==='l'?COL_LONG:COL_SHORT):cfg.color;
+    const sColor=isLS?(side==='l'?cc.green:cc.red):cfg.color;
     const sLabel=isLS?(side==='l'?cfg.label+' · Longs':cfg.label+' · Shorts'):cfg.label;
     const w=mkWrap(cotEl,sLabel,sColor,subH);
     const ch=LightweightCharts.createChart(w.el,{...mkBase(isLast),width:W,height:subH});
     if(isLS&&visMode==='histogram'){
       ch.applyOptions({rightPriceScale:mkPS(HIST_SCALE)});
       ch.addLineSeries({color:'transparent',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:COT_FMT}).setData(cot.map(d=>({time:d.time,value:0})));
-      const chgKey=side==='l'?'chgL':'chgS',posColor=side==='l'?COL_LONG:COL_SHORT;
+      const chgKey=side==='l'?'chgL':'chgS';
       const hs=ch.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT,base:0});
-      hs.setData(cot.map(d=>{const v=d[key][chgKey];return{time:d.time,value:v,color:v>=0?posColor:COL_NEUTRAL};}));
+      hs.setData(cot.map(d=>{const v=d[key][chgKey];return{time:d.time,value:v,color:v>=0?cc.green:cc.red};}));
       chartSeries.set(ch,hs);
     }else if(metric==='net'&&visMode==='histogram'){
       ch.applyOptions({rightPriceScale:mkPS(HIST_SCALE)});
       ch.addLineSeries({color:'transparent',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:COT_FMT}).setData(cot.map(d=>({time:d.time,value:0})));
       const hs=ch.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT,base:0});
-      hs.setData(cot.map(d=>{const v=d[key].net;return{time:d.time,value:v,color:v>=0?COL_LONG:'#f16b6b'};}));
+      hs.setData(cot.map(d=>{const v=d[key].net;return{time:d.time,value:v,color:v>=0?cc.green:cc.red};}));
       chartSeries.set(ch,hs);
     }else{
       ch.addLineSeries({color:'transparent',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:COT_FMT}).setData(cot.map(d=>({time:d.time,value:0})));
@@ -463,7 +465,7 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
       let ms;
       if(metric==='chgNet'){
         ms=ch.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT});
-        ms.setData(cot.map(d=>({time:d.time,value:d[key][dataKey],color:d[key][dataKey]>=0?cfg.color:'#f16b6b'})));
+        ms.setData(cot.map(d=>({time:d.time,value:d[key][dataKey],color:d[key][dataKey]>=0?cfg.color:cc.red})));
       }else{
         ms=ch.addLineSeries({color:sColor,lineWidth:1.5,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT});
         ms.setData(cot.map(d=>({time:d.time,value:d[key][dataKey]})));
@@ -763,9 +765,9 @@ function buildTable(){
           if(isChg&&v!==0){
             const st=colStats[k][m.key];const absV=Math.abs(v);
             if(absV>=st.p75&&st.max>st.p75){
-              const maxAlpha=document.documentElement.dataset.theme==='light'?.14:.25;
-              const alpha=(Math.min((absV-st.p75)/(st.max-st.p75),1)*maxAlpha).toFixed(3);
-              sty+=v>0?`;background:rgba(122,167,255,${alpha});color:#a8c5ff`:`;background:rgba(241,107,107,${alpha});color:#fca5a5`;
+              const isLight=document.documentElement.dataset.theme==='light';
+              const alpha=(Math.min((absV-st.p75)/(st.max-st.p75),1)*(isLight?.22:.25)).toFixed(3);
+              sty+=v>0?`;background:rgba(122,167,255,${alpha});color:${isLight?'#1d4ed8':'#a8c5ff'}`:`;background:rgba(241,107,107,${alpha});color:${isLight?'#b91c1c':'#fca5a5'}`;
             }
           }
           h+=`<td style="${sty}">${fmt(v)}</td>`;
@@ -789,15 +791,20 @@ function applyThemeToCharts(){
   };
   [...lwCharts,...sigCharts].forEach(ch=>{try{ch.applyOptions(opts);}catch(e){}});
 }
+function updateThemeIcon(){
+  const btn=document.querySelector('.theme-toggle');
+  if(!btn)return;
+  btn.innerHTML=document.documentElement.dataset.theme==='light'?MOON_SVG:SUN_SVG;
+}
 function toggleTheme(){
   const root=document.documentElement;
   const next=(root.dataset.theme||'dark')==='dark'?'light':'dark';
   root.dataset.theme=next;
   localStorage.setItem('cot-theme',next);
-  const btn=document.getElementById('theme-btn');
-  if(btn)btn.textContent=next==='dark'?'☀':'🌙';
-  applyThemeToCharts();
-  if(activePage==='table')buildTable();
+  updateThemeIcon();
+  if(activePage==='chart')renderCharts();
+  else if(activePage==='signals')renderSignals();
+  else buildTable();
 }
 window.onresize=()=>{
   if(activePage==='chart'){
@@ -837,8 +844,7 @@ async function loadData(){
 window.onload=async()=>{
   const savedTheme=localStorage.getItem('cot-theme')||'dark';
   document.documentElement.dataset.theme=savedTheme;
-  const btn=document.getElementById('theme-btn');
-  if(btn)btn.textContent=savedTheme==='dark'?'☀':'🌙';
+  updateThemeIcon();
   setupControls();setupSigToggles();onMetricChange();
   buildSidebar();buildInstTabs();updateHeaderName();
   await loadData();
