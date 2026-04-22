@@ -139,6 +139,7 @@ tbody tr:hover .td-date{background:var(--surface)!important;}
 ::-webkit-scrollbar-thumb:hover{background:var(--muted2);}
 html{scrollbar-width:thin;scrollbar-color:var(--muted) var(--border2);}
 .tv-lightweight-charts table > tr > td:first-child{width:0!important;padding:0!important;}
+.cot-table td.cat-first,.cot-table th.cat-first{border-left:2px solid var(--border2)!important;padding-left:14px;}
 </style>
 </head>
 <body>
@@ -755,18 +756,19 @@ function buildTable(){
   const posBase=isLight?'rgba(37,99,235,':'rgba(122,167,255,',negBase=isLight?'rgba(220,38,38,':'rgba(241,107,107,';
   const hiPosText=isLight?'#1e3a8a':'#a8c5ff',hiNegText=isLight?'#7f1d1d':'#fca5a5';
   const maxAlpha=isLight?.35:.25;
-  let h=`<table><thead><tr><th class="th-base th-sticky" rowspan="2" style="width:96px">Date</th><th class="th-base" rowspan="2" style="width:80px">OI</th>`;
-  keys.forEach(k=>{const c=CATS[k];const cc2=catColor(c);h+=`<th class="th-cat" colspan="${MDEF.length}" style="border-left:1px solid var(--border2);color:${cc2};background:var(--surface);border-bottom:2px solid ${cc2}">${c.short}</th>`;});
+  let h=`<table class="cot-table"><thead><tr><th class="th-base th-sticky" rowspan="2" style="width:96px">Date</th><th class="th-base" rowspan="2" style="width:80px">OI</th>`;
+  keys.forEach((k,ki)=>{const c=CATS[k];const cc2=catColor(c);const cf=ki>0?' cat-first':'';h+=`<th class="th-cat${cf}" colspan="${MDEF.length}" style="color:${cc2};background:var(--surface);border-bottom:2px solid ${cc2}">${c.short}</th>`;});
   h+=`</tr><tr>`;
-  keys.forEach(k=>{MDEF.forEach((m,mi)=>{const bl=mi===0?`border-left:1px solid var(--border2)`:`border-left:1px solid var(--border)`;h+=`<th class="th-m" style="${bl}">${m.label}</th>`;});});
+  keys.forEach((k,ki)=>{MDEF.forEach((m,mi)=>{const cf=ki>0&&mi===0?' cat-first':'';const bl=mi===0&&ki===0?`border-left:1px solid var(--border2)`:`border-left:1px solid var(--border)`;h+=`<th class="th-m${cf}" style="${bl}">${m.label}</th>`;});});
   h+=`</tr></thead><tbody>`;
   [...cot].reverse().forEach(d=>{
     h+=`<tr><td class="td-date">${d.date}</td><td class="td-oi">${fmtK(d.oi)}</td>`;
-    keys.forEach(k=>{
+    keys.forEach((k,ki)=>{
       const c=d[k],cfg=CATS[k];
       MDEF.forEach((m,mi)=>{
-        const bl=mi===0?`border-left:1px solid var(--border2)`:``;
-        if(m.key==='pctNet'){const v=parseFloat(c.pctNet);const pSty=bl+(v>0?`;color:${pctPos}`:v<0?`;color:${pctNeg}`:'');h+=`<td style="${pSty}">${v>0?'+':''}${c.pctNet}%</td>`;}
+        const cf=ki>0&&mi===0?'cat-first':'';
+        const bl=mi===0&&ki===0?`border-left:1px solid var(--border2)`:``;
+        if(m.key==='pctNet'){const v=parseFloat(c.pctNet);const pSty=bl+(v>0?`;color:${pctPos}`:v<0?`;color:${pctNeg}`:'');h+=`<td class="${cf}" style="${pSty}">${v>0?'+':''}${c.pctNet}%</td>`;}
         else{
           const v=c[m.key];const isChg=['chgL','chgS','chgNet'].includes(m.key);let sty=bl;
           if(isChg&&v!==0){
@@ -776,7 +778,7 @@ function buildTable(){
               sty+=v>0?`;background:${posBase}${alpha});color:${hiPosText}`:`;background:${negBase}${alpha});color:${hiNegText}`;
             }
           }
-          h+=`<td style="${sty}">${fmt(v)}</td>`;
+          h+=`<td class="${cf}" style="${sty}">${fmt(v)}</td>`;
         }
       });
     });
