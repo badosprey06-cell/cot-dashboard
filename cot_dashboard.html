@@ -502,7 +502,8 @@ function buildSigCard(panelsId,priceSeries,catData,opts={}){
   const priceEl=document.createElement('div');priceEl.style.cssText='width:100%;height:100%;';
   priceWrap.appendChild(priceLbl);priceWrap.appendChild(priceEl);container.appendChild(priceWrap);
   const pChart=LightweightCharts.createChart(priceEl,{...mkBase(false),width:W,height:priceH,rightPriceScale:mkPS()});
-  const pSeries=pChart.addLineSeries({color:'rgba(200,208,222,0.45)',lineWidth:1.5,priceLineVisible:false,lastValueVisible:false,priceFormat:COT_FMT});
+  const dimPrice=document.documentElement.dataset.theme==='light'?'rgba(71,85,105,0.55)':'rgba(200,208,222,0.45)';
+  const pSeries=pChart.addLineSeries({color:dimPrice,lineWidth:1.5,priceLineVisible:false,lastValueVisible:false,priceFormat:COT_FMT});
   if(priceSeries.length)pSeries.setData(priceSeries);
   chartSeries.set(pChart,pSeries);cardSeries.set(pChart,pSeries);cardCharts.push(pChart);sigCharts.push(pChart);
   const splitDiv=document.createElement('div');splitDiv.style.cssText='height:1px;background:var(--border);flex-shrink:0;';container.appendChild(splitDiv);
