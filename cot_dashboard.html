@@ -283,12 +283,13 @@ const INSTRUMENTS={
 const MAX_WEEKS=156,AXIS_W=76;
 const COL_LONG='#86efac',COL_SHORT='#fca5a5',COL_NEUTRAL='#2e3f58';
 const CATS={
-  dealer:  {label:'Dealer / Intermediary',short:'Dealer',color:'#7aa7ff',pfxL:'dealer_positions_long_all',pfxS:'dealer_positions_short_all',pfxCL:'change_in_dealer_long_all',pfxCS:'change_in_dealer_short_all',active:true},
-  assetmgr:{label:'Asset Manager / Inst.',short:'Asset Mgr',color:'#7ad0aa',pfxL:'asset_mgr_positions_long',pfxS:'asset_mgr_positions_short',pfxCL:'change_in_asset_mgr_long',pfxCS:'change_in_asset_mgr_short',active:true},
-  levfunds:{label:'Leveraged Funds',short:'Lev Funds',color:'#c4a8f5',pfxL:'lev_money_positions_long',pfxS:'lev_money_positions_short',pfxCL:'change_in_lev_money_long',pfxCS:'change_in_lev_money_short',active:true},
-  other:   {label:'Other Reportable',short:'Other Rept',color:'#f5b584',pfxL:'other_rept_positions_long',pfxS:'other_rept_positions_short',pfxCL:'change_in_other_rept_long',pfxCS:'change_in_other_rept_short',active:false},
-  nonrept: {label:'Non-Reportable',short:'Non-Rept',color:'#8a96a8',pfxL:'nonrept_positions_long_all',pfxS:'nonrept_positions_short_all',pfxCL:'change_in_nonrept_long_all',pfxCS:'change_in_nonrept_short_all',active:false},
+  dealer:  {label:'Dealer / Intermediary',short:'Dealer',color:'#7aa7ff',colorLight:'#2563eb',pfxL:'dealer_positions_long_all',pfxS:'dealer_positions_short_all',pfxCL:'change_in_dealer_long_all',pfxCS:'change_in_dealer_short_all',active:true},
+  assetmgr:{label:'Asset Manager / Inst.',short:'Asset Mgr',color:'#7ad0aa',colorLight:'#0d9488',pfxL:'asset_mgr_positions_long',pfxS:'asset_mgr_positions_short',pfxCL:'change_in_asset_mgr_long',pfxCS:'change_in_asset_mgr_short',active:true},
+  levfunds:{label:'Leveraged Funds',short:'Lev Funds',color:'#c4a8f5',colorLight:'#7c3aed',pfxL:'lev_money_positions_long',pfxS:'lev_money_positions_short',pfxCL:'change_in_lev_money_long',pfxCS:'change_in_lev_money_short',active:true},
+  other:   {label:'Other Reportable',short:'Other Rept',color:'#f5b584',colorLight:'#ea580c',pfxL:'other_rept_positions_long',pfxS:'other_rept_positions_short',pfxCL:'change_in_other_rept_long',pfxCS:'change_in_other_rept_short',active:false},
+  nonrept: {label:'Non-Reportable',short:'Non-Rept',color:'#8a96a8',colorLight:'#475569',pfxL:'nonrept_positions_long_all',pfxS:'nonrept_positions_short_all',pfxCL:'change_in_nonrept_long_all',pfxCS:'change_in_nonrept_short_all',active:false},
 };
+function catColor(cfg){return document.documentElement.dataset.theme==='light'?cfg.colorLight:cfg.color;}
 let activeInstrument='ES',activePage='chart';
 let cotData=[],priceData=[],showOI=false;
 let lwCharts=[],priceChart=null,sigCharts=[];
@@ -442,7 +443,7 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
   }
   active.forEach((key,i)=>{
     const cfg=CATS[key],isLast=idx===panelCount-1;
-    const sColor=isLS?(side==='l'?cc.green:cc.red):cfg.color;
+    const sColor=isLS?(side==='l'?cc.green:cc.red):catColor(cfg);
     const sLabel=isLS?(side==='l'?cfg.label+' · Longs':cfg.label+' · Shorts'):cfg.label;
     const w=mkWrap(cotEl,sLabel,sColor,subH);
     const ch=LightweightCharts.createChart(w.el,{...mkBase(isLast),width:W,height:subH});
@@ -465,7 +466,7 @@ function buildPanel(cotPanelsId,pricePaneId,side,W,totalH,cot,price,metric,activ
       let ms;
       if(metric==='chgNet'){
         ms=ch.addHistogramSeries({priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT});
-        ms.setData(cot.map(d=>({time:d.time,value:d[key][dataKey],color:d[key][dataKey]>=0?cfg.color:cc.red})));
+        ms.setData(cot.map(d=>({time:d.time,value:d[key][dataKey],color:d[key][dataKey]>=0?catColor(cfg):cc.red})));
       }else{
         ms=ch.addLineSeries({color:sColor,lineWidth:1.5,priceLineVisible:false,lastValueVisible:true,priceFormat:COT_FMT});
         ms.setData(cot.map(d=>({time:d.time,value:d[key][dataKey]})));
@@ -548,19 +549,19 @@ function renderSignals(){
   const fHi=sigFlipThresh,fLo=100-sigFlipThresh,zT=sigZThresh;
   requestAnimationFrame(()=>{
     buildSigCard('sig-flip-panels',priceLine,
-      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:cfg.color,fmt:PCT_FMT,data:computeFlip(key).filter(d=>d.time>=rs)};}),
+      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:catColor(cfg),fmt:PCT_FMT,data:computeFlip(key).filter(d=>d.time>=rs)};}),
       {scaleMargins:{top:.06,bottom:.06},lines:[{v:fHi,c:'rgba(241,107,107,0.55)',t:`${fHi}%`},{v:fLo,c:'rgba(61,214,140,0.55)',t:`${fLo}%`},{v:50,c:'rgba(90,106,128,0.2)',t:''}]}
     );
     buildSigCard('sig-znet-panels',priceLine,
-      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:cfg.color,fmt:Z_FMT,data:computeZ(key,'net').filter(d=>d.time>=rs)};}),
+      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:catColor(cfg),fmt:Z_FMT,data:computeZ(key,'net').filter(d=>d.time>=rs)};}),
       {scaleMargins:{top:.1,bottom:.1},lines:[{v:zT,c:'rgba(241,107,107,0.55)',t:`+${zT}σ`},{v:-zT,c:'rgba(61,214,140,0.55)',t:`-${zT}σ`},{v:0,c:'rgba(90,106,128,0.2)',t:''}]}
     );
     buildSigCard('sig-zlong-panels',priceLine,
-      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:cfg.color,fmt:Z_FMT,data:computeZ(key,'longs').filter(d=>d.time>=rs)};}),
+      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:catColor(cfg),fmt:Z_FMT,data:computeZ(key,'longs').filter(d=>d.time>=rs)};}),
       {scaleMargins:{top:.1,bottom:.1},lines:[{v:zT,c:'rgba(241,107,107,0.55)',t:`+${zT}σ`},{v:-zT,c:'rgba(61,214,140,0.55)',t:`-${zT}σ`},{v:0,c:'rgba(90,106,128,0.2)',t:''}]}
     );
     buildSigCard('sig-zshort-panels',priceLine,
-      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:cfg.color,fmt:Z_FMT,data:computeZ(key,'shorts').filter(d=>d.time>=rs)};}),
+      active.map(key=>{const cfg=CATS[key];return{label:cfg.short,color:catColor(cfg),fmt:Z_FMT,data:computeZ(key,'shorts').filter(d=>d.time>=rs)};}),
       {scaleMargins:{top:.1,bottom:.1},lines:[{v:zT,c:'rgba(241,107,107,0.55)',t:`+${zT}σ`},{v:-zT,c:'rgba(61,214,140,0.55)',t:`-${zT}σ`},{v:0,c:'rgba(90,106,128,0.2)',t:''}]}
     );
     sigCharts.forEach(src=>{
@@ -682,7 +683,7 @@ function buildSidebar(){
   const sec=document.getElementById('cat-toggles');sec.innerHTML='';
   Object.entries(CATS).forEach(([key,cfg])=>{
     const row=document.createElement('div');row.className='tog-row';
-    row.innerHTML=`<div class="tog-lbl ${cfg.active?'on':''}" id="tl-${key}"><div class="cdot" style="background:${cfg.color}"></div>${cfg.short}</div><div class="sw ${cfg.active?'on':''}" id="ts-${key}"></div>`;
+    row.innerHTML=`<div class="tog-lbl ${cfg.active?'on':''}" id="tl-${key}"><div class="cdot" style="background:${catColor(cfg)}"></div>${cfg.short}</div><div class="sw ${cfg.active?'on':''}" id="ts-${key}"></div>`;
     row.onclick=()=>{
       cfg.active=!cfg.active;
       document.getElementById('ts-'+key).classList.toggle('on',cfg.active);
@@ -749,8 +750,13 @@ function computeColStats(cot){
 function buildTable(){
   const{cot}=filteredData();const keys=Object.keys(CATS);
   const colStats=computeColStats(cot);
+  const isLight=document.documentElement.dataset.theme==='light';
+  const pctPos=isLight?'#1e3a8a':'#86c8ff',pctNeg=isLight?'#991b1b':'#ff9090';
+  const posBase=isLight?'rgba(37,99,235,':'rgba(122,167,255,',negBase=isLight?'rgba(220,38,38,':'rgba(241,107,107,';
+  const hiPosText=isLight?'#1e3a8a':'#a8c5ff',hiNegText=isLight?'#7f1d1d':'#fca5a5';
+  const maxAlpha=isLight?.35:.25;
   let h=`<table><thead><tr><th class="th-base th-sticky" rowspan="2" style="width:96px">Date</th><th class="th-base" rowspan="2" style="width:80px">OI</th>`;
-  keys.forEach(k=>{const c=CATS[k];h+=`<th class="th-cat" colspan="${MDEF.length}" style="border-left:1px solid var(--border2);color:${c.color};background:var(--surface);border-bottom:2px solid ${c.color}">${c.short}</th>`;});
+  keys.forEach(k=>{const c=CATS[k];const cc2=catColor(c);h+=`<th class="th-cat" colspan="${MDEF.length}" style="border-left:1px solid var(--border2);color:${cc2};background:var(--surface);border-bottom:2px solid ${cc2}">${c.short}</th>`;});
   h+=`</tr><tr>`;
   keys.forEach(k=>{MDEF.forEach((m,mi)=>{const bl=mi===0?`border-left:1px solid var(--border2)`:`border-left:1px solid var(--border)`;h+=`<th class="th-m" style="${bl}">${m.label}</th>`;});});
   h+=`</tr></thead><tbody>`;
@@ -760,15 +766,14 @@ function buildTable(){
       const c=d[k],cfg=CATS[k];
       MDEF.forEach((m,mi)=>{
         const bl=mi===0?`border-left:1px solid var(--border2)`:``;
-        if(m.key==='pctNet'){const v=parseFloat(c.pctNet);h+=`<td class="${v>0?'cell-pos':v<0?'cell-neg':''}" style="${bl}">${v>0?'+':''}${c.pctNet}%</td>`;}
+        if(m.key==='pctNet'){const v=parseFloat(c.pctNet);const pSty=bl+(v>0?`;color:${pctPos}`:v<0?`;color:${pctNeg}`:'');h+=`<td style="${pSty}">${v>0?'+':''}${c.pctNet}%</td>`;}
         else{
           const v=c[m.key];const isChg=['chgL','chgS','chgNet'].includes(m.key);let sty=bl;
           if(isChg&&v!==0){
             const st=colStats[k][m.key];const absV=Math.abs(v);
             if(absV>=st.p75&&st.max>st.p75){
-              const isLight=document.documentElement.dataset.theme==='light';
-              const alpha=(Math.min((absV-st.p75)/(st.max-st.p75),1)*(isLight?.22:.25)).toFixed(3);
-              sty+=v>0?`;background:rgba(122,167,255,${alpha});color:${isLight?'#1d4ed8':'#a8c5ff'}`:`;background:rgba(241,107,107,${alpha});color:${isLight?'#b91c1c':'#fca5a5'}`;
+              const alpha=(Math.min((absV-st.p75)/(st.max-st.p75),1)*maxAlpha).toFixed(3);
+              sty+=v>0?`;background:${posBase}${alpha});color:${hiPosText}`:`;background:${negBase}${alpha});color:${hiNegText}`;
             }
           }
           h+=`<td style="${sty}">${fmt(v)}</td>`;
@@ -803,6 +808,7 @@ function toggleTheme(){
   root.dataset.theme=next;
   localStorage.setItem('cot-theme',next);
   updateThemeIcon();
+  buildSidebar();
   if(activePage==='chart')renderCharts();
   else if(activePage==='signals')renderSignals();
   else buildTable();
