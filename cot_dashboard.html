@@ -140,6 +140,25 @@ tbody tr:hover .td-date{background:var(--surface)!important;}
 html{scrollbar-width:thin;scrollbar-color:var(--muted) var(--border2);}
 .tv-lightweight-charts table > tr > td:first-child{width:0!important;padding:0!important;}
 .cot-table td.cat-first,.cot-table th.cat-first{border-left:2px solid var(--border2)!important;padding-left:14px;}
+#page-macro{overflow:hidden;}
+.macro-topbar{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:2px 0;}
+.macro-overlay-row{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 8px;border-radius:4px;transition:background .1s;user-select:none;}
+.macro-overlay-row:hover{background:var(--card);}
+.macro-overlay-lbl{font-size:12px;color:var(--muted2);}
+.macro-grid{flex:1 1 0;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;}
+.macro-grid--expanded{grid-template-columns:1fr;grid-template-rows:1fr;}
+.macro-grid--expanded .macro-panel:not(.macro-panel--active){display:none;}
+.macro-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.macro-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);}
+.macro-panel-hdr{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.macro-panel-left{display:flex;flex-direction:column;gap:2px;}
+.macro-panel-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono);color:var(--text);}
+.macro-panel-sub{font-size:9px;color:var(--muted2);font-family:var(--mono);}
+.macro-panel-right{display:flex;align-items:center;gap:8px;}
+.macro-cur-val{font-size:15px;font-weight:600;font-family:var(--mono);}
+.macro-expand-btn{background:transparent;border:1px solid transparent;color:var(--muted);width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;font-size:13px;padding:0;transition:color .15s,border-color .15s,background .15s;}
+.macro-expand-btn:hover{color:var(--text);border-color:var(--border2);background:var(--card2);}
+.macro-chart{flex:1 1 0;min-height:0;}
 </style>
 </head>
 <body>
@@ -151,6 +170,7 @@ html{scrollbar-width:thin;scrollbar-color:var(--muted) var(--border2);}
       <div class="ptab active" data-page="chart">Chart</div>
       <div class="ptab" data-page="signals">Signals</div>
       <div class="ptab" data-page="table">Table</div>
+      <div class="ptab" data-page="macro">Macro</div>
     </div>
     <div id="hdr-controls">
       <div class="hdr-ctrl-group">
@@ -271,6 +291,44 @@ html{scrollbar-width:thin;scrollbar-color:var(--muted) var(--border2);}
         </div>
       </div>
       <div class="page" id="page-table"><div class="tbl-card"><div id="tbl"></div></div></div>
+      <div class="page" id="page-macro">
+        <div class="macro-topbar">
+          <div class="macro-overlay-row" onclick="toggleESOverlay()">
+            <div class="sw" id="ts-es-ovl"></div>
+            <span class="macro-overlay-lbl">ES Price Overlay</span>
+          </div>
+        </div>
+        <div class="macro-grid" id="macro-grid">
+          <div class="macro-panel" id="mpanel-vix" data-key="vix">
+            <div class="macro-panel-hdr">
+              <div class="macro-panel-left"><div class="macro-panel-title">VIX</div><div class="macro-panel-sub">CBOE Volatility Index</div></div>
+              <div class="macro-panel-right"><span class="macro-cur-val" id="mval-vix"></span><button class="macro-expand-btn" id="mexp-vix" onclick="toggleMacroExpand('vix')">⤢</button></div>
+            </div>
+            <div class="macro-chart" id="mchart-vix"></div>
+          </div>
+          <div class="macro-panel" id="mpanel-hyspread" data-key="hyspread">
+            <div class="macro-panel-hdr">
+              <div class="macro-panel-left"><div class="macro-panel-title">HY Spread</div><div class="macro-panel-sub">ICE BofA US High Yield OAS (%)</div></div>
+              <div class="macro-panel-right"><span class="macro-cur-val" id="mval-hyspread"></span><button class="macro-expand-btn" id="mexp-hyspread" onclick="toggleMacroExpand('hyspread')">⤢</button></div>
+            </div>
+            <div class="macro-chart" id="mchart-hyspread"></div>
+          </div>
+          <div class="macro-panel" id="mpanel-yieldcrv" data-key="yieldcrv">
+            <div class="macro-panel-hdr">
+              <div class="macro-panel-left"><div class="macro-panel-title">Yield Curve</div><div class="macro-panel-sub">10Y − 2Y Treasury Spread (%)</div></div>
+              <div class="macro-panel-right"><span class="macro-cur-val" id="mval-yieldcrv"></span><button class="macro-expand-btn" id="mexp-yieldcrv" onclick="toggleMacroExpand('yieldcrv')">⤢</button></div>
+            </div>
+            <div class="macro-chart" id="mchart-yieldcrv"></div>
+          </div>
+          <div class="macro-panel" id="mpanel-fedbal" data-key="fedbal">
+            <div class="macro-panel-hdr">
+              <div class="macro-panel-left"><div class="macro-panel-title">Fed Balance</div><div class="macro-panel-sub">Total Assets, Wednesday Level ($M)</div></div>
+              <div class="macro-panel-right"><span class="macro-cur-val" id="mval-fedbal"></span><button class="macro-expand-btn" id="mexp-fedbal" onclick="toggleMacroExpand('fedbal')">⤢</button></div>
+            </div>
+            <div class="macro-chart" id="mchart-fedbal"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -297,6 +355,13 @@ const CATS={
 function catColor(cfg){return document.documentElement.dataset.theme==='light'?cfg.colorLight:cfg.color;}
 let activeCats=new Set(['dealer','assetmgr','levfunds']);
 function initActiveCats(inst){activeCats=new Set(inst.defaultCats);}
+const MACRO={
+  vix:      {key:'vix',      label:'VIX',          fullName:'CBOE Volatility Index',                  color:'#f5b584',colorLight:'#ea580c',decimals:2,refLine:null},
+  hyspread: {key:'hyspread', label:'HY Spread',     fullName:'ICE BofA US High Yield OAS (%)',         color:'#e5736b',colorLight:'#dc2626',decimals:2,refLine:null},
+  yieldcrv: {key:'yieldcrv', label:'Yield Curve',   fullName:'10Y − 2Y Treasury Spread (%)',           color:'#7ad0e5',colorLight:'#0284c7',decimals:2,refLine:0},
+  fedbal:   {key:'fedbal',   label:'Fed Balance',   fullName:'Total Assets, Wednesday Level ($M)',     color:'#7ad0aa',colorLight:'#16a34a',decimals:0,refLine:null,formatter:'trillions'},
+};
+let macroData=null,macroChartMap={},showESOverlay=false,macroExpandedKey=null,macroESCache=null;
 let activeInstrument='ES',activePage='chart';
 let cotData=[],priceData=[],showOI=false;
 let lwCharts=[],priceChart=null,sigCharts=[];
@@ -719,6 +784,84 @@ function toggleOI(){
   if(activePage==='chart')renderCharts();
 }
 
+function macroFmt(cfg,v){if(cfg.formatter==='trillions')return'$'+(v/1e6).toFixed(2)+'t';return v.toFixed(cfg.decimals);}
+function macroColor(cfg){return document.documentElement.dataset.theme==='light'?cfg.colorLight:cfg.color;}
+async function loadMacroData(){
+  if(macroData)return macroData;
+  const resp=await fetch(`data/macro.json?v=${Date.now()}`);
+  if(!resp.ok)throw new Error(`macro.json: ${resp.status}`);
+  macroData=await resp.json();
+  return macroData;
+}
+function toggleESOverlay(){
+  showESOverlay=!showESOverlay;
+  document.getElementById('ts-es-ovl').classList.toggle('on',showESOverlay);
+  if(activePage==='macro')buildMacro();
+}
+async function buildMacro(){
+  Object.values(macroChartMap).forEach(c=>{try{c.remove();}catch(e){}});
+  macroChartMap={};
+  let md;
+  try{md=await loadMacroData();}catch(e){console.error('macro.json load failed:',e);return;}
+  const rs=rangeStart(),cc=getChartColors();
+  const isLight=document.documentElement.dataset.theme==='light';
+  const overlayColor=isLight?'rgba(71,85,105,0.45)':'rgba(200,208,222,0.3)';
+  let esPrice=[];
+  if(showESOverlay){
+    try{
+      if(!macroESCache){const esd=await loadInstrumentData('ES');macroESCache=esd.price||[];}
+      esPrice=macroESCache.filter(d=>d.time>=rs);
+    }catch(e){console.warn('ES overlay failed:',e);}
+  }
+  requestAnimationFrame(()=>{
+    for(const key of Object.keys(MACRO)){
+      const cfg=MACRO[key];
+      const chartEl=document.getElementById('mchart-'+key);
+      if(!chartEl)continue;
+      const W=chartEl.clientWidth,H=chartEl.clientHeight;
+      if(!W||!H)continue;
+      const series=(md[key]||[]).filter(d=>d.time>=rs);
+      const valEl=document.getElementById('mval-'+key);
+      if(valEl){const last=series[series.length-1];valEl.textContent=last?macroFmt(cfg,last.value):'—';valEl.style.color=macroColor(cfg);}
+      const ch=LightweightCharts.createChart(chartEl,{...mkBase(true),width:W,height:H});
+      const color=macroColor(cfg);
+      const fmt={type:'custom',formatter:v=>macroFmt(cfg,v),minMove:cfg.decimals===0?1:0.01};
+      const ls=ch.addLineSeries({color,lineWidth:1.5,priceLineVisible:false,lastValueVisible:true,priceFormat:fmt});
+      ls.setData(series);
+      if(cfg.refLine!==null){ls.createPriceLine({price:cfg.refLine,color:cc.border,lineWidth:1,lineStyle:2,axisLabelVisible:true,title:''});}
+      if(showESOverlay&&esPrice.length){
+        ch.applyOptions({leftPriceScale:{visible:true,borderColor:cc.border,minimumWidth:40}});
+        const ov=ch.addLineSeries({color:overlayColor,lineWidth:1,priceScaleId:'left',priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:PRICE_FMT});
+        ov.setData(esPrice);
+      }
+      ch.timeScale().fitContent();
+      macroChartMap[key]=ch;
+    }
+    const mcs=Object.values(macroChartMap);
+    mcs.forEach(src=>{
+      src.timeScale().subscribeVisibleLogicalRangeChange(range=>{
+        if(!range)return;
+        mcs.forEach(o=>{if(o!==src)o.timeScale().setVisibleLogicalRange(range);});
+      });
+    });
+  });
+}
+function toggleMacroExpand(key){
+  const grid=document.getElementById('macro-grid');
+  if(macroExpandedKey===key){
+    macroExpandedKey=null;
+    grid.classList.remove('macro-grid--expanded');
+    document.querySelectorAll('.macro-panel').forEach(p=>p.classList.remove('macro-panel--active'));
+    document.querySelectorAll('.macro-expand-btn').forEach(b=>b.textContent='⤢');
+  }else{
+    macroExpandedKey=key;
+    grid.classList.add('macro-grid--expanded');
+    document.querySelectorAll('.macro-panel').forEach(p=>p.classList.toggle('macro-panel--active',p.dataset.key===key));
+    document.querySelectorAll('.macro-expand-btn').forEach(b=>b.textContent=b.id==='mexp-'+key?'⤡':'⤢');
+  }
+  requestAnimationFrame(()=>buildMacro());
+}
+
 function setupControls(){
   document.querySelectorAll('.hbtn').forEach(btn=>{
     btn.addEventListener('click',()=>{
@@ -736,12 +879,13 @@ function switchPage(pg){
   activePage=pg;
   document.querySelectorAll('.ptab').forEach(t=>t.classList.toggle('active',t.dataset.page===pg));
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+pg));
-  document.getElementById('sidebar').classList.toggle('hidden',pg==='table');
+  document.getElementById('sidebar').classList.toggle('hidden',pg==='table'||pg==='macro');
   document.getElementById('range-btns').style.display=pg==='table'?'none':'flex';
   document.getElementById('hdr-controls').style.display=pg==='chart'?'flex':'none';
   if(pg==='chart')requestAnimationFrame(()=>renderCharts());
   else if(pg==='signals')requestAnimationFrame(()=>renderSignals());
   else if(pg==='table'&&cotData.length)buildTable();
+  else if(pg==='macro')requestAnimationFrame(()=>buildMacro());
 }
 document.querySelectorAll('.ptab').forEach(t=>{t.onclick=()=>switchPage(t.dataset.page);});
 document.querySelectorAll('.rbtn').forEach(btn=>{btn.onclick=()=>{
@@ -749,6 +893,7 @@ document.querySelectorAll('.rbtn').forEach(btn=>{btn.onclick=()=>{
   activeRange=btn.dataset.range;
   if(activePage==='chart')renderCharts();
   else if(activePage==='signals')renderSignals();
+  else if(activePage==='macro')buildMacro();
   else buildTable();
 };});
 
@@ -831,6 +976,7 @@ function toggleTheme(){
   buildSidebar();
   if(activePage==='chart')renderCharts();
   else if(activePage==='signals')renderSignals();
+  else if(activePage==='macro')buildMacro();
   else buildTable();
 }
 window.onresize=()=>{
@@ -840,7 +986,8 @@ window.onresize=()=>{
     const wR=isLS?document.getElementById('split-wrap-r').clientWidth:0;
     const half=Math.ceil(lwCharts.length/2);
     lwCharts.forEach((c,i)=>{c.applyOptions({width:isLS&&i>=half?wR:wL});});
-  }else if(activePage==='signals'){renderSignals();}
+  }else if(activePage==='signals'){renderSignals();
+  }else if(activePage==='macro'){buildMacro();}
 };
 
 async function loadData(){
