@@ -830,9 +830,9 @@ async function buildMacro(){
       ls.setData(series);
       if(cfg.refLine!==null){ls.createPriceLine({price:cfg.refLine,color:cc.border,lineWidth:1,lineStyle:2,axisLabelVisible:true,title:''});}
       if(showESOverlay&&esPrice.length){
-        ch.applyOptions({leftPriceScale:{visible:true,borderColor:cc.border,minimumWidth:40}});
         const ov=ch.addLineSeries({color:overlayColor,lineWidth:1,priceScaleId:'left',priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false,priceFormat:PRICE_FMT});
-        ov.setData(esPrice);
+        ov.setData(esPrice.map(d=>({time:d.time,value:d.close})));
+        ch.priceScale('left').applyOptions({visible:true,borderVisible:false,scaleMargins:{top:.1,bottom:.1}});
       }
       ch.timeScale().fitContent();
       macroChartMap[key]=ch;
