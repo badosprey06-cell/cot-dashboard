@@ -1,5 +1,6 @@
 import json
 import math
+import os
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -37,6 +38,15 @@ DISAG_CATS = {
 TFF_URL   = "https://publicreporting.cftc.gov/resource/gpe5-46if.json"
 DISAG_URL = "https://publicreporting.cftc.gov/resource/72hh-3qpy.json"
 MAX_WEEKS = 156
+
+FRED_SERIES = {
+    "vix":      {"id": "VIXCLS",       "label": "VIX",          "description": "CBOE Volatility Index"},
+    "hyspread": {"id": "BAMLH0A0HYM2", "label": "HY Spread",    "description": "ICE BofA US High Yield OAS"},
+    "yieldcrv": {"id": "T10Y2Y",       "label": "Yield Curve",  "description": "10Y - 2Y Treasury Spread"},
+    "fedbal":   {"id": "WALCL",        "label": "Fed Balance",  "description": "Total Assets, Wednesday Level"},
+}
+FRED_BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
+FRED_OBSERVATION_START = "2018-01-01"
 
 
 def to_monday_cot(date_str: str) -> str:
@@ -100,6 +110,27 @@ def fetch_disaggregated(cftc_name: str) -> list:
     if not rows:
         raise ValueError(f"No Disaggregated data for: {cftc_name}")
     return _parse_rows(rows, DISAG_CATS)
+
+
+def fetch_fred(series_id: str, api_key: str) -> list:
+    params = {
+        "series_id": series_id,
+        "api_key": api_key,
+        "file_type": "json",
+        "observation_start": FRED_OBSERVATION_START,
+    }
+    resp = requests.get(FRED_BASE_URL, params=params, timeout=30)
+    resp.raise_for_status()
+    observations = resp.json().get("observations", [])
+    result = []
+    for obs in observations:
+        if obs.get("value") in (".", None):
+            continue
+        try:
+            result.append({"time": obs["date"], "value": float(obs["value"])})
+        except (ValueError, KeyError):
+            continue
+    return result
 
 
 def fetch_price(yahoo_ticker: str) -> list:
@@ -181,6 +212,25 @@ def main():
         path = out_dir / f"{inst}.json"
         path.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
         print(f"[{inst}] → {len(cot)} COT rows, {len(price)} price bars → {path.name}")
+
+    # === FRED Macro Data ===
+    fred_api_key = os.environ.get("FRED_API_KEY")
+    if not fred_api_key:
+        print("[WARN] FRED_API_KEY not set — skipping macro data fetch")
+    else:
+        print("[INFO] Fetching FRED macro data...")
+        macro_data = {}
+        for key, cfg in FRED_SERIES.items():
+            try:
+                print(f"  - {cfg['label']} ({cfg['id']})...")
+                macro_data[key] = fetch_fred(cfg["id"], fred_api_key)
+                print(f"    OK: {len(macro_data[key])} observations")
+            except Exception as e:
+                print(f"    ERROR fetching {cfg['id']}: {e}", file=sys.stderr)
+                macro_data[key] = []
+        macro_path = out_dir / "macro.json"
+        macro_path.write_text(json.dumps(macro_data, separators=(",", ":")), encoding="utf-8")
+        print(f"[INFO] Saved {macro_path.name}")
 
     if errors:
         print(f"\nFailed instruments: {errors}", file=sys.stderr)
